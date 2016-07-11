@@ -75,6 +75,8 @@ def menu():
 
     15) Installing ArchStrike repositories
 
+    16) Setting up video & window manager
+
     99) Exit
 
     NOTE: If you want to do anything partitioning related, it's suggested you start over from Step 3
@@ -110,6 +112,8 @@ def menu():
         set_root_pass()
     elif step == "15":
         install_archstrike()
+    elif step == "16":
+        set_video_utils()        
     elif step == "99":
         main()
     else:
