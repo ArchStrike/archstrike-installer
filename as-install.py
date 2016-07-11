@@ -113,7 +113,7 @@ def menu():
     elif step == "15":
         install_archstrike()
     elif step == "16":
-        set_video_utils()        
+        set_video_utils()
     elif step == "99":
         main()
     else:
@@ -420,10 +420,11 @@ def install_archstrike():
     print "Done. It's mandatory to enable multilib for x86_64. Do you want to enable multilib? (say no if it's already enabled)"
     bit = raw_input("> [Y/n]:").lower() or 'yes'
     if bit in yes:
-        print "Opening file with nano. Remove the # in front of '[multilib]' and the following 'Include' line"
-        sp.call("arch-chroot /mnt nano {0}".format(pacmanconf), shell=True)
+        sp.call("""sed -i '/\[multilib]$/ {
+			N
+			/Include/s/#//g}' /mnt/%s
+        """ % (pacmanconf), shell=True)
         sp.call("arch-chroot /mnt pacman -Rns gcc-libs --noconfirm", shell=True)
-        ## TODO: achieve this with sed or similar
         print "Multilib has been enabled."
     else:
         print "Alright, looks like no. Continuing."
