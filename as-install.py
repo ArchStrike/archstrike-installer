@@ -418,6 +418,7 @@ def install_archstrike():
     if bit in yes:
         print "Opening file with nano. Remove the # in front of '[multilib]' and the following 'Include' line"
         sp.call("arch-chroot /mnt nano {0}".format(pacmanconf), shell=True)
+        sp.call("arch-chroot /mnt pacman -Rns gcc-libs --noconfirm", shell=True)
         ## TODO: achieve this with sed or similar
         print "Multilib has been enabled."
     else:
