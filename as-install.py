@@ -459,7 +459,7 @@ def install_archstrike():
 
 def add_user():
     global username
-    
+
     sp.call("clear", shell=True)
     print "Step 16) Add new User"
     opt =  raw_input("> Would you like to add a new user? [Y/n]: ").lower() or 'yes'
@@ -474,6 +474,7 @@ def add_user():
         if admin in yes:
             sp.call("sed -i '/%wheel ALL=(ALL) ALL/s/^#//' /mnt/etc/sudoers", shell=True)
             sp.call("arch-chroot /mnt usermod -a -G wheel {0}".format(username), shell=True)
+    username = 'root'
     set_video_utils(username)
 
 def set_video_utils(user):
