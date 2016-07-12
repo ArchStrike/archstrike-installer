@@ -510,9 +510,10 @@ def set_video_utils(user):
             set_video_utils()
     desktop = raw_input("> Would you like to install the OpenBox window manager with ArchStrike configs? [Y/n]: ") or 'yes'
     if desktop in yes:
-        sp.call("arch-chroot /mnt pacman -S openbox --noconfirm", shell=True)
+        sp.call("arch-chroot /mnt pacman -S archstrike-openbox-config --noconfirm", shell=True)
         if username:
             sp.call("echo 'exec openbox' > /mnt/home/{0}/.xinitrc".format(username), shell=True)
+            sp.call("cp -a /mnt/usr/share/archstrike-openbox-config/etc/* /mnt/home/{0}/.config/".format(username), shell=True)
         sp.call("echo 'exec openbox' > /mnt/root/.xinitrc", shell=True)
 
     lm = raw_input("> Would you like to install a login manager? [Y/n]: ").lower() or 'yes'
