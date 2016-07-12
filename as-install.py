@@ -75,7 +75,9 @@ def menu():
 
     15) Installing ArchStrike repositories
 
-    16) Setting up video & window manager
+    16) Add a New User
+
+    17) Setting up video & window manager
 
     99) Exit
 
@@ -113,6 +115,8 @@ def menu():
     elif step == "15":
         install_archstrike()
     elif step == "16":
+        add_user()
+    elif step == "17":
         set_video_utils()
     elif step == "99":
         main()
@@ -451,9 +455,28 @@ def install_archstrike():
     if install_now in yes:
         sp.call('arch-chroot /mnt /bin/bash -c "yes| pacman -S cryptsetup-nuke-keys"', shell=True)
         sp.call("arch-chroot /mnt pacman -S archstrike --noconfirm", shell=True)
-    set_video_utils()
+    add_user()
 
-def set_video_utils():
+def add_user():
+    global username
+    
+    sp.call("clear", shell=True)
+    print "Step 16) Add new User"
+    opt =  raw_input("> Would you like to add a new user? [Y/n]: ").lower() or 'yes'
+    if opt in yes:
+        username = ''
+        while not username:
+            username = raw_input("> Please enter a username: ")
+        sp.call("arch-chroot /mnt useradd -m -g users -G audio,network,power,storage,optical {0}".format(username), shell=True)
+        print "> Please enter the password for {0}: ".format(username)
+        sp.call("arch-chroot /mnt passwd {0}".format(username), shell=True)
+        admin = raw_input("> Would you like to give {0} admin privileges? [Y/n]: ".format(username)).lower() or 'yes'
+        if admin in yes:
+            sp.call("sed -i '/%wheel ALL=(ALL) ALL/s/^#//' /mnt/etc/sudoers", shell=True)
+            sp.call("arch-chroot /mnt usermod -a -G wheel {0}".format(username), shell=True)
+    set_video_utils(username)
+
+def set_video_utils(user):
     gpus = {
         1:'mesa-libgl',
         2:'nvidia',
@@ -461,7 +484,8 @@ def set_video_utils():
         4:'intel',
         5:''
     }
-    print "Step 16) Setting up video and desktop environment"
+    sp.call("clear", shell=True)
+    print "Step 17) Setting up video and desktop environment"
     choice = raw_input("> Would you like to set up video utilities? [Y/n]: ").lower() or 'yes'
     if choice in yes:
         print "Setting up video. I need to know your GPU."
@@ -480,14 +504,14 @@ def set_video_utils():
         gpu = raw_input("> Choose an option or leave empty for default") or 5
         try:
             sel = gpus[gpu]
-            sp.call("pacman -S xorg-server xorg-server-utils xorg-xinit xterm {0} --noconfirm".format(sel), shell=True)
+            sp.call("arch-chroot /mnt pacman -S xorg-server xorg-server-utils xorg-xinit xterm {0} --noconfirm".format(sel), shell=True)
         except IndexError:
             print "Not a valid option"
             set_video_utils()
     desktop = raw_input("> Would you like to install the OpenBox window manager with ArchStrike configs? [Y/n]: ") or 'yes'
     if desktop in yes:
-        sp.call("pacman -S openbox --noconfirm", shell=True)
-        sp.call("echo 'exec openbox' > ~/$USER/.xinitrc", shell=True)
+        sp.call("arch-chroot /mnt pacman -S openbox --noconfirm", shell=True)
+        sp.call("echo 'exec openbox' > /mnt/home/{0}/.xinitrc".format(username), shell=True)
     finalize()
 
 
