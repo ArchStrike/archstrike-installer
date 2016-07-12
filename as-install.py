@@ -459,12 +459,12 @@ def install_archstrike():
 
 def add_user():
     global username
+    username = ''
 
     sp.call("clear", shell=True)
     print "Step 16) Add new User"
     opt =  raw_input("> Would you like to add a new user? [Y/n]: ").lower() or 'yes'
     if opt in yes:
-        username = ''
         while not username:
             username = raw_input("> Please enter a username: ")
         sp.call("arch-chroot /mnt useradd -m -g users -G audio,network,power,storage,optical {0}".format(username), shell=True)
@@ -474,7 +474,6 @@ def add_user():
         if admin in yes:
             sp.call("sed -i '/%wheel ALL=(ALL) ALL/s/^#//' /mnt/etc/sudoers", shell=True)
             sp.call("arch-chroot /mnt usermod -a -G wheel {0}".format(username), shell=True)
-    username = 'root'
     set_video_utils(username)
 
 def set_video_utils(user):
@@ -482,8 +481,8 @@ def set_video_utils(user):
         1:'mesa-libgl',
         2:'nvidia',
         3:'xf86-video-ati',
-        4:'intel',
-        5:''
+        4:'xf86-video-intel',
+        5:'xf86-video-vesa'
     }
     sp.call("clear", shell=True)
     print "Step 17) Setting up video and desktop environment"
@@ -500,7 +499,7 @@ def set_video_utils(user):
 
         3) xf86-video-ati
 
-        4) intel
+        4) xf86-video-intel
         """
         gpu = raw_input("> Choose an option or leave empty for default") or 5
         try:
@@ -512,7 +511,23 @@ def set_video_utils(user):
     desktop = raw_input("> Would you like to install the OpenBox window manager with ArchStrike configs? [Y/n]: ") or 'yes'
     if desktop in yes:
         sp.call("arch-chroot /mnt pacman -S openbox --noconfirm", shell=True)
-        sp.call("echo 'exec openbox' > /mnt/home/{0}/.xinitrc".format(username), shell=True)
+        if username:
+            sp.call("echo 'exec openbox' > /mnt/home/{0}/.xinitrc".format(username), shell=True)
+        sp.call("echo 'exec openbox' > /mnt/root/.xinitrc", shell=True)
+
+    lm = raw_input("> Would you like to install a login manager? [Y/n]: ").lower() or 'yes'
+    if lm in yes:
+        sp.call("arch-chroot /mnt pacman -S lightdm lightdm-gtk-greeter --noconfirm", shell=True)
+        sp.call("arch-chroot /mnt systemctl enable lightdm.service", shell=True)
+
+    touchpad = raw_input("> Would you like to add touchpad support? [y/N]: ").lower() or 'no'
+    if  touchpad in yes:
+        sp.call("arch-chroot /mnt pacman -S xf86-input-synaptics --noconfirm", shell=True)
+
+    bluetooth = raw_input("> Would you like to add bluetooth support? [y/N]: ").lower() or 'no'
+    if bluetooth in yes:
+        sp.call("arch-chroot /mnt pacman -S blueman --noconfirm", shell=True)
+
     finalize()
 
 
