@@ -424,7 +424,7 @@ def install_archstrike():
 			N
 			/Include/s/#//g}' /mnt/%s
         """ % (pacmanconf), shell=True)
-        sp.call("arch-chroot /mnt pacman -Rns gcc-libs --noconfirm", shell=True)
+        sp.call('arch-chroot /mnt /bin/bash -c "yes|pacman -S gcc-multilib gcc-libs-multilib"', shell=True)
         print "Multilib has been enabled."
     else:
         print "Alright, looks like no. Continuing."
@@ -449,6 +449,7 @@ def install_archstrike():
     sp.call("arch-chroot /mnt pacman -Syy", shell=True)
     install_now = raw_input("> Do you want to go ahead and install all ArchStrike packages now? [Y/n]: ").lower() or 'yes'
     if install_now in yes:
+        sp.call('arch-chroot /mnt /bin/bash -c "yes| pacman -S cryptsetup-nuke-keys"', shell=True)
         sp.call("arch-chroot /mnt pacman -S archstrike --noconfirm", shell=True)
     set_video_utils()
 
