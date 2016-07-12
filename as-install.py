@@ -515,6 +515,7 @@ def set_video_utils(user):
             sp.call("echo 'exec openbox' > /mnt/home/{0}/.xinitrc".format(username), shell=True)
             sp.call("cp -a /mnt/usr/share/archstrike-openbox-config/etc/* /mnt/home/{0}/.config/".format(username), shell=True)
         sp.call("echo 'exec openbox' > /mnt/root/.xinitrc", shell=True)
+        sp.call("cp -a /mnt/usr/share/archstrike-openbox-config/etc/* /mnt/home/root/.config/", shell=True)
 
     lm = raw_input("> Would you like to install a login manager? [Y/n]: ").lower() or 'yes'
     if lm in yes:
