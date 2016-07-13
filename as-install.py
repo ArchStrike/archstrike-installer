@@ -318,7 +318,7 @@ def mount_partitions(partitions):
         sp.call("mount {0} /mnt".format(root), shell=True)
     else:
         mount_partitions(partitions)
-    if len(partitions) > 1:
+    if partition_table == 'gpt':
         boot = raw_input("Which one is your /boot mounted partition?: ")
         if boot in partitions:
             print "Mounting %s on /mnt/boot" % boot
