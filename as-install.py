@@ -11,6 +11,12 @@ no = ['n', 'no', 'N', 'NO']
 pacmanconf = "/etc/pacman.conf"
 archstrike_mirrorlist = "/etc/pacman.d/archstrike-mirrorlist"
 
+def system(command, chroot=False):
+    if chroot:
+        command = "arch-chroot /mnt {0}".format(command)
+
+    return sp.call(command, shell=True)
+
 def main():
     print """
     Welcome to the ArchStrike Installer!
@@ -125,7 +131,7 @@ def menu():
         main()
 
 def start():
-    sp.call("clear", shell=True)
+    system("clear")
     print "Performing some checks before we continue.."
     time.sleep(3)
     if internet_on() == False:
@@ -135,7 +141,7 @@ def start():
     if os.geteuid() != 0:
         exit("Run as root/sudo please.\nExiting now")
     ## update system clock
-    sp.call("timedatectl set-ntp true", shell=True)
+    system("timedatectl set-ntp true")
     check_uefi()
 
 ## internet check function
@@ -148,7 +154,7 @@ def internet_on():
 
 ## uefi check function
 def check_uefi():
-    sp.call("clear", shell=True)
+    system("clear")
     print "Step 1) UEFI mode / No UEFI mode"
     time.sleep(3)
     uefi = raw_input("> Is your computer running a UEFI board? (y/N): ").lower() or 'no'
@@ -168,18 +174,18 @@ def check_uefi():
 
 ## keymap check function
 def set_keymap():
-    sp.call("clear", shell=True)
+    system("clear")
     print "Step 2) Setting your keymap"
     time.sleep(3)
     print "I'm setting your keyboard layout now, default is US."
     choice = raw_input("> Do you want to change the keyboard layout? [y/N]: ").lower() or 'no'
     if choice in yes:
-        sp.call("ls /usr/share/kbd/keymaps/**/*.map.gz", shell=True)
+        system("ls /usr/share/kbd/keymaps/**/*.map.gz")
         layout = raw_input("> Enter the keyboard layout you want: ")
-        sp.call("loadkeys {0}".format(layout), shell=True)
+        system("loadkeys {0}".format(layout))
         weirdfont = raw_input("> Try typing in here to test. If some characters are coming up different, delete it all and type 'Y': ")
         if weirdfont in yes:
-            sp.call("setfont lat9w-16", shell=True)
+            system("setfont lat9w-16")
             print "Should be fixed now."
             identify_devices()
         else:
@@ -197,11 +203,11 @@ def identify_devices():
     global drive
     global partition_table
 
-    sp.call("clear", shell=True)
+    system("clear")
     print "Step 3) Preparing your hard drive to install ArchStrike"
     time.sleep(3)
     print "Listing your partitions now."
-    sp.call("lsblk", shell=True)
+    system("lsblk")
     print "Results ending in 'rom', 'loop' or 'airoot' can be ignored."
     drive = raw_input("> Please choose the drive you want to install ArchStrike on (default: /dev/sda ): ") or '/dev/sda'
     ## idiotproofing
@@ -215,7 +221,7 @@ def identify_devices():
 
 ## let's actually partition now
 def partition_devices(drive, partition_table):
-    sp.call("clear", shell=True)
+    system("clear")
     print "Step 4) Partitioning the devices (be careful during this step)"
     time.sleep(3)
     print "I'm now going to print the current partition scheme of your drive %s" % drive
@@ -231,7 +237,7 @@ def partition_devices(drive, partition_table):
             print "That doesn't look right. Let's try identifying those again."
             identify_devices()
     print "Looks like both are confirmed."
-    sp.call("lsblk {0}".format(drive), shell=True)
+    system("lsblk {0}".format(drive))
     if partition_table == 'gpt':
         print """
       For the GPT partition table, the suggested partition scheme looks like this:
@@ -268,10 +274,10 @@ def partition_devices(drive, partition_table):
         partition_devices(partition_table)
 
 def partitioner(partition_table):
-    sp.call("clear", shell=True)
-    sp.call('cfdisk {0}'.format(drive), shell=True)
-    sp.call("clear", shell=True)
-    sp.call('lsblk {0}'.format(drive), shell=True)
+    system("clear")
+    system('cfdisk {0}'.format(drive))
+    system("clear")
+    system('lsblk {0}'.format(drive))
     check_sure = raw_input("> Are you sure your partitions are set up correctly? [Y/n]: ").lower() or 'yes'
     if check_sure in yes:
         format_partitions()
@@ -279,11 +285,11 @@ def partitioner(partition_table):
         partitioner(partition_table)
 
 def format_partitions():
-    sp.call("clear", shell=True)
+    system("clear")
     print "Step 5) Formatting partitions"
     time.sleep(3)
     print "Showing the current partition scheme of {0}".format(drive)
-    sp.call("lsblk %s" % drive, shell=True)
+    system("lsblk %s" % drive)
     partitions = raw_input("> Enter all the partitions you created by seperating them with a comma: ").split(',')
     print "You sure these are the partitions?"
     print '\n'.join(partitions)
@@ -294,12 +300,12 @@ def format_partitions():
             print "Partition {0} will be formatted now".format(i)
             partition_type = raw_input("> Enter the partition type (linux, uefi, swap): ").lower()
             if partition_type == 'linux':
-                sp.call("mkfs.ext4 {0}".format(i), shell=True)
+                system("mkfs.ext4 {0}".format(i))
             elif partition_type == 'uefi':
-                sp.call("mkfs.fat -F32 {0}".format(i), shell=True)
+                system("mkfs.fat -F32 {0}".format(i))
             elif partition_type == 'swap':
-                sp.call("mkswap {0}".format(i), shell=True)
-                sp.call("swapon {0}".format(i), shell=True)
+                system("mkswap {0}".format(i))
+                system("swapon {0}".format(i))
             else:
                 print "Not sure what you're talking about."
                 format_partitions()
@@ -308,7 +314,7 @@ def format_partitions():
         format_partitions()
 
 def mount_partitions(partitions):
-    sp.call("clear", shell=True)
+    system("clear")
     print "Step 6) Mounting the partitions"
     time.sleep(3)
     ## get individual partition fs types so we can mount / in /mnt
@@ -316,166 +322,166 @@ def mount_partitions(partitions):
     root = raw_input("Which one is your / mounted partition?: ")
     if root in partitions:
         print "Mounting {0} on /mnt".format(root)
-        sp.call("mount {0} /mnt".format(root), shell=True)
+        system("mount {0} /mnt".format(root))
     else:
         mount_partitions(partitions)
     if partition_table == 'gpt':
         boot = raw_input("Which one is your /boot mounted partition?: ")
         if boot in partitions:
             print "Mounting %s on /mnt/boot" % boot
-            sp.call("mkdir -p /mnt/boot", shell=True)
-            sp.call("mount {0} /mnt/boot".format(boot), shell=True)
+            system("mkdir -p /mnt/boot")
+            system("mount {0} /mnt/boot".format(boot))
         else:
             mount_partitions(partitions)
     else:
-        sp.call("mkdir -p /mnt/boot", shell=True)
+        system("mkdir -p /mnt/boot")
     install_base()
 
 def install_base():
-    sp.call("clear", shell=True)
+    system("clear")
     print "Step 7) Installing the base system"
     print "Starting base install.."
     time.sleep(3)
-    sp.call("pacstrap /mnt base base-devel", shell=True)
+    system("pacstrap /mnt base base-devel")
     genfstab()
 
 def genfstab():
-    sp.call("clear", shell=True)
+    system("clear")
     print "Step 8) Generating fstab"
     print "Starting now.."
     time.sleep(3)
-    sp.call("genfstab -U /mnt >> /mnt/etc/fstab", shell=True)
+    system("genfstab -U /mnt >> /mnt/etc/fstab")
     edit = raw_input("> Would you like to edit the generated fstab? [y/N]: ").lower() or 'no'
     if edit in yes:
-        sp.call("nano /mnt/etc/fstab")
+        system("nano /mnt/etc/fstab")
     locale_and_time()
 
 def locale_and_time():
-    sp.call("clear", shell=True)
+    system("clear")
     print "Step 9) Generating locale and setting timezone"
     print "Now you will edit the locale list."
     print "Remove the # in front of the locale your want."
     time.sleep(3)
-    sp.call("nano /mnt/etc/locale.gen", shell=True)
-    sp.call("arch-chroot /mnt locale-gen", shell=True) ## dont launch shell. just run a command
+    system("nano /mnt/etc/locale.gen")
+    system("locale-gen", True) ## dont launch shell. just run a command
     print "Setting up keyboard layout, will take the current one."
-    layout = sp.call("localectl | grep Locale | cut -d ':' -f 2", shell=True)
-    sp.call("echo {0} >> /mnt/etc/vconsole.conf".format(layout), shell=True)
+    layout = system("localectl | grep Locale | cut -d ':' -f 2")
+    system("echo {0} >> /mnt/etc/vconsole.conf".format(layout))
     print "Setting up timezone."
-    sp.call("arch-chroot /mnt tzselect > /tmp/archstrike-timezone", shell=True)
-    sp.call("arch-chroot /mnt ln -s /usr/share/zoneinfo/$(cat /tmp/archstrike-timezone) /etc/localtime", shell=True)
-    sp.call("hwclock --systohc --utc", shell=True)
+    system("tzselect > /tmp/archstrike-timezone", True)
+    system("ln -s /usr/share/zoneinfo/$(cat /tmp/archstrike-timezone) /etc/localtime", True)
+    system("hwclock --systohc --utc")
     gen_initramfs()
 
 def gen_initramfs():
-    sp.call("clear", shell=True)
+    system("clear")
     print "Step 10) Generate initramfs image"
     print "Starting now.."
     time.sleep(3)
-    sp.call("arch-chroot /mnt mkinitcpio -p linux", shell=True)
+    system("mkinitcpio -p linux", True)
     setup_bootloader()
 
 def setup_bootloader():
-    sp.call("clear", shell=True)
+    system("clear")
     print "Step 11) Setting up GRUB bootloader"
     print "Starting GRUB install now."
     time.sleep(3)
-    sp.call("arch-chroot /mnt pacman -S grub --noconfirm", shell=True)
-    sp.call("arch-chroot /mnt grub-install {0}".format(drive), shell=True)
-    sp.call("arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg ", shell=True)
+    system("pacman -S grub --noconfirm", True)
+    system("grub-install {0}".format(drive), True)
+    system("grub-mkconfig -o /boot/grub/grub.cfg ", True)
     # TODO: systemd-bootloader and syslinux
     set_hostname()
 
 def set_hostname():
-    sp.call("clear", shell=True)
+    system("clear")
     print "Step 12) Set Hostname"
     print "Your hostname will be 'archstrike'. You can change it later if you wish."
     time.sleep(3)
-    sp.call("arch-chroot /mnt echo archstrike > /etc/hostname", shell=True)
+    system("echo archstrike > /etc/hostname", True)
     setup_internet()
 
 def setup_internet():
-    sp.call("clear", shell=True)
+    system("clear")
     print "Step 13) Setup Internet"
     wireless = raw_input("> Do you want wireless utilities on your new install? [Y/n]: ").lower() or 'yes'
     if wireless in yes:
         print "Installing Wireless utilities"
-        sp.call("arch-chroot /mnt pacman -S iw wpa_supplicant dialog --noconfirm", shell=True)
+        system("pacman -S iw wpa_supplicant dialog --noconfirm", True)
     dhcp = raw_input("> Would you like to enable DHCP? [Y/n]: ").lower() or 'yes'
     if dhcp in yes:
         print "Enabling DHCP"
-        sp.call("arch-chroot /mnt systemctl enable dhcpcd", shell=True)
+        system("systemctl enable dhcpcd", True)
     set_root_pass()
 
 def set_root_pass():
-    sp.call("clear", shell=True)
+    system("clear")
     print "Step 14) Setting root password"
     print "You will be prompted to choose a root password now."
     time.sleep(3)
-    sp.call("arch-chroot /mnt passwd", shell=True)
+    system("passwd", True)
     install_archstrike()
 
 def install_archstrike():
-    sp.call("clear", shell=True)
+    system("clear")
     print "Step 15)"
     print "Now to install the ArchStrike repositories."
     print "Adding repositories.."
     time.sleep(3)
-    sp.call("echo '[archstrike]' >> /mnt{0}".format(pacmanconf), shell=True)
-    sp.call("echo 'Server = https://mirror.archstrike.org/$arch/$repo' >> /mnt{0}".format(pacmanconf), shell=True)
+    system("echo '[archstrike]' >> /mnt{0}".format(pacmanconf))
+    system("echo 'Server = https://mirror.archstrike.org/$arch/$repo' >> /mnt{0}".format(pacmanconf))
     print "Done. It's mandatory to enable multilib for x86_64. Do you want to enable multilib? (say no if it's already enabled)"
     bit = raw_input("> [Y/n]:").lower() or 'yes'
     if bit in yes:
-        sp.call("""sed -i '/\[multilib]$/ {
+        system("""sed -i '/\[multilib]$/ {
 			N
 			/Include/s/#//g}' /mnt/%s
-        """ % (pacmanconf), shell=True)
-        sp.call('arch-chroot /mnt /bin/bash -c "yes|pacman -S gcc-multilib gcc-libs-multilib"', shell=True)
+        """ % (pacmanconf))
+        system('/bin/bash -c "yes|pacman -S gcc-multilib gcc-libs-multilib"', True)
         print "Multilib has been enabled."
     else:
         print "Alright, looks like no. Continuing."
     print "I will now perform database updates, hang tight."
-    sp.call("arch-chroot /mnt pacman -Syy", shell=True)
+    system("pacman -Syy", True)
     print "Installing ArchStrike keyring and mirrorlist.."
-    sp.call("arch-chroot /mnt pacman-key --init", shell=True)
-    sp.call("arch-chroot /mnt dirmngr < /dev/null", shell=True)
-    sp.call("arch-chroot /mnt pacman-key -r 7CBC0D51", shell=True)
-    sp.call("arch-chroot /mnt pacman-key --lsign-key 7CBC0D51", shell=True)
-    sp.call("arch-chroot /mnt pacman -S archstrike-keyring --noconfirm", shell=True)
-    sp.call("arch-chroot /mnt pacman -S archstrike-mirrorlist --noconfirm", shell=True)
+    system("pacman-key --init", True)
+    system("dirmngr < /dev/null", True)
+    system("pacman-key -r 7CBC0D51", True)
+    system("pacman-key --lsign-key 7CBC0D51", True)
+    system("pacman -S archstrike-keyring --noconfirm", True)
+    system("pacman -S archstrike-mirrorlist --noconfirm", True)
     print "Done. Editing your pacman config to use the new mirrorlist."
-    sp.call("sed -i 's|Server = https://mirror.archstrike.org/$arch/$repo|Include = /etc/pacman.d/archstrike-mirrorlist|' /mnt{0}".format(pacmanconf), shell=True)
+    system("sed -i 's|Server = https://mirror.archstrike.org/$arch/$repo|Include = /etc/pacman.d/archstrike-mirrorlist|' /mnt{0}".format(pacmanconf))
     testing = raw_input("> Do you want to add archstrike-testing as well? [Y/n]: ").lower() or 'yes'
     if testing in yes:
-        sp.call("echo '[archstrike-testing]' >> /mnt{0}".format(pacmanconf), shell=True)
-        sp.call("echo 'Include = /etc/pacman.d/archstrike-mirrorlist' >> /mnt{0}".format(pacmanconf), shell=True)
+        system("echo '[archstrike-testing]' >> /mnt{0}".format(pacmanconf))
+        system("echo 'Include = /etc/pacman.d/archstrike-mirrorlist' >> /mnt{0}".format(pacmanconf))
     else:
           print "Alright going forward."
     print "Performing database update once more to test mirrorlist"
-    sp.call("arch-chroot /mnt pacman -Syy", shell=True)
+    system("pacman -Syy", True)
     install_now = raw_input("> Do you want to go ahead and install all ArchStrike packages now? [Y/n]: ").lower() or 'yes'
     if install_now in yes:
-        sp.call('arch-chroot /mnt /bin/bash -c "yes| pacman -S cryptsetup-nuke-keys"', shell=True)
-        sp.call("arch-chroot /mnt pacman -S archstrike --noconfirm", shell=True)
+        system('/bin/bash -c "yes| pacman -S cryptsetup-nuke-keys"', True)
+        system("pacman -S archstrike --noconfirm", True)
     add_user()
 
 def add_user():
     global username
     username = ''
 
-    sp.call("clear", shell=True)
+    system("clear")
     print "Step 16) Add new User"
     opt =  raw_input("> Would you like to add a new user? [Y/n]: ").lower() or 'yes'
     if opt in yes:
         while not username:
             username = raw_input("> Please enter a username: ")
-        sp.call("arch-chroot /mnt useradd -m -g users -G audio,network,power,storage,optical {0}".format(username), shell=True)
+        system("useradd -m -g users -G audio,network,power,storage,optical {0}".format(username), True)
         print "> Please enter the password for {0}: ".format(username)
-        sp.call("arch-chroot /mnt passwd {0}".format(username), shell=True)
+        system("passwd {0}".format(username), True)
         admin = raw_input("> Would you like to give {0} admin privileges? [Y/n]: ".format(username)).lower() or 'yes'
         if admin in yes:
-            sp.call("sed -i '/%wheel ALL=(ALL) ALL/s/^#//' /mnt/etc/sudoers", shell=True)
-            sp.call("arch-chroot /mnt usermod -a -G wheel {0}".format(username), shell=True)
+            system("sed -i '/%wheel ALL=(ALL) ALL/s/^#//' /mnt/etc/sudoers")
+            system("usermod -a -G wheel {0}".format(username), True)
     set_video_utils(username)
 
 def set_video_utils(user):
@@ -486,7 +492,7 @@ def set_video_utils(user):
         '4':'xf86-video-intel',
         '5':'xf86-video-vesa'
     }
-    sp.call("clear", shell=True)
+    system("clear")
     print "Step 17) Setting up video and desktop environment"
     choice = raw_input("> Would you like to set up video utilities? [Y/n]: ").lower() or 'yes'
     if choice in yes:
@@ -506,7 +512,7 @@ def set_video_utils(user):
         gpu = raw_input("> Choose an option or leave empty for default: ") or '5'
         try:
             sel = gpus[gpu]
-            sp.call("arch-chroot /mnt pacman -S xorg-server xorg-server-utils xorg-xinit xterm {0} --noconfirm".format(sel), shell=True)
+            system("pacman -S xorg-server xorg-server-utils xorg-xinit xterm {0} --noconfirm".format(sel), True)
         except KeyError:
             print "Not a valid option"
             set_video_utils(username)
@@ -531,55 +537,55 @@ def set_video_utils(user):
                 opt = ''
 
         if '1' in opt:
-            sp.call("arch-chroot /mnt pacman -S archstrike-openbox-config --noconfirm", shell=True)
+            system("pacman -S archstrike-openbox-config --noconfirm", True)
             if username:
-                sp.call("mkdir -p /mnt/home/{0}/.config".format(username), shell=True)
-                sp.call("echo 'exec openbox-session' > /mnt/home/{0}/.xinitrc".format(username), shell=True)
-                sp.call("cp -a /mnt/usr/share/archstrike-openbox-config/etc/* /mnt/home/{0}/.config/".format(username), shell=True)
-                sp.call("arch-chroot /mnt chown {0}:users -R /home/{0}/.config /home/{0}/.xinitrc".format(username), shell=True)
-            sp.call("echo 'exec openbox-session' > /mnt/root/.xinitrc", shell=True)
-            sp.call("mkdir -p /mnt/root/.config", shell=True)
-            sp.call("cp -a /mnt/usr/share/archstrike-openbox-config/etc/* /mnt/root/.config/", shell=True)
+                system("mkdir -p /mnt/home/{0}/.config".format(username))
+                system("echo 'exec openbox-session' > /mnt/home/{0}/.xinitrc".format(username))
+                system("cp -a /mnt/usr/share/archstrike-openbox-config/etc/* /mnt/home/{0}/.config/".format(username))
+                system("chown {0}:users -R /home/{0}/.config /home/{0}/.xinitrc".format(username), True)
+            system("echo 'exec openbox-session' > /mnt/root/.xinitrc")
+            system("mkdir -p /mnt/root/.config")
+            system("cp -a /mnt/usr/share/archstrike-openbox-config/etc/* /mnt/root/.config/")
 
         if '2' in opt:
-            sp.call("arch-chroot /mnt pacman -S archstrike-xfce-config --noconfirm", shell=True)
+            system("pacman -S archstrike-xfce-config --noconfirm", True)
             if username:
-                sp.call("mkdir -p /mnt/home/{0}/.config".format(username), shell=True)
-                sp.call("echo 'exec startxfce4' > /mnt/home/{0}/.xinitrc".format(username), shell=True)
-                sp.call("cp -a /mnt/usr/share/archstrike-xfce-config/config/* /mnt/home/{0}/.config/".format(username), shell=True)
-                sp.call("arch-chroot /mnt chown {0}:users -R /home/{0}/.config /home/{0}/.xinitrc".format(username), shell=True)
-            sp.call("echo 'exec startxfce4' > /mnt/root/.xinitrc", shell=True)
-            sp.call("mkdir -p /mnt/root/.config", shell=True)
-            sp.call("cp -a /mnt/usr/share/archstrike-xfce-config/config/* /mnt/root/.config/", shell=True)
-        sp.call("cp -a /home/archstrike/.config/terminator /mnt/home/{0}/.config/".format(username), shell=True)
+                system("mkdir -p /mnt/home/{0}/.config".format(username))
+                system("echo 'exec startxfce4' > /mnt/home/{0}/.xinitrc".format(username))
+                system("cp -a /mnt/usr/share/archstrike-xfce-config/config/* /mnt/home/{0}/.config/".format(username))
+                system("chown {0}:users -R /home/{0}/.config /home/{0}/.xinitrc".format(username), True)
+            system("echo 'exec startxfce4' > /mnt/root/.xinitrc")
+            system("mkdir -p /mnt/root/.config")
+            system("cp -a /mnt/usr/share/archstrike-xfce-config/config/* /mnt/root/.config/")
+        system("cp -a /home/archstrike/.config/terminator /mnt/home/{0}/.config/".format(username))
 
     lm = raw_input("> Would you like to install a login manager? [Y/n]: ").lower() or 'yes'
     if lm in yes:
-        sp.call("arch-chroot /mnt pacman -S lightdm lightdm-gtk-greeter --noconfirm", shell=True)
-        sp.call("arch-chroot /mnt systemctl enable lightdm.service", shell=True)
+        system("pacman -S lightdm lightdm-gtk-greeter --noconfirm", True)
+        system("systemctl enable lightdm.service", True)
 
     vb = raw_input("> Would you like to install virtualbox utils? [Y/n]: ").lower() or 'yes'
     if vb in yes:
-        sp.call("arch-chroot /mnt pacman -S virtualbox-guest-utils linux-headers mesa-libgl --noconfirm", shell=True)
+        system("pacman -S virtualbox-guest-utils linux-headers mesa-libgl --noconfirm", True)
 
     touchpad = raw_input("> Would you like to add touchpad support? [y/N]: ").lower() or 'no'
     if  touchpad in yes:
-        sp.call("arch-chroot /mnt pacman -S xf86-input-synaptics --noconfirm", shell=True)
+        system("pacman -S xf86-input-synaptics --noconfirm", True)
 
     bluetooth = raw_input("> Would you like to add bluetooth support? [y/N]: ").lower() or 'no'
     if bluetooth in yes:
-        sp.call("arch-chroot /mnt pacman -S blueman --noconfirm", shell=True)
+        system("pacman -S blueman --noconfirm", True)
 
     finalize()
 
 
 def finalize():
-    sp.call("clear", shell=True)
+    system("clear")
     print "FINAL: Your system is set up! Rebooting now.."
     print "Thanks for installing ArchStrike!"
     time.sleep(3)
-    sp.call("umount -R /mnt", shell=True)
-    sp.call("reboot", shell=True)
+    system("umount -R /mnt")
+    system("reboot")
 
 if __name__ == '__main__':
     main()
