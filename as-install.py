@@ -513,18 +513,6 @@ def set_video_utils(user):
 
     desktop = raw_input("> Would you like to install a Desktop Environment or Window Manager? [Y/n]: ") or 'yes'
     if desktop in yes:
-<<<<<<< 290a72459ea17d146abb01464a1c7aa843d6fb8c
-        sp.call("arch-chroot /mnt pacman -S archstrike-openbox-config --noconfirm", shell=True)
-        if username:
-            sp.call("mkdir -p /mnt/home/{0}/.config".format(username), shell=True)
-            sp.call("echo 'exec openbox-session' > /mnt/home/{0}/.xinitrc".format(username), shell=True)
-            sp.call("cp -a /mnt/usr/share/archstrike-openbox-config/etc/* /mnt/home/{0}/.config/".format(username), shell=True)
-            sp.call("arch-chroot /mnt chown {0}:users -R /home/{0}/.config /home/{0}/.xinitrc".format(username), shell=True)
-            sp.call("cp -a /home/archstrike/.config/terminator /mnt/home/{0}/.config/".format(username), shell=True)
-        sp.call("echo 'exec openbox-session' > /mnt/root/.xinitrc", shell=True)
-        sp.call("mkdir -p /mnt/root/.config", shell=True)
-        sp.call("cp -a /mnt/usr/share/archstrike-openbox-config/etc/* /mnt/root/.config/", shell=True)
-=======
         opt = ''
         while not opt:
             print """
@@ -564,8 +552,6 @@ def set_video_utils(user):
             sp.call("mkdir -p /mnt/root/.config", shell=True)
             sp.call("cp -a /mnt/usr/share/archstrike-xfce-config/config/* /mnt/root/.config/", shell=True)
         sp.call("cp -a /home/archstrike/.config/terminator /mnt/home/{0}/.config/".format(username), shell=True)
-
->>>>>>> add option for openbox or xfce
 
     lm = raw_input("> Would you like to install a login manager? [Y/n]: ").lower() or 'yes'
     if lm in yes:
