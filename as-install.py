@@ -527,7 +527,7 @@ def set_video_utils(user):
 
     vb = raw_input("> Would you like to install virtualbox utils? [Y/n]: ").lower() or 'yes'
     if vb in yes:
-        sp.call("arch-chroot /mnt pacman -S virtualbox-guest-utils linux-headers mesa-libgl --noconfirm". shell=True)
+        sp.call("arch-chroot /mnt pacman -S virtualbox-guest-utils linux-headers mesa-libgl --noconfirm", shell=True)
 
     touchpad = raw_input("> Would you like to add touchpad support? [y/N]: ").lower() or 'no'
     if  touchpad in yes:
