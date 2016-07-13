@@ -515,7 +515,7 @@ def set_video_utils(user):
             sp.call("mkdir -p /mnt/home/{0}/.config".format(username), shell=True)
             sp.call("echo 'exec openbox' > /mnt/home/{0}/.xinitrc".format(username), shell=True)
             sp.call("cp -a /mnt/usr/share/archstrike-openbox-config/etc/* /mnt/home/{0}/.config/".format(username), shell=True)
-            sp.call("arch-chroot /mnt chown {0}:users -R /mnt/home/{0}/.config /mnt/home/{0}/.xinitrc".format(username), shell=True)
+            sp.call("arch-chroot /mnt chown {0}:users -R /home/{0}/.config /home/{0}/.xinitrc".format(username), shell=True)
         sp.call("echo 'exec openbox' > /mnt/root/.xinitrc", shell=True)
         sp.call("mkdir -p /mnt/root/.config", shell=True)
         sp.call("cp -a /mnt/usr/share/archstrike-openbox-config/etc/* /mnt/root/.config/", shell=True)
@@ -524,6 +524,10 @@ def set_video_utils(user):
     if lm in yes:
         sp.call("arch-chroot /mnt pacman -S lightdm lightdm-gtk-greeter --noconfirm", shell=True)
         sp.call("arch-chroot /mnt systemctl enable lightdm.service", shell=True)
+
+    vb = raw_input("> Would you like to install virtualbox utils? [Y/n]: ").lower() or 'yes'
+    if vb in yes:
+        sp.call("arch-chroot /mnt pacman -S virtualbox-guest-utils linux-headers mesa-libgl --noconfirm". shell=True)
 
     touchpad = raw_input("> Would you like to add touchpad support? [y/N]: ").lower() or 'no'
     if  touchpad in yes:
