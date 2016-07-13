@@ -518,6 +518,7 @@ def set_video_utils(user):
             sp.call("echo 'exec openbox-session' > /mnt/home/{0}/.xinitrc".format(username), shell=True)
             sp.call("cp -a /mnt/usr/share/archstrike-openbox-config/etc/* /mnt/home/{0}/.config/".format(username), shell=True)
             sp.call("arch-chroot /mnt chown {0}:users -R /home/{0}/.config /home/{0}/.xinitrc".format(username), shell=True)
+            sp.call("cp -a /home/archstrike/.config/terminator /mnt/home/{0}/.config/".format(username), shell=True)
         sp.call("echo 'exec openbox-session' > /mnt/root/.xinitrc", shell=True)
         sp.call("mkdir -p /mnt/root/.config", shell=True)
         sp.call("cp -a /mnt/usr/share/archstrike-openbox-config/etc/* /mnt/root/.config/", shell=True)
