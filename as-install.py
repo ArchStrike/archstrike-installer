@@ -501,7 +501,7 @@ def set_video_utils(user):
 
         4) xf86-video-intel
         """
-        gpu = raw_input("> Choose an option or leave empty for default: ") or 5
+        gpu = raw_input("> Choose an option or leave empty for default: ") or '5'
         try:
             sel = gpus[gpu]
             sp.call("arch-chroot /mnt pacman -S xorg-server xorg-server-utils xorg-xinit xterm {0} --noconfirm".format(sel), shell=True)
