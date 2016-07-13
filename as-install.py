@@ -548,6 +548,7 @@ def set_video_utils(user):
             system("cp -a /mnt/usr/share/archstrike-openbox-config/etc/* /mnt/root/.config/")
 
         if '2' in opt:
+            system("pacman -S xfce4 xfce4-goodies --noconfirm", True)
             system("pacman -S archstrike-xfce-config --noconfirm", True)
             if username:
                 system("mkdir -p /mnt/home/{0}/.config".format(username))
