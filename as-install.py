@@ -224,10 +224,11 @@ def partition_devices(drive, partition_table):
     if confirm_drive != drive:
         print "That doesn't look right. Let's try identifying those again."
         identify_devices()
-    confirm_table = raw_input("> Please confirm that {0} is the partition table of {1} by typing it again: ".format(partition_table, drive))
-    if confirm_table != partition_table:
-        print "That doesn't look right. Let's try identifying those again."
-        identify_devices()
+    if partition_table:
+        confirm_table = raw_input("> Please confirm that {0} is the partition table of {1} by typing it again: ".format(partition_table, drive))
+        if confirm_table != partition_table:
+            print "That doesn't look right. Let's try identifying those again."
+            identify_devices()
     print "Looks like both are confirmed."
     sp.call("lsblk {0}".format(drive), shell=True)
     if partition_table == 'gpt':
