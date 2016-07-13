@@ -478,11 +478,11 @@ def add_user():
 
 def set_video_utils(user):
     gpus = {
-        1:'mesa-libgl',
-        2:'nvidia',
-        3:'xf86-video-ati',
-        4:'xf86-video-intel',
-        5:'xf86-video-vesa'
+        '1':'mesa-libgl',
+        '2':'nvidia',
+        '3':'xf86-video-ati',
+        '4':'xf86-video-intel',
+        '5':'xf86-video-vesa'
     }
     sp.call("clear", shell=True)
     print "Step 17) Setting up video and desktop environment"
@@ -501,13 +501,13 @@ def set_video_utils(user):
 
         4) xf86-video-intel
         """
-        gpu = raw_input("> Choose an option or leave empty for default") or 5
+        gpu = raw_input("> Choose an option or leave empty for default: ") or 5
         try:
             sel = gpus[gpu]
             sp.call("arch-chroot /mnt pacman -S xorg-server xorg-server-utils xorg-xinit xterm {0} --noconfirm".format(sel), shell=True)
-        except IndexError:
+        except KeyError:
             print "Not a valid option"
-            set_video_utils()
+            set_video_utils(username)
     desktop = raw_input("> Would you like to install the OpenBox window manager with ArchStrike configs? [Y/n]: ") or 'yes'
     if desktop in yes:
         sp.call("arch-chroot /mnt pacman -S archstrike-openbox-config --noconfirm", shell=True)
@@ -515,6 +515,7 @@ def set_video_utils(user):
             sp.call("mkdir -p /mnt/home/{0}/.config".format(username), shell=True)
             sp.call("echo 'exec openbox' > /mnt/home/{0}/.xinitrc".format(username), shell=True)
             sp.call("cp -a /mnt/usr/share/archstrike-openbox-config/etc/* /mnt/home/{0}/.config/".format(username), shell=True)
+            sp.call("arch-chroot /mnt chown {0}:users -R /mnt/home/{0}/.config /mnt/home/{0}/.xinitrc".format(username), shell=True)
         sp.call("echo 'exec openbox' > /mnt/root/.xinitrc", shell=True)
         sp.call("mkdir -p /mnt/root/.config", shell=True)
         sp.call("cp -a /mnt/usr/share/archstrike-openbox-config/etc/* /mnt/root/.config/", shell=True)
