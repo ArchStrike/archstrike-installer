@@ -510,8 +510,10 @@ def set_video_utils(user):
         except KeyError:
             print "Not a valid option"
             set_video_utils(username)
-    desktop = raw_input("> Would you like to install the OpenBox window manager with ArchStrike configs? [Y/n]: ") or 'yes'
+
+    desktop = raw_input("> Would you like to install a Desktop Environment or Window Manager? [Y/n]: ") or 'yes'
     if desktop in yes:
+<<<<<<< 290a72459ea17d146abb01464a1c7aa843d6fb8c
         sp.call("arch-chroot /mnt pacman -S archstrike-openbox-config --noconfirm", shell=True)
         if username:
             sp.call("mkdir -p /mnt/home/{0}/.config".format(username), shell=True)
@@ -522,6 +524,48 @@ def set_video_utils(user):
         sp.call("echo 'exec openbox-session' > /mnt/root/.xinitrc", shell=True)
         sp.call("mkdir -p /mnt/root/.config", shell=True)
         sp.call("cp -a /mnt/usr/share/archstrike-openbox-config/etc/* /mnt/root/.config/", shell=True)
+=======
+        opt = ''
+        while not opt:
+            print """
+            Available Options:
+
+            1) OpenBox
+
+            2) Xfce
+
+            3) All
+            """
+            opt = raw_input("> Choice: ")
+            if opt == '3':
+                opt = '12'
+            elif opt not in '123':
+                opt = ''
+
+        if '1' in opt:
+            sp.call("arch-chroot /mnt pacman -S archstrike-openbox-config --noconfirm", shell=True)
+            if username:
+                sp.call("mkdir -p /mnt/home/{0}/.config".format(username), shell=True)
+                sp.call("echo 'exec openbox-session' > /mnt/home/{0}/.xinitrc".format(username), shell=True)
+                sp.call("cp -a /mnt/usr/share/archstrike-openbox-config/etc/* /mnt/home/{0}/.config/".format(username), shell=True)
+                sp.call("arch-chroot /mnt chown {0}:users -R /home/{0}/.config /home/{0}/.xinitrc".format(username), shell=True)
+            sp.call("echo 'exec openbox-session' > /mnt/root/.xinitrc", shell=True)
+            sp.call("mkdir -p /mnt/root/.config", shell=True)
+            sp.call("cp -a /mnt/usr/share/archstrike-openbox-config/etc/* /mnt/root/.config/", shell=True)
+
+        if '2' in opt:
+            sp.call("arch-chroot /mnt pacman -S archstrike-xfce-config --noconfirm", shell=True)
+            if username:
+                sp.call("mkdir -p /mnt/home/{0}/.config".format(username), shell=True)
+                sp.call("echo 'exec startxfce4' > /mnt/home/{0}/.xinitrc".format(username), shell=True)
+                sp.call("cp -a /mnt/usr/share/archstrike-xfce-config/config/* /mnt/home/{0}/.config/".format(username), shell=True)
+                sp.call("arch-chroot /mnt chown {0}:users -R /home/{0}/.config /home/{0}/.xinitrc".format(username), shell=True)
+            sp.call("echo 'exec startxfce4' > /mnt/root/.xinitrc", shell=True)
+            sp.call("mkdir -p /mnt/root/.config", shell=True)
+            sp.call("cp -a /mnt/usr/share/archstrike-xfce-config/config/* /mnt/root/.config/", shell=True)
+        sp.call("cp -a /home/archstrike/.config/terminator /mnt/home/{0}/.config/".format(username), shell=True)
+
+>>>>>>> add option for openbox or xfce
 
     lm = raw_input("> Would you like to install a login manager? [Y/n]: ").lower() or 'yes'
     if lm in yes:
