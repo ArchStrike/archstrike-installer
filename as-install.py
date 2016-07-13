@@ -558,6 +558,8 @@ def set_video_utils(user):
             system("echo 'exec startxfce4' > /mnt/root/.xinitrc")
             system("mkdir -p /mnt/root/.config")
             system("cp -a /mnt/usr/share/archstrike-xfce-config/config/* /mnt/root/.config/")
+            system("cp -a /mnt/usr/share/archstrike-xfce-config/icons/* /mnt/usr/share/pixmaps/")
+            system("cp -a /mnt/usr/share/archstrike-xfce-config/wallpapers/* /mnt/usr/share/backgrounds/xfce/")
         system("cp -a /home/archstrike/.config/terminator /mnt/home/{0}/.config/".format(username))
 
     lm = raw_input("> Would you like to install a login manager? [Y/n]: ").lower() or 'yes'
