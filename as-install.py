@@ -195,6 +195,7 @@ def set_keymap():
 ## function to identify devices for partitioning
 def identify_devices():
     global drive
+    global partition_table
 
     sp.call("clear", shell=True)
     print "Step 3) Preparing your hard drive to install ArchStrike"
