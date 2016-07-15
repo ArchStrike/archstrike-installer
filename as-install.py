@@ -568,6 +568,7 @@ def set_video_utils(user):
             if username:
                 system("mkdir -p /mnt/home/{0}/.config".format(username))
                 system("echo 'exec i3' > /mnt/home/{0}/.xinitrc".format(username))
+                system("cp -a /mnt/usr/share/archstrike-i3-config/config/* /mnt/home/{0}/.config/".format(username))
                 system("cat /mnt/usr/share/archstrike-i3-config/Xresources >> /mnt/home/{0}/.Xresources".format(username))
                 system("cp -a /mnt/usr/share/archstrike-i3-config/gtkrc-2.0 /mnt/home/{0}/.gtkrc-2.0".format(username))
                 system("chown {0}:users -R /home/{0}/.config /home/{0}/.xinitrc /home/{0}/.Xresources /home/{0}/.gtkrc-2.0".format(username), True)
