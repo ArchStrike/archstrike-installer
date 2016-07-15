@@ -535,7 +535,7 @@ def set_video_utils(user):
             opt = raw_input("> Choice: ")
             if opt == '4':
                 opt = '123'
-            elif opt not in '123':
+            elif opt not in '1234':
                 opt = ''
 
         if '1' in opt:
@@ -562,17 +562,23 @@ def set_video_utils(user):
             system("cp -a /mnt/usr/share/archstrike-xfce-config/config/* /mnt/root/.config/")
             system("cp -a /mnt/usr/share/archstrike-xfce-config/icons/* /mnt/usr/share/pixmaps/")
             system("cp -a /mnt/usr/share/archstrike-xfce-config/wallpapers/* /mnt/usr/share/backgrounds/xfce/")
-        system("cp -a /home/archstrike/.config/terminator /mnt/home/{0}/.config/".format(username))
+
         if '3' in opt:
             system("pacman -S archstrike-i3-config --noconfirm", True)
             if username:
                 system("mkdir -p /mnt/home/{0}/.config".format(username))
                 system("echo 'exec i3' > /mnt/home/{0}/.xinitrc".format(username))
-                system("chown {0}:users -R /home/{0}/.config /home/{0}/.xinitrc".format(username), True)
+                system("cat /mnt/usr/share/archstrike-i3-config/Xresources >> /mnt/home/{0}/.Xresources".format(username))
+                system("cp -a /mnt/usr/share/archstrike-i3-config/gtkrc-2.0 /mnt/home/{0}/.gtkrc-2.0".format(username))
+                system("chown {0}:users -R /home/{0}/.config /home/{0}/.xinitrc /home/{0}/.Xresources /home/{0}/.gtkrc-2.0".format(username), True)
             system("echo 'exec i3' > /mnt/root/.xinitrc")
             system("mkdir -p /mnt/root/.config")
             system("cp -a /mnt/usr/share/archstrike-i3-config/config/* /mnt/root/.config/")
-            system("cp -a /home/archstrike/.config/terminator /mnt/home/{0}/.config".format(username))
+            system("cat /mnt/usr/share/archstrike-i3-config/Xresources >> /mnt/root/.Xresources")
+            system("cp -a /mnt/usr/share/archstrike-i3-config/gtkrc-2.0 /mnt/root/.gtkrc-2.0")
+
+        system("cp -a /home/archstrike/.config/terminator /mnt/home/{0}/.config".format(username))
+        system("cp -a /home/archstrike/.config/terminator /mnt/root/.config/")
 
     lm = raw_input("> Would you like to install a login manager? [Y/n]: ").lower() or 'yes'
     if lm in yes:
