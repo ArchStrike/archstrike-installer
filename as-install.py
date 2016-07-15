@@ -528,11 +528,13 @@ def set_video_utils(user):
 
             2) Xfce
 
-            3) All
+            3) i3wm
+
+            4) All
             """
             opt = raw_input("> Choice: ")
-            if opt == '3':
-                opt = '12'
+            if opt == '4':
+                opt = '123'
             elif opt not in '123':
                 opt = ''
 
@@ -561,6 +563,16 @@ def set_video_utils(user):
             system("cp -a /mnt/usr/share/archstrike-xfce-config/icons/* /mnt/usr/share/pixmaps/")
             system("cp -a /mnt/usr/share/archstrike-xfce-config/wallpapers/* /mnt/usr/share/backgrounds/xfce/")
         system("cp -a /home/archstrike/.config/terminator /mnt/home/{0}/.config/".format(username))
+        if '3' in opt:
+            system("pacman -S archstrike-i3-config --noconfirm", True)
+            if username:
+                system("mkdir -p /mnt/home/{0}/.config".format(username))
+                system("echo 'exec i3' > /mnt/home/{0}/.xinitrc".format(username))
+                system("chown {0}:users -R /home/{0}/.config /home/{0}/.xinitrc".format(username), True)
+            system("echo 'exec i3' > /mnt/root/.xinitrc")
+            system("mkdir -p /mnt/root/.config")
+            system("cp -a /mnt/usr/share/archstrike-i3-config/config/* /mnt/root/.config/")
+            system("cp -a /home/archstrike/.config/terminator /mnt/home/{0}/.config".format(username))
 
     lm = raw_input("> Would you like to install a login manager? [Y/n]: ").lower() or 'yes'
     if lm in yes:
