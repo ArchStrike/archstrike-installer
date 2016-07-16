@@ -21,9 +21,7 @@ pacmanconf = "/etc/pacman.conf"
 archstrike_mirrorlist = "/etc/pacman.d/archstrike-mirrorlist"
 
 def signal_handler(signal, handler):
-    # TODO: Confirm exit
-    print "\n\nGood bye"
-    sys.exit()
+    pass #ignore sigint
 
 
 def system(command, chroot=False):
