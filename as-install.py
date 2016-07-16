@@ -1,9 +1,18 @@
 #!/usr/bin/env python2
 import subprocess as sp
+import logging
+import signal
 import urllib2
 import time
 import sys
 import os
+
+# Setup Logging
+logging.basicConfig(filename='/tmp/archstrike-installer.log',
+                    level=logging.DEBUG,
+                    format='%(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 
 ## Set some variables for being lazy later on
 yes = ['y', 'ye', 'yes', 'Y', 'YE', 'YES']
@@ -11,13 +20,30 @@ no = ['n', 'no', 'N', 'NO']
 pacmanconf = "/etc/pacman.conf"
 archstrike_mirrorlist = "/etc/pacman.d/archstrike-mirrorlist"
 
+def signal_handler(signal, handler):
+    # TODO: Confirm exit
+    print "\n\nGood bye"
+    sys.exit()
+
+
 def system(command, chroot=False):
     if chroot:
         command = "arch-chroot /mnt {0}".format(command)
+    p = sp.Popen([command], stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
+    stdout, stderr = p.communicate()
 
-    return sp.call(command, shell=True)
+    logger.debug(command)
+
+    if stdout:
+        print stdout
+        if command != 'clear':
+            logger.info(stdout)
+    if stderr:
+        logger.error(stderr)
 
 def main():
+    logger.debug("Starting Installation")
+
     print """
     Welcome to the ArchStrike Installer!
     This was coded by Wh1t3Fox and xorond for the ArchStrike Project
@@ -131,6 +157,7 @@ def menu():
         main()
 
 def start():
+    logger.debug("Performing Checks")
     system("clear")
     print "Performing some checks before we continue.."
     time.sleep(3)
@@ -146,14 +173,18 @@ def start():
 
 ## internet check function
 def internet_on():
+    logger.debug("Checking internet connection")
     try:
         response=urllib2.urlopen('http://google.com',timeout=1)
+        logger.info("Connection Successful")
         return True
-    except urllib2.URLError as err: pass
+    except urllib2.URLError as err:
+        logger.error("Internet Connection Failed")
     return False
 
 ## uefi check function
 def check_uefi():
+    logger.debug("Check UEFI")
     system("clear")
     print "Step 1) UEFI mode / No UEFI mode"
     time.sleep(3)
@@ -174,6 +205,7 @@ def check_uefi():
 
 ## keymap check function
 def set_keymap():
+    logger.debug("Set Keymap")
     system("clear")
     print "Step 2) Setting your keymap"
     time.sleep(3)
@@ -203,6 +235,7 @@ def identify_devices():
     global drive
     global partition_table
 
+    logger.debug("Identify Devices")
     system("clear")
     print "Step 3) Preparing your hard drive to install ArchStrike"
     time.sleep(3)
@@ -221,6 +254,7 @@ def identify_devices():
 
 ## let's actually partition now
 def partition_devices(drive, partition_table):
+    logger.debug("Partition Devices")
     system("clear")
     print "Step 4) Partitioning the devices (be careful during this step)"
     time.sleep(3)
@@ -274,6 +308,7 @@ def partition_devices(drive, partition_table):
         partition_devices(partition_table)
 
 def partitioner(partition_table):
+    logger.debug("Partitioner")
     system("clear")
     system('cfdisk {0}'.format(drive))
     system("clear")
@@ -285,6 +320,7 @@ def partitioner(partition_table):
         partitioner(partition_table)
 
 def format_partitions():
+    logger.debug("Format Partitions")
     system("clear")
     print "Step 5) Formatting partitions"
     time.sleep(3)
@@ -314,6 +350,7 @@ def format_partitions():
         format_partitions()
 
 def mount_partitions(partitions):
+    logger.debug("Mount Partitions")
     system("clear")
     print "Step 6) Mounting the partitions"
     time.sleep(3)
@@ -338,6 +375,7 @@ def mount_partitions(partitions):
     install_base()
 
 def install_base():
+    logger.debug("Install Base")
     system("clear")
     print "Step 7) Installing the base system"
     print "Starting base install.."
@@ -346,6 +384,7 @@ def install_base():
     genfstab()
 
 def genfstab():
+    logger.debug("Genfstab")
     system("clear")
     print "Step 8) Generating fstab"
     print "Starting now.."
@@ -357,6 +396,7 @@ def genfstab():
     locale_and_time()
 
 def locale_and_time():
+    logger.debug("Locale and Time")
     system("clear")
     print "Step 9) Generating locale and setting timezone"
     print "Now you will edit the locale list."
@@ -374,6 +414,7 @@ def locale_and_time():
     gen_initramfs()
 
 def gen_initramfs():
+    logger.debug("Gen Initramfs")
     system("clear")
     print "Step 10) Generate initramfs image"
     print "Starting now.."
@@ -382,6 +423,7 @@ def gen_initramfs():
     setup_bootloader()
 
 def setup_bootloader():
+    logger.debug("Setup Bootloader")
     system("clear")
     print "Step 11) Setting up GRUB bootloader"
     print "Starting GRUB install now."
@@ -393,6 +435,7 @@ def setup_bootloader():
     set_hostname()
 
 def set_hostname():
+    logger.debug("Set Hostname")
     system("clear")
     print "Step 12) Set Hostname"
     print "Your hostname will be 'archstrike'. You can change it later if you wish."
@@ -401,6 +444,7 @@ def set_hostname():
     setup_internet()
 
 def setup_internet():
+    logger.debug("Setup Internet")
     system("clear")
     print "Step 13) Setup Internet"
     wireless = raw_input("> Do you want wireless utilities on your new install? [Y/n]: ").lower() or 'yes'
@@ -414,6 +458,7 @@ def setup_internet():
     set_root_pass()
 
 def set_root_pass():
+    logger.debug("Set root Pass")
     system("clear")
     print "Step 14) Setting root password"
     print "You will be prompted to choose a root password now."
@@ -422,6 +467,7 @@ def set_root_pass():
     install_archstrike()
 
 def install_archstrike():
+    logger.debug("Install ArchStrike")
     system("clear")
     print "Step 15)"
     print "Now to install the ArchStrike repositories."
@@ -469,6 +515,7 @@ def add_user():
     global username
     username = ''
 
+    logger.debug("Add User")
     system("clear")
     print "Step 16) Add new User"
     opt =  raw_input("> Would you like to add a new user? [Y/n]: ").lower() or 'yes'
@@ -492,6 +539,7 @@ def set_video_utils(user):
         '4':'xf86-video-intel',
         '5':'xf86-video-vesa'
     }
+    logger.debug("Set Video Utils")
     system("clear")
     print "Step 17) Setting up video and desktop environment"
     choice = raw_input("> Would you like to set up video utilities? [Y/n]: ").lower() or 'yes'
@@ -602,6 +650,7 @@ def set_video_utils(user):
 
 
 def finalize():
+    logger.debug("Finalize")
     system("clear")
     print "FINAL: Your system is set up! Rebooting now.."
     print "Thanks for installing ArchStrike!"
@@ -610,4 +659,9 @@ def finalize():
     system("reboot")
 
 if __name__ == '__main__':
-    main()
+    try:
+        signal.signal(signal.SIGINT, signal_handler)
+        main()
+    except Exception as e:
+        logger.error(e)
+        print "An error has occured, see /tmp/archstrike-installer.log for details."
