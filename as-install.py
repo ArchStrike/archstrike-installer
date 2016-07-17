@@ -282,16 +282,20 @@ def partition_devices():
         partition_devices()
     setup_swap()
 
-# TODO: CHECK Swap Size
 def setup_swap():
     global swap_space
     cswap = raw_input("> Step 4) Would you like to create a new swap space? [Y/n]: ").lower() or 'yes'
     if cswap in yes:
         swap_space = raw_input("> Enter your swap space size (default is 512M ): ".format(drive_size)).rstrip() or '512M'
+        size = swap_space[:-1]
         if swap_space[-1] == "M":
-            pass
+            if int(size) >= (int(drive_size)*1024 - 4096):
+                print "Your swap space is too large"
+                setup_swap()
         elif swap_space[-1] == "G":
-            pass
+            if int(size) >= (int(drive_size) - 4):
+                print "Your swap space is too large"
+                setup_swap()
         else:
             print "Swap space must be in M or G"
             setup_swap()
