@@ -9,6 +9,7 @@ import os
 
 # Setup Logging
 logging.basicConfig(filename='/tmp/archstrike-installer.log',
+                    filemode='w',
                     level=logging.DEBUG,
                     format='%(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -30,7 +31,8 @@ def system(command, chroot=False):
     p = sp.Popen([command], stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
     stdout, stderr = p.communicate()
 
-    logger.debug(command)
+    if command != 'clear':
+        logger.debug(command)
 
     if stdout:
         print stdout
@@ -162,7 +164,7 @@ def start():
     if internet_on() == False:
         print "Looks like you're not connected to the internet. Exiting."
         sys.exit()
-        print "Checks done. I will now start the installation process."
+        print "Checks done. The installation process will now begin."
     if os.geteuid() != 0:
         exit("Run as root/sudo please.\nExiting now")
     ## update system clock
@@ -171,7 +173,7 @@ def start():
 
 ## internet check function
 def internet_on():
-    logger.debug("Checking internet connection")
+    logger.debug("Checking Internet connection")
     try:
         response=urllib2.urlopen('http://google.com',timeout=1)
         logger.info("Connection Successful")
@@ -184,9 +186,9 @@ def internet_on():
 def check_uefi():
     logger.debug("Check UEFI")
     system("clear")
-    print "Step 1) UEFI mode / No UEFI mode"
+    print "Step 1) UEFI Mode Check"
     time.sleep(3)
-    uefi = raw_input("> Is your computer running a UEFI board? (y/N): ").lower() or 'no'
+    uefi = raw_input("> Are you running a UEFI board? (y/N): ").lower() or 'no'
     if uefi in yes:
         try:
             os.listdir('/sys/firmware/efi/efivars')
@@ -205,13 +207,13 @@ def check_uefi():
 def set_keymap():
     logger.debug("Set Keymap")
     system("clear")
-    print "Step 2) Setting your keymap"
+    print "Step 2) Keymap Setup"
     time.sleep(3)
-    print "I'm setting your keyboard layout now, default is US."
-    choice = raw_input("> Do you want to change the keyboard layout? [y/N]: ").lower() or 'no'
+    print "Setting your keyboard layout now, default is US."
+    choice = raw_input("> Would you like to change the keyboard layout? [y/N]: ").lower() or 'no'
     if choice in yes:
         system("ls /usr/share/kbd/keymaps/**/*.map.gz")
-        layout = raw_input("> Enter the keyboard layout you want: ")
+        layout = raw_input("> Enter your keyboard layout: ")
         system("loadkeys {0}".format(layout))
         weirdfont = raw_input("> Try typing in here to test. If some characters are coming up different, delete it all and type 'Y': ")
         if weirdfont in yes:
@@ -235,19 +237,19 @@ def identify_devices():
 
     logger.debug("Identify Devices")
     system("clear")
-    print "Step 3) Preparing your hard drive to install ArchStrike"
+    print "Step 3) HDD Preparation"
     time.sleep(3)
-    print "Listing your partitions now."
+    print "Current Partitions"
     system("lsblk")
-    print "Results ending in 'rom', 'loop' or 'airoot' can be ignored."
-    drive = raw_input("> Please choose the drive you want to install ArchStrike on (default: /dev/sda ): ") or '/dev/sda'
+    print "*NOTE: Results ending in 'rom', 'loop' or 'airoot' can be ignored."
+    drive = raw_input("> Please choose the drive you would like to install ArchStrike on (default: /dev/sda ): ") or '/dev/sda'
     ## idiotproofing
-    sure = raw_input("You chose {0}. Are you sure about that? Choosing the wrong drive may have very bad consequences!: ".format(drive))
+    sure = raw_input("Are you sure want to use {0}? Choosing the wrong drive may have very bad consequences!: ".format(drive))
     if sure in no:
         identify_devices()
-    print "I will now check the partition table in {0}.".format(drive)
+    print "Checking the partition table in {0}...".format(drive)
     partition_table = sp.check_output("fdisk -l {0} | grep Disklabel | cut -d ' ' -f 3".format(drive), shell=True).rstrip()
-    print "Looks like {0} has {1} partition table".format(drive, partition_table)
+    print "{0} has a {1} partition table".format(drive, partition_table)
     partition_devices(drive, partition_table)
 
 ## let's actually partition now
@@ -256,15 +258,13 @@ def partition_devices(drive, partition_table):
     system("clear")
     print "Step 4) Partitioning the devices (be careful during this step)"
     time.sleep(3)
-    print "I'm now going to print the current partition scheme of your drive %s" % drive
-    print "But first let's confirm everything."
     ## making it idiotproof
-    confirm_drive = raw_input("> Please confirm that {0} is the drive you chose by typing it again: ".format(drive))
+    confirm_drive = raw_input("> Please confirm your drive by typing {0}: ".format(drive))
     if confirm_drive != drive:
         print "That doesn't look right. Let's try identifying those again."
         identify_devices()
     if partition_table:
-        confirm_table = raw_input("> Please confirm that {0} is the partition table of {1} by typing it again: ".format(partition_table, drive))
+        confirm_table = raw_input("> Please confirm partition table of {1} by typing {0}: ".format(partition_table, drive))
         if confirm_table != partition_table:
             print "That doesn't look right. Let's try identifying those again."
             identify_devices()
@@ -308,7 +308,8 @@ def partition_devices(drive, partition_table):
 def partitioner(partition_table):
     logger.debug("Partitioner")
     system("clear")
-    system('cfdisk {0}'.format(drive))
+    logger.info("cfdisk {0}".format(drive))
+    sp.call('cfdisk {0}'.format(drive), shell=True)
     system("clear")
     system('lsblk {0}'.format(drive))
     check_sure = raw_input("> Are you sure your partitions are set up correctly? [Y/n]: ").lower() or 'yes'
@@ -322,9 +323,9 @@ def format_partitions():
     system("clear")
     print "Step 5) Formatting partitions"
     time.sleep(3)
-    print "Showing the current partition scheme of {0}".format(drive)
+    print "Current partition scheme of {0}".format(drive)
     system("lsblk %s" % drive)
-    partitions = raw_input("> Enter all the partitions you created by seperating them with a comma: ").split(',')
+    partitions = raw_input("> Enter all the partitions you created by seperating them with a comma (e.g. /dev/sda1,/dev/sda2): ").split(',')
     print "You sure these are the partitions?"
     print '\n'.join(partitions)
     sure = raw_input("> [Y/n]: ").lower() or 'yes'
@@ -354,14 +355,14 @@ def mount_partitions(partitions):
     time.sleep(3)
     ## get individual partition fs types so we can mount / in /mnt
     print '\n'.join(partitions)
-    root = raw_input("Which one is your / mounted partition?: ")
+    root = raw_input("Which one is your / mounted partition? (e.g. /dev/sda1): ")
     if root in partitions:
         print "Mounting {0} on /mnt".format(root)
         system("mount {0} /mnt".format(root))
     else:
         mount_partitions(partitions)
     if partition_table == 'gpt':
-        boot = raw_input("Which one is your /boot mounted partition?: ")
+        boot = raw_input("Which one is your /boot mounted partition? (e.g. /dev/sda2): ")
         if boot in partitions:
             print "Mounting %s on /mnt/boot" % boot
             system("mkdir -p /mnt/boot")
@@ -385,7 +386,7 @@ def genfstab():
     logger.debug("Genfstab")
     system("clear")
     print "Step 8) Generating fstab"
-    print "Starting now.."
+    print "Starting now..."
     time.sleep(3)
     system("genfstab -U /mnt >> /mnt/etc/fstab")
     edit = raw_input("> Would you like to edit the generated fstab? [y/N]: ").lower() or 'no'
@@ -662,4 +663,4 @@ if __name__ == '__main__':
         main()
     except Exception as e:
         logger.error(e)
-        print "An error has occured, see /tmp/archstrike-installer.log for details."
+        print "\n\nAn error has occured, see /tmp/archstrike-installer.log for details."
