@@ -341,7 +341,7 @@ def auto_partition():
             if swap_space != 'None':
                 system('echo -e "n\n\n\n512M\nef00\nn\n3\n\n+{0}\n8200\nn\n\n\n\n\nw\ny" | gdisk {1}'.format(swap_space, drive))
                 SWAP = sp.check_output("lsblk | grep %s | awk '{ if (NR==4) print substr ($1,3) }'" % (drive[-3:]), shell=True).rstrip()
-                system("wipefs -a /dev/{0}".format(SWAP))
+                system("wipefs -af /dev/{0}".format(SWAP))
                 system("mkswap /dev/{0}".format(SWAP))
                 system("swapon /dev/{0}".format(SWAP))
             else:
@@ -352,7 +352,7 @@ def auto_partition():
             if swap_space != 'None':
                 system('echo -e "o\ny\nn\n1\n\n+100M\n\nn\n2\n\n+1M\nEF02\nn\n4\n\n+{0}\n8200\nn\n3\n\n\n\nw\ny" | gdisk {1}'.format(swap_space, drive))
                 SWAP = sp.check_output("lsblk | grep %s |  awk '{ if (NR==5) print substr ($1,3) }'" % (drive[-3:]), shell=True).rstrip()
-                system("wipefs -a /dev/{0}".format(SWAP))
+                system("wipefs -af /dev/{0}".format(SWAP))
                 system("mkswap /dev/{0}".format(SWAP))
                 system("swapon /dev/{0}".format(SWAP))
             else:
@@ -363,7 +363,7 @@ def auto_partition():
         if swap_space != 'None':
             system('echo -e "o\nn\np\n1\n\n+100M\nn\np\n3\n\n+{0}\nt\n\n82\nn\np\n2\n\n\nw" | fdisk {1}'.format(swap_space, drive))
             SWAP = sp.check_output("lsblk | grep %s |  awk '{ if (NR==4) print substr ($1,3) }'" % (drive[-3:]), shell=True).rstrip()
-            system("wipefs -a /dev/{0}".format(SWAP))
+            system("wipefs -af /dev/{0}".format(SWAP))
             system("mkswap /dev/{0}".format(SWAP))
             system("swapon /dev/{0}".format(SWAP))
         else:
@@ -371,14 +371,14 @@ def auto_partition():
         BOOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==2) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
         ROOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==3) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
     # Create Boot Partition
-    system("wipefs -a /dev/{0}".format(BOOT))
+    system("wipefs -af /dev/{0}".format(BOOT))
     if uefi:
         system("mkfs.vfat -F32 /dev/{0}".format(BOOT))
     else:
         system("mkfs.ext4 /dev/{0}".format(BOOT))
 
     # Create Root Partition
-    system("wipefs -a /dev/{0}".format(ROOT))
+    system("wipefs -af /dev/{0}".format(ROOT))
     if fs == 'jfs' or fs == 'reiserfs':
         system('echo -e "y" | mkfs.{0} /dev/{1}'.format(fs, ROOT))
     else:
