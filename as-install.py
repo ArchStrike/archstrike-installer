@@ -273,10 +273,10 @@ def partition_devices():
     6) reiserfs
     """
     try:
-        fsc = int(raw_input("> Choice (Default is ext4): ").strip()) or 1
-        if fsc not in range(1,7):
+        fsc = raw_input("> Choice (Default is ext4): ").strip() or 1
+        if int(fsc) not in range(1,7):
             raise Exception("Invalid Option")
-        fs = types[fsc]
+        fs = types[int(fsc)]
     except:
         print "Invalid Option"
         partition_devices()
