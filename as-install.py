@@ -12,6 +12,11 @@ logging.basicConfig(filename='/tmp/archstrike-installer.log',
                     filemode='w',
                     level=logging.DEBUG,
                     format='%(levelname)s - %(message)s')
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+formatter = logging.Formatter('%(levelname)s - %(message)s')
+console.setFormatter(formatter)
+logging.getLogger(__name__).addHandler(console)
 logger = logging.getLogger(__name__)
 
 
@@ -26,19 +31,18 @@ def signal_handler(signal, handler):
 
 
 def system(command, chroot=False):
+    if command == 'clear':
+        sp.call(command, shell=True)
+        return
+
     if chroot:
         command = "arch-chroot /mnt {0}".format(command)
-    p = sp.Popen([command], stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
-    stdout, stderr = p.communicate()
 
-    if command != 'clear':
-        logger.debug(command)
+    logger.debug(command)
 
-    if stdout:
-        print stdout
-        if command != 'clear':
-            logger.info(stdout)
-    if stderr:
+    try:
+        sp.call([command], shell=True)
+    except:
         logger.error(stderr)
 
 def main():
@@ -308,8 +312,7 @@ def partition_devices(drive, partition_table):
 def partitioner(partition_table):
     logger.debug("Partitioner")
     system("clear")
-    logger.info("cfdisk {0}".format(drive))
-    sp.call('cfdisk {0}'.format(drive), shell=True)
+    system('cfdisk {0}'.format(drive), shell=True)
     system("clear")
     system('lsblk {0}'.format(drive))
     check_sure = raw_input("> Are you sure your partitions are set up correctly? [Y/n]: ").lower() or 'yes'
