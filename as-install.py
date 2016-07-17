@@ -40,7 +40,7 @@ def system(command, chroot=False):
     logger.debug(command)
 
     try:
-        sp.call([command], shell=True)
+        return sp.call([command], shell=True)
     except:
         logger.error(stderr)
 
@@ -474,7 +474,9 @@ def set_root_pass():
     print "Step 13) Setting root password"
     print "You will be prompted to choose a root password now."
     time.sleep(3)
-    system("passwd", True)
+    ret = -1
+    while ret != 0:
+        ret = system("passwd", True)
     install_archstrike()
 
 def install_archstrike():
@@ -533,7 +535,9 @@ def add_user():
             username = raw_input("> Please enter a username: ")
         system("useradd -m -g users -G audio,network,power,storage,optical {0}".format(username), True)
         print "> Please enter the password for {0}: ".format(username)
-        system("passwd {0}".format(username), True)
+        ret = -1
+        while ret != 0:
+            ret = system("passwd {0}".format(username), True)
         admin = raw_input("> Would you like to give {0} admin privileges? [Y/n]: ".format(username)).lower() or 'yes'
         if admin in yes:
             system("sed -i '/%wheel ALL=(ALL) ALL/s/^#//' /mnt/etc/sudoers")
