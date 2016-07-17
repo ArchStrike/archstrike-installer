@@ -335,6 +335,7 @@ def auto_partition():
     logger.debug("Format Partitions")
     system("clear")
     print "Step 6) Formatting Drive..."
+    system("sgdisk --zap-all {0}".format(drive))
     if gpt:
         if uefi:
             if swap_space != 'None':
