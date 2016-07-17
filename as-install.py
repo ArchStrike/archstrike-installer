@@ -233,6 +233,7 @@ def identify_devices():
     logger.debug("Identify Devices")
     system("clear")
     print "Step 2) HDD Preparation"
+    system("swapoff -a")
     time.sleep(3)
     print "Current Devices"
     system(''' lsblk -p | grep "disk" | awk '{print $1" "$4}' ''')
@@ -334,7 +335,6 @@ def auto_partition():
     logger.debug("Format Partitions")
     system("clear")
     print "Step 6) Formatting Drive..."
-    system("sgdisk --zap-all {0}".format(drive))
     if gpt:
         if uefi:
             if swap_space != 'None':
