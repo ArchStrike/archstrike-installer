@@ -676,4 +676,5 @@ if __name__ == '__main__':
         main()
     except Exception as e:
         logger.error(e)
+        system("umount -R /mnt")
         print "\n\nAn error has occured, see /tmp/archstrike-installer.log for details."
