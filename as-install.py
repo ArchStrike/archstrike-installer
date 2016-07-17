@@ -29,7 +29,6 @@ archstrike_mirrorlist = "/etc/pacman.d/archstrike-mirrorlist"
 def signal_handler(signal, handler):
     pass #ignore sigint
 
-
 def system(command, chroot=False):
     if command == 'clear':
         sp.call(command, shell=True)
@@ -45,6 +44,7 @@ def system(command, chroot=False):
     except:
         logger.error(stderr)
 
+
 def main():
     logger.debug("Starting Installation")
 
@@ -58,15 +58,11 @@ def main():
 
     1) Start the ArchStrike Installer (will install ArchStrike on your hard drive)
 
-    2) Choose an individual step in the installation process
-
     99) Exit
     """
     choice = raw_input("> Enter the number of your choice: ")
     if choice == "1":
         start()
-    elif choice == "2":
-        menu()
     elif choice == "99":
         print "Alright, see you later!"
         sys.exit()
@@ -188,30 +184,25 @@ def internet_on():
 
 ## uefi check function
 def check_uefi():
+    global uefi
+
     logger.debug("Check UEFI")
     system("clear")
-    print "Step 1) UEFI Mode Check"
-    time.sleep(3)
-    uefi = raw_input("> Are you running a UEFI board? (y/N): ").lower() or 'no'
-    if uefi in yes:
-        try:
-            os.listdir('/sys/firmware/efi/efivars')
-        except OSError:
-            # Dir doesnt exist
-            print "Your computer doesnt seem to be running a UEFI board. Continuing.."
-            set_keymap()
-    elif uefi in no:
-        print "Going to the next step."
+
+    try:
+        os.listdir('/sys/firmware/efi/efivars')
+        uefi = True
+    except OSError:
+        # Dir doesnt exist
+        print "Your computer doesnt seem to be running a UEFI board. Continuing.."
+        uefi = False
         set_keymap()
-    else:
-        print "Not sure what you're talking about."
-        check_uefi()
 
 ## keymap check function
 def set_keymap():
     logger.debug("Set Keymap")
     system("clear")
-    print "Step 2) Keymap Setup"
+    print "Step 1) Keymap Setup"
     time.sleep(3)
     print "Setting your keyboard layout now, default is US."
     choice = raw_input("> Would you like to change the keyboard layout? [y/N]: ").lower() or 'no'
@@ -237,150 +228,162 @@ def set_keymap():
 ## function to identify devices for partitioning
 def identify_devices():
     global drive
-    global partition_table
+    global drive_size
 
     logger.debug("Identify Devices")
     system("clear")
-    print "Step 3) HDD Preparation"
+    print "Step 2) HDD Preparation"
     time.sleep(3)
-    print "Current Partitions"
-    system("lsblk")
-    print "*NOTE: Results ending in 'rom', 'loop' or 'airoot' can be ignored."
+    print "Current Devices"
+    system(''' lsblk -p | grep "disk" | awk '{print $1" "$4}' ''')
     drive = raw_input("> Please choose the drive you would like to install ArchStrike on (default: /dev/sda ): ") or '/dev/sda'
-    ## idiotproofing
     sure = raw_input("Are you sure want to use {0}? Choosing the wrong drive may have very bad consequences!: ".format(drive))
     if sure in no:
         identify_devices()
-    print "Checking the partition table in {0}...".format(drive)
-    partition_table = sp.check_output("fdisk -l {0} | grep Disklabel | cut -d ' ' -f 3".format(drive), shell=True).rstrip()
-    print "{0} has a {1} partition table".format(drive, partition_table)
-    partition_devices(drive, partition_table)
+    drive_size = sp.check_output("lsblk -p | grep -w %s | awk '{print $4}' | grep -o '[0-9]*' | awk 'NR==1'" % (drive), shell=True).rstrip()
+    partition_devices()
 
-## let's actually partition now
-def partition_devices(drive, partition_table):
+def partition_devices():
+    global fs
+    types = {
+        1: 'ext4',
+        2: 'ext3',
+        3: 'ext2',
+        4: 'btrfs',
+        5: 'jfs',
+        6: 'reiserfs'
+    }
     logger.debug("Partition Devices")
     system("clear")
-    print "Step 4) Partitioning the devices (be careful during this step)"
+    print "Step 3) Selecting the Filesystem Type"
     time.sleep(3)
-    ## making it idiotproof
-    confirm_drive = raw_input("> Please confirm your drive by typing {0}: ".format(drive))
-    if confirm_drive != drive:
-        print "That doesn't look right. Let's try identifying those again."
-        identify_devices()
-    if partition_table:
-        confirm_table = raw_input("> Please confirm partition table of {1} by typing {0}: ".format(partition_table, drive))
-        if confirm_table != partition_table:
-            print "That doesn't look right. Let's try identifying those again."
-            identify_devices()
-    print "Looks like both are confirmed."
-    system("lsblk {0}".format(drive))
-    if partition_table == 'gpt':
-        print """
-      For the GPT partition table, the suggested partition scheme looks like this:
+    print """
+    Select your filesystem type:
 
-      mountpoint        partition        partition type            boot flag        suggested size
-      _________________________________________________________________________________________
+    1) ext4
 
-      /boot              /dev/sdx1        EFI System Partition      Yes               260-512 MiB
+    2) ext3
 
-      [SWAP]             /dev/sdx2        Linux swap                No                More than 512 MiB
+    3) ext2
 
-      /                  /dev/sdx3        Linux (ext4)              No                Remainder of the device
+    4) btrfs
 
-      WARNING: If dual-booting with an existing installation of Windows on a UEFI/GPT system,
-      avoid reformatting the UEFI partition, as this includes the Windows .efi file required to boot it.
+    5) jfs
 
-      """
-    elif partition_table == 'dos':
-        print """
-      For the MBR partition table, the suggested partition scheme looks like this:
+    6) reiserfs
+    """
+    try:
+        fsc = int(raw_input("> Choice (Default is ext4): ").strip()) or 1
+        if fsc not in range(1,7):
+            raise Exception("Invalid Option")
+        fs = types[fsc]
+    except:
+        print "Invalid Option"
+        partition_devices()
+    setup_swap()
 
-      mountpoint        partition        partition type            boot flag        suggested size
-      _________________________________________________________________________________________
-
-      [SWAP]            /dev/sdx1        Linux swap                No                More than 512 MiB
-
-      /                 /dev/sdx2        Linux (ext4)              Yes               Remainder of the device
-
-      """
-    go_on = raw_input("> I've read this and wish to continue to the partitioner. [Y/n]: ").lower() or 'yes'
-    if go_on in yes:
-        partitioner(partition_table)
+# TODO: CHECK Swap Size
+def setup_swap():
+    global swap_space
+    cswap = raw_input("> Step 4) Would you like to create a new swap space? [Y/n]: ").lower() or 'yes'
+    if cswap in yes:
+        swap_space = raw_input("> Enter your swap space size (default is 512M ): ".format(drive_size)).rstrip() or '512M'
+        if swap_space[-1] == "M":
+            pass
+        elif swap_space[-1] == "G":
+            pass
+        else:
+            print "Swap space must be in M or G"
+            setup_swap()
     else:
-        partition_devices(partition_table)
+        swap_space = 'None'
+    partitioner()
 
-def partitioner(partition_table):
+def partitioner():
+    global gpt
+
     logger.debug("Partitioner")
     system("clear")
-    system('cfdisk {0}'.format(drive))
+    gpt = False
+    if not uefi:
+        cgpt = raw_input("> Step 5) Would you like to use GUID Partition Table? [y/N]: ").lower() or 'no'
+        if cgpt in yes:
+            gpt = True
     system("clear")
-    system('lsblk {0}'.format(drive))
+    print """
+    Device: %s
+    Filesystem: %s
+    Swap: %s
+    """ % (drive, fs, swap_space)
     check_sure = raw_input("> Are you sure your partitions are set up correctly? [Y/n]: ").lower() or 'yes'
     if check_sure in yes:
-        format_partitions()
+        auto_partition()
     else:
-        partitioner(partition_table)
+        identify_devices()
 
-def format_partitions():
+def auto_partition():
     logger.debug("Format Partitions")
     system("clear")
-    print "Step 5) Formatting partitions"
-    time.sleep(3)
-    print "Current partition scheme of {0}".format(drive)
-    system("lsblk %s" % drive)
-    partitions = raw_input("> Enter all the partitions you created by seperating them with a comma (e.g. /dev/sda1,/dev/sda2): ").split(',')
-    print "You sure these are the partitions?"
-    print '\n'.join(partitions)
-    sure = raw_input("> [Y/n]: ").lower() or 'yes'
-    if sure in yes:
-        print "Alright, starting to format."
-        for i in partitions:
-            print "Partition {0} will be formatted now".format(i)
-            partition_type = raw_input("> Enter the partition type (linux, uefi, swap): ").lower()
-            if partition_type == 'linux':
-                system("mkfs.ext4 {0}".format(i))
-            elif partition_type == 'uefi':
-                system("mkfs.fat -F32 {0}".format(i))
-            elif partition_type == 'swap':
-                system("mkswap {0}".format(i))
-                system("swapon {0}".format(i))
+    print "Step 6) Formatting Drive..."
+    system("sgdisk --zap-all {0}".format(drive))
+    if gpt:
+        if uefi:
+            if swap_space != 'None':
+                system('echo -e "n\n\n\n512M\nef00\nn\n3\n\n+{0}\n8200\nn\n\n\n\n\nw\ny" | gdisk {1}'.format(swap_space, drive))
+                SWAP = sp.check_output("lsblk | grep %s | awk '{ if (NR==4) print substr ($1,3) }'" % (drive[-3:]), shell=True).rstrip()
+                system("wipefs -a /dev/{0}".format(SWAP))
+                system("mkswap /dev/{0}".format(SWAP))
+                system("swapon /dev/{0}".format(SWAP))
             else:
-                print "Not sure what you're talking about."
-                format_partitions()
-        mount_partitions(partitions)
-    else:
-        format_partitions()
-
-def mount_partitions(partitions):
-    logger.debug("Mount Partitions")
-    system("clear")
-    print "Step 6) Mounting the partitions"
-    time.sleep(3)
-    ## get individual partition fs types so we can mount / in /mnt
-    print '\n'.join(partitions)
-    root = raw_input("Which one is your / mounted partition? (e.g. /dev/sda1): ")
-    if root in partitions:
-        print "Mounting {0} on /mnt".format(root)
-        system("mount {0} /mnt".format(root))
-    else:
-        mount_partitions(partitions)
-    if partition_table == 'gpt':
-        boot = raw_input("Which one is your /boot mounted partition? (e.g. /dev/sda2): ")
-        if boot in partitions:
-            print "Mounting %s on /mnt/boot" % boot
-            system("mkdir -p /mnt/boot")
-            system("mount {0} /mnt/boot".format(boot))
+                system('echo -e "n\n\n\n512M\nef00\nn\n\n\n\n\nw\ny" | gdisk {0}'.format(drive))
+            BOOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==2) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
+            ROOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==3) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
         else:
-            mount_partitions(partitions)
+            if swap_space != 'None':
+                system('echo -e "o\ny\nn\n1\n\n+100M\n\nn\n2\n\n+1M\nEF02\nn\n4\n\n+{0}\n8200\nn\n3\n\n\n\nw\ny" | gdisk {1}'.format(swap_space, drive))
+                SWAP = sp.check_output("lsblk | grep %s |  awk '{ if (NR==5) print substr ($1,3) }'" % (drive[-3:]), shell=True).rstrip()
+                system("wipefs -a /dev/{0}".format(SWAP))
+                system("mkswap /dev/{0}".format(SWAP))
+                system("swapon /dev/{0}".format(SWAP))
+            else:
+                system('echo -e "o\ny\nn\n1\n\n+100M\n\nn\n2\n\n+1M\nEF02\nn\n3\n\n\n\nw\ny" | gdisk {0}'.format(drive))
+            BOOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==2) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
+            ROOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==4) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
     else:
-        system("mkdir -p /mnt/boot")
+        if swap_space != 'None':
+            system('echo -e "o\nn\np\n1\n\n+100M\nn\np\n3\n\n+{0}\nt\n\n82\nn\np\n2\n\n\nw" | fdisk {1}'.format(swap_space, drive))
+            SWAP = sp.check_output("lsblk | grep %s |  awk '{ if (NR==4) print substr ($1,3) }'" % (drive[-3:]), shell=True).rstrip()
+            system("wipefs -a /dev/{0}".format(SWAP))
+            system("mkswap /dev/{0}".format(SWAP))
+            system("swapon /dev/{0}".format(SWAP))
+        else:
+            system('echo -e "o\nn\np\n1\n\n+100M\nn\np\n2\n\n\nw" | fdisk {0}'.format(drive))
+        BOOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==2) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
+        ROOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==3) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
+    # Create Boot Partition
+    system("wipefs -a /dev/{0}".format(BOOT))
+    if uefi:
+        system("mkfs.vfat -F32 /dev/{0}".format(BOOT))
+    else:
+        system("mkfs.ext4 /dev/{0}".format(BOOT))
+
+    # Create Root Partition
+    system("wipefs -a /dev/{0}".format(ROOT))
+    if fs == 'jfs' or fs == 'reiserfs':
+        system('echo -e "y" | mkfs.{0} /dev/{1}'.format(fs, ROOT))
+    else:
+        system('mkfs.{0} /dev/{1}'.format(fs, ROOT))
+
+    system("mount /dev/{0} /mnt".format(ROOT))
+    system("mkdir -p /mnt/boot")
+    system("mount /dev/{0} /mnt/boot".format(BOOT))
+
     install_base()
 
 def install_base():
     logger.debug("Install Base")
     system("clear")
-    print "Step 7) Installing the base system"
-    print "Starting base install.."
+    print "Step 7) Starting base install.."
     time.sleep(3)
     system("pacstrap /mnt base base-devel")
     genfstab()
@@ -388,8 +391,7 @@ def install_base():
 def genfstab():
     logger.debug("Genfstab")
     system("clear")
-    print "Step 8) Generating fstab"
-    print "Starting now..."
+    print "Step 8) Generating fstab..."
     time.sleep(3)
     system("genfstab -U /mnt >> /mnt/etc/fstab")
     edit = raw_input("> Would you like to edit the generated fstab? [y/N]: ").lower() or 'no'
@@ -418,8 +420,7 @@ def locale_and_time():
 def gen_initramfs():
     logger.debug("Gen Initramfs")
     system("clear")
-    print "Step 10) Generate initramfs image"
-    print "Starting now.."
+    print "Step 10) Generate initramfs image..."
     time.sleep(3)
     system("mkinitcpio -p linux", True)
     setup_bootloader()
@@ -427,8 +428,7 @@ def gen_initramfs():
 def setup_bootloader():
     logger.debug("Setup Bootloader")
     system("clear")
-    print "Step 11) Setting up GRUB bootloader"
-    print "Starting GRUB install now."
+    print "Setting up GRUB bootloader"
     time.sleep(3)
     system("pacman -S grub --noconfirm", True)
     system("grub-install {0}".format(drive), True)
@@ -439,7 +439,7 @@ def setup_bootloader():
 def set_hostname():
     logger.debug("Set Hostname")
     system("clear")
-    print "Step 12) Set Hostname"
+    print "Step 11) Setting Hostname"
     print "Your hostname will be 'archstrike'. You can change it later if you wish."
     time.sleep(3)
     system("echo archstrike > /etc/hostname", True)
@@ -448,7 +448,7 @@ def set_hostname():
 def setup_internet():
     logger.debug("Setup Internet")
     system("clear")
-    print "Step 13) Setup Internet"
+    print "Step 12) Setup Internet"
     wireless = raw_input("> Do you want wireless utilities on your new install? [Y/n]: ").lower() or 'yes'
     if wireless in yes:
         print "Installing Wireless utilities"
@@ -462,7 +462,7 @@ def setup_internet():
 def set_root_pass():
     logger.debug("Set root Pass")
     system("clear")
-    print "Step 14) Setting root password"
+    print "Step 13) Setting root password"
     print "You will be prompted to choose a root password now."
     time.sleep(3)
     system("passwd", True)
@@ -471,9 +471,7 @@ def set_root_pass():
 def install_archstrike():
     logger.debug("Install ArchStrike")
     system("clear")
-    print "Step 15)"
-    print "Now to install the ArchStrike repositories."
-    print "Adding repositories.."
+    print "Step 14) Installing the ArchStrike repositories..."
     time.sleep(3)
     system("echo '[archstrike]' >> /mnt{0}".format(pacmanconf))
     system("echo 'Server = https://mirror.archstrike.org/$arch/$repo' >> /mnt{0}".format(pacmanconf))
@@ -507,7 +505,7 @@ def install_archstrike():
           print "Alright going forward."
     print "Performing database update once more to test mirrorlist"
     system("pacman -Syy", True)
-    install_now = raw_input("> Do you want to go ahead and install all ArchStrike packages now? [Y/n]: ").lower() or 'yes'
+    install_now = raw_input("> Do you want to go ahead and install all ArchStrike packages now? [y/N]: ").lower() or 'no'
     if install_now in yes:
         system('/bin/bash -c "yes| pacman -S cryptsetup-nuke-keys"', True)
         system("pacman -S archstrike --noconfirm", True)
@@ -519,7 +517,7 @@ def add_user():
 
     logger.debug("Add User")
     system("clear")
-    print "Step 16) Add new User"
+    print "Step 15) Add new User"
     opt =  raw_input("> Would you like to add a new user? [Y/n]: ").lower() or 'yes'
     if opt in yes:
         while not username:
@@ -543,13 +541,11 @@ def set_video_utils(user):
     }
     logger.debug("Set Video Utils")
     system("clear")
-    print "Step 17) Setting up video and desktop environment"
+    print "Step 16) Setting up video and desktop environment"
     choice = raw_input("> Would you like to set up video utilities? [Y/n]: ").lower() or 'yes'
     if choice in yes:
-        print "Setting up video. I need to know your GPU."
-        time.sleep(2)
+        print "To setup video utilities select your GPU. (Leave empty if unsure)"
         print """
-        Here are some options, please choose one or leave empty for default.
 
         1) mesa-libgl
 
