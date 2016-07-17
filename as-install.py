@@ -236,7 +236,12 @@ def identify_devices():
     time.sleep(3)
     print "Current Devices"
     system(''' lsblk -p | grep "disk" | awk '{print $1" "$4}' ''')
+    available_drives = sp.check_output(''' lsblk -p | grep "disk" | awk '{print $1}' ''', shell=True).split('\n')[:-1]
     drive = raw_input("> Please choose the drive you would like to install ArchStrike on (default: /dev/sda ): ") or '/dev/sda'
+    if drive not in available_drives:
+        print "That drive does not exist"
+        time.sleep(1)
+        identify_devices()
     sure = raw_input("Are you sure want to use {0}? Choosing the wrong drive may have very bad consequences!: ".format(drive))
     if sure in no:
         identify_devices()
