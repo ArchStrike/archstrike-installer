@@ -312,7 +312,7 @@ def partition_devices(drive, partition_table):
 def partitioner(partition_table):
     logger.debug("Partitioner")
     system("clear")
-    system('cfdisk {0}'.format(drive), shell=True)
+    system('cfdisk {0}'.format(drive))
     system("clear")
     system('lsblk {0}'.format(drive))
     check_sure = raw_input("> Are you sure your partitions are set up correctly? [Y/n]: ").lower() or 'yes'
