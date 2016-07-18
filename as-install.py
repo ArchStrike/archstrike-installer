@@ -495,10 +495,48 @@ def auto_encrypt():
 
 def install_base():
     logger.debug("Install Base")
-    system("clear")
-    print "Step 7) Starting base install.."
-    time.sleep(3)
-    system("pacstrap /mnt base base-devel")
+    base = 1
+    while True:
+        system("clear")
+        print "Step 7) Install System Base"
+        print """
+        Select Your Base
+
+        1) Arch-Linux-Base
+
+        2) Arch-Linux-Base-Devel
+
+        3) Arch-Linux-GrSec
+
+        4) Arch-Linux-LTS-Base
+
+        5) Arch-Linux-LTS-Base-Devel
+        """
+        choice = raw_input("> Choice (Default is Arch-Linux-Base): ") or 1
+        try:
+            if int(choice) in range(1,6):
+                base = int(choice)
+                break
+        except:
+            print "Invalid Option"
+            time.sleep(1)
+
+    if base == 1:
+        base_install = "sudo"
+    elif base == 2:
+        base_install = "base-devel"
+    elif base == 3:
+        base_install = "linux-grsec sudo"
+    elif base == 4:
+        base_install = "linux-lts sudo"
+    elif base == 5:
+        base_install = "base-devel linux-lts"
+
+    if uefi:
+        base_install += " efibootmgr"
+
+    system("pacstrap /mnt base {0}".format(base_install))
+
     genfstab()
 
 def genfstab():
