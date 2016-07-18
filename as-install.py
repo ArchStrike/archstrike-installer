@@ -523,7 +523,7 @@ def install_archstrike():
     install_now = raw_input("> Do you want to go ahead and install all ArchStrike packages now? [y/N]: ").lower() or 'no'
     if install_now in yes:
         system('/bin/bash -c "yes| pacman -S cryptsetup-nuke-keys"', True)
-        system("pacman -S archstrike --noconfirm", True)
+        system("pacman -S archstrike linux-headers --noconfirm", True)
     add_user()
 
 def add_user():
