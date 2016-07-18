@@ -414,15 +414,15 @@ def auto_encrypt():
 
     if gpt:
         if uefi:
-            system('echo -e "n\n\n\n512M\nef00\nn\n\n\n\n\nw\ny" | gdisk {1}'.format(drive))
+            system('echo -e "n\n\n\n512M\nef00\nn\n\n\n\n\nw\ny" | gdisk {0}'.format(drive))
             BOOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==2) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
             ROOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==3) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
         else:
-            system('echo -e "o\ny\nn\n1\n\n+100M\n\nn\n2\n\n+1M\nEF02\nn\n3\n\n\n\nw\ny" | gdisk {1}'.format(drive))
+            system('echo -e "o\ny\nn\n1\n\n+100M\n\nn\n2\n\n+1M\nEF02\nn\n3\n\n\n\nw\ny" | gdisk {0}'.format(drive))
             BOOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==4) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
             ROOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==2) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
     else:
-        system('echo -e "o\nn\np\n1\n\n+100M\nn\np\n2\n\n\nw" | fdisk {1}'.format(drive))
+        system('echo -e "o\nn\np\n1\n\n+100M\nn\np\n2\n\n\nw" | fdisk {0}'.format(drive))
         BOOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==2) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
         ROOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==3) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
 
