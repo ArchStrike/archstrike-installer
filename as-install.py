@@ -411,16 +411,26 @@ def auto_partition():
     # Create Boot Partition
     system("wipefs -afq /dev/{0}".format(BOOT))
     if uefi:
-        system("mkfs.vfat -F32 /dev/{0}".format(BOOT))
+        ret = system("mkfs.vfat -F32 /dev/{0}".format(BOOT))
+        if ret != 0:
+            raise Exception("MKFS FAILURE")
     else:
-        system("mkfs.ext4 /dev/{0}".format(BOOT))
+        ret = system("mkfs.ext4 /dev/{0}".format(BOOT))
+        if ret != 0:
+            raise Exception("MKFS FAILURE")
 
     # Create Root Partition
-    system("wipefs -afq /dev/{0}".format(ROOT))
+    ret = system("wipefs -afq /dev/{0}".format(ROOT))
+    if ret != 0:
+        raise Exception("MKFS FAILURE")
     if fs == 'jfs' or fs == 'reiserfs':
-        system('echo -e "y" | mkfs.{0} /dev/{1}'.format(fs, ROOT))
+        ret = system('echo -e "y" | mkfs.{0} /dev/{1}'.format(fs, ROOT))
+        if ret != 0:
+            raise Exception("MKFS FAILURE")
     else:
-        system('mkfs.{0} /dev/{1}'.format(fs, ROOT))
+        ret = system('mkfs.{0} /dev/{1}'.format(fs, ROOT))
+        if ret != 0:
+            raise Exception("MKFS FAILURE")
 
     system("mount /dev/{0} /mnt".format(ROOT))
     system("mkdir -p /mnt/boot")
@@ -477,15 +487,23 @@ def auto_encrypt():
 
     system("wipefs -afq /dev/mapper/root")
     if fs == 'jfs' or fs == 'reiserfs':
-        system('echo -e "y" | mkfs.{0} /dev/mapper/root'.format(fs))
+        ret = system('echo -e "y" | mkfs.{0} /dev/mapper/root'.format(fs))
+        if ret != 0:
+            raise Exception("MKFS FAILURE")
     else:
-        system('mkfs.{0} /dev/mapper/root'.format(fs))
+        ret = system('mkfs.{0} /dev/mapper/root'.format(fs))
+        if ret != 0:
+            raise Exception("MKFS FAILURE")
 
     if uefi:
-        system("mkfs.vfat -F32 /dev/".format(BOOT))
+        ret = system("mkfs.vfat -F32 /dev/".format(BOOT))
+        if ret != 0:
+            raise Exception("MKFS FAILURE")
     else:
         system("wipefs -afq /dev/{0}".format(BOOT))
-        system("mkfs.ext4 /dev/{0}".format(BOOT))
+        ret = system("mkfs.ext4 /dev/{0}".format(BOOT))
+        if ret != 0:
+            raise Exception("MKFS FAILURE")
 
     system("mount /dev/mapper/root /mnt")
     system("mkdir -p /mnt/boot")
