@@ -27,7 +27,10 @@ pacmanconf = "/etc/pacman.conf"
 archstrike_mirrorlist = "/etc/pacman.d/archstrike-mirrorlist"
 
 def signal_handler(signal, handler):
-    pass #ignore sigint
+    sp.Popen("umount -R /mnt", stdout=FNULL, stderr=sp.STDOUT, shell=True)
+    FNULL.close()
+    print "\n\nGood Bye"
+    sys.exit()
 
 def system(command, chroot=False):
     if command == 'clear':
@@ -672,9 +675,11 @@ def finalize():
 
 if __name__ == '__main__':
     try:
+        FNULL = open(os.devnull, 'w')
         signal.signal(signal.SIGINT, signal_handler)
         main()
     except Exception as e:
         logger.error(e)
-        system("umount -R /mnt")
+        sp.Popen("umount -R /mnt", stdout=FNULL, stderr=sp.STDOUT, shell=True)
         print "\n\nAn error has occured, see /tmp/archstrike-installer.log for details."
+        FNULL.close()
