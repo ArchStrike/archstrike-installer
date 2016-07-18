@@ -445,7 +445,7 @@ def auto_encrypt():
     if fs == 'jfs' or fs == 'reiserfs':
         system('echo -e "y" | mkfs.{0} /dev/mapper/root'.format(fs))
     else:
-        system('mkfs.{0} /dev/mapper/root'.format(fs)
+        system('mkfs.{0} /dev/mapper/root'.format(fs))
 
     if uefi:
         system("mkfs.vfat -F32 /dev/".format(BOOT))
