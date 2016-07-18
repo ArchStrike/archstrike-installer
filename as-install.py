@@ -346,9 +346,9 @@ def partition_menu():
         print """
         Select Your Partition Method
 
-        1) Auto Partition
+        1) Auto Partition Drive
 
-        2) Auto Encrypt Partition with LVM
+        2) Auto Partition Encrypted LVM
 
         """
         part = raw_input("> Choice: ")
