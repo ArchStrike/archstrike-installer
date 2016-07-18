@@ -34,7 +34,8 @@ def signal_handler(signal, handler):
     sys.exit()
 
 def system(command, chroot=False):
-    if command == 'clear':
+    # don't log clear or encryption passwd
+    if command == 'clear' or command.find('printf') != -1:
         sp.call(command, shell=True)
         return
 
@@ -229,10 +230,6 @@ def set_keymap():
         print "Not sure what you're talking about."
         set_keymap()
 
-# Select Partition Method
-def partition_method():
-    pass
-
 ## function to identify devices for partitioning
 def identify_devices():
     global drive
@@ -335,11 +332,44 @@ def partitioner():
     """ % (drive, fs, swap_space)
     check_sure = raw_input("> Are you sure your partitions are set up correctly? [Y/n]: ").lower() or 'yes'
     if check_sure in yes:
-        auto_partition()
+        partition_menu()
     else:
         identify_devices()
 
+def partition_menu():
+    global part_type
+    logger.debug("Partition Menu")
+
+    while True:
+        system("clear")
+        print "Step 6) Partition Menu"
+        print """
+        Select Your Partition Method
+
+        1) Auto Partition
+
+        2) Auto Encrypt Partition with LVM
+
+        """
+        part = raw_input("> Choice: ")
+        try:
+            if int(part) in range(1,3):
+                part_type = int(part)
+                break
+        except:
+            print "Invalid Option"
+            time.sleep(1)
+
+    if part_type == 1:
+        auto_partition()
+    elif part_type == 2:
+        auto_encrypt()
+
 def auto_partition():
+    global ROOT
+    global BOOT
+    global SWAP
+
     logger.debug("Format Partitions")
     system("clear")
     print "Step 6) Formatting Drive..."
@@ -399,10 +429,14 @@ def auto_partition():
     install_base()
 
 def auto_encrypt():
+    global ROOT
+    global BOOT
+    global SWAP
+
     print "WARNING! This will encrypt {0}".format(drive)
     cont = raw_input("> Continue? [y/N]: ").lower() or 'no'
     if cont in no:
-        partition_method()
+        partition_menu()
     pass_set = False
     while not pass_set:
         passwd = getpass("> Please enter a new password for {0}: ".format(drive))
@@ -457,6 +491,8 @@ def auto_encrypt():
     system("mkdir -p /mnt/boot")
     system("mount /dev/{0} /mnt/boot".format(BOOT))
 
+    install_base()
+
 def install_base():
     logger.debug("Install Base")
     system("clear")
@@ -495,22 +531,62 @@ def locale_and_time():
     gen_initramfs()
 
 def gen_initramfs():
-    logger.debug("Gen Initramfs")
-    system("clear")
-    print "Step 10) Generate initramfs image..."
-    time.sleep(3)
-    system("mkinitcpio -p linux", True)
+    if part_type !=2 and not uefi:
+        logger.debug("Gen Initramfs")
+        system("clear")
+        print "Step 10) Generate initramfs image..."
+        time.sleep(3)
+        system("mkinitcpio -p linux", True)
+
     setup_bootloader()
 
+# TODO: systemd-bootloader and syslinux
 def setup_bootloader():
     logger.debug("Setup Bootloader")
     system("clear")
     print "Setting up GRUB bootloader"
     time.sleep(3)
+
     system("pacman -S grub --noconfirm", True)
-    system("grub-install {0}".format(drive), True)
+
+    #Encrypted
+    if part_type == 2:
+        system("sed -i 's!quiet!cryptdevice=/dev/lvm/lvroot:root root=/dev/mapper/root!' /mnt/etc/default/grub")
+    else:
+        system("sed -i 's/quiet//' /mnt/etc/default/grub")
+
+    if uefi:
+        system("grub-install --efi-directory=/boot --target=x86_64-efi --bootloader-id=boot", True)
+        system("mv /mnt/boot/EFI/boot/grubx64.efi /mnt/boot/EFI/boot/bootx64.efi") #Check this
+
+        if part_type != 2:
+            system("mkinitcpio -p linux", True)
+    else:
+        system("grub-install {0}".format(drive), True)
+
     system("grub-mkconfig -o /boot/grub/grub.cfg ", True)
-    # TODO: systemd-bootloader and syslinux
+
+    configure_system()
+
+def configure_system():
+    print "Configuring System"
+    time.sleep(1)
+
+    if part_type == 2 and uefi:
+        system('echo "/dev/{0}              /boot           vfat         rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,errors=remount-ro        0       2" > /mnt/etc/fstab'.format(BOOT))
+    elif part_type == 2:
+        system('echo "/dev/{0}              /boot           {1}         defaults        0       2" > /mnt/etc/fstab'.format(BOOT, fs))
+
+    if part_type == 2:
+        system('echo "/dev/mapper/root        /               {0}         defaults        0       1" >> /mnt/etc/fstab'.format(fs))
+        system('echo "/dev/mapper/tmp         /tmp            tmpfs        defaults        0       0" >> /mnt/etc/fstab')
+        system('echo "tmp	       /dev/lvm/tmp	       /dev/urandom	tmp,cipher=aes-xts-plain64,size=256" >> /mnt/etc/crypttab')
+        if swap_space != 'None':
+            system('echo "/dev/mapper/swap     none            swap          sw                    0       0" >> /mnt/etc/fstab')
+            system('echo "swap	/dev/lvm/swap	/dev/urandom	swap,cipher=aes-xts-plain64,size=256" >> /mnt/etc/crypttab')
+        system("sed -i 's/k filesystems k/k lvm2 encrypt filesystems k/' /mnt/etc/mkinitcpio.conf")
+        system("mkinitcpio -p linux", True)
+
     set_hostname()
 
 def set_hostname():
@@ -726,7 +802,6 @@ def set_video_utils(user):
         system("pacman -S blueman --noconfirm", True)
 
     finalize()
-
 
 def finalize():
     logger.debug("Finalize")
