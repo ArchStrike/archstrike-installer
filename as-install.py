@@ -1,4 +1,5 @@
 #!/usr/bin/env python2
+from getpass import getpass
 import subprocess as sp
 import logging
 import signal
@@ -228,6 +229,10 @@ def set_keymap():
         print "Not sure what you're talking about."
         set_keymap()
 
+# Select Partition Method
+def partition_method():
+    pass
+
 ## function to identify devices for partitioning
 def identify_devices():
     global drive
@@ -392,6 +397,65 @@ def auto_partition():
     system("mount /dev/{0} /mnt/boot".format(BOOT))
 
     install_base()
+
+def auto_encrypt():
+    print "WARNING! This will encrypt {0}".format(drive)
+    cont = raw_input("> Continue? [y/N]: ").lower() or 'no'
+    if cont in no:
+        partition_method()
+    pass_set = False
+    while not pass_set:
+        passwd = getpass("> Please enter a new password for {0}: ".format(drive))
+        passwd_chk = getpass("> New {0} password again: ".format(drive))
+        if passwd == passwd_chk:
+            pass_set = True
+        else:
+            print "Password do not Match."
+
+    if gpt:
+        if uefi:
+            system('echo -e "n\n\n\n512M\nef00\nn\n\n\n\n\nw\ny" | gdisk {1}'.format(drive))
+            BOOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==2) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
+            ROOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==3) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
+        else:
+            system('echo -e "o\ny\nn\n1\n\n+100M\n\nn\n2\n\n+1M\nEF02\nn\n3\n\n\n\nw\ny" | gdisk {1}'.format(drive))
+            BOOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==4) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
+            ROOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==2) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
+    else:
+        system('echo -e "o\nn\np\n1\n\n+100M\nn\np\n2\n\n\nw" | fdisk {1}'.format(drive))
+        BOOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==2) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
+        ROOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==3) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
+
+    system("wipefs -afq /dev/{0}".format(ROOT))
+    system("wipefs -afq /dev/{0}".format(BOOT))
+
+    system("lvm pvcreate /dev/{0}".format(ROOT))
+    system("lvm vgcreate lvm /dev/{0}".format(ROOT))
+
+    if swap_space != 'None':
+        system("lvm lvcreate -L {0} -n swap lvm ".format(swap_space))
+
+    system("lvm lvcreate -L 500M -n tmp lvm")
+    system("lvm lvcreate -l 100%FREE -n lvroot lvm")
+
+    system("printf {0} | cryptsetup luksFormat -c aes-xts-plain64 -s 512 /dev/lvm/lvroot -".format(passwd))
+    system("printf {0} | cryptsetup open --type luks /dev/lvm/lvroot root -".format(passwd))
+
+    system("wipefs -afq /dev/mapper/root")
+    if fs == 'jfs' or fs == 'reiserfs':
+        system('echo -e "y" | mkfs.{0} /dev/mapper/root'.format(fs))
+    else:
+        system('mkfs.{0} /dev/mapper/root'.format(fs)
+
+    if uefi:
+        system("mkfs.vfat -F32 /dev/".format(BOOT))
+    else:
+        system("wipefs -afq /dev/{0}".format(BOOT))
+        system("mkfs.ext4 /dev/{0}".format(BOOT))
+
+    system("mount /dev/mapper/root /mnt")
+    system("mkdir -p /mnt/boot")
+    system("mount /dev/{0} /mnt/boot".format(BOOT))
 
 def install_base():
     logger.debug("Install Base")
