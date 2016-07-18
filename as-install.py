@@ -497,7 +497,7 @@ def install_archstrike():
 			N
 			/Include/s/#//g}' /mnt/%s
         """ % (pacmanconf))
-        system('/bin/bash -c "yes|pacman -S gcc-multilib gcc-libs-multilib"', True)
+        system('/bin/bash -c "yes|pacman -S gcc-multilib"', True)
         print "Multilib has been enabled."
     else:
         print "Alright, looks like no. Continuing."
