@@ -20,6 +20,16 @@ console.setFormatter(formatter)
 logging.getLogger(__name__).addHandler(console)
 logger = logging.getLogger(__name__)
 
+COLORS = {
+    'HEADER' : '\033[95m',
+    'OKBLUE' : '\033[94m',
+    'OKGREEN' : '\033[92m',
+    'WARNING' : '\033[93m',
+    'FAIL' : '\033[91m',
+    'ENDC' : '\033[0m',
+    'BOLD' : '\033[1m',
+    'UNDERLINE' : '\033[4m'
+}
 
 ## Set some variables for being lazy later on
 yes = ['y', 'ye', 'yes', 'Y', 'YE', 'YES']
@@ -52,19 +62,22 @@ def system(command, chroot=False):
 
 def main():
     logger.debug("Starting Installation")
-
-    print """
-    Welcome to the ArchStrike Installer!
-    This was coded by Wh1t3Fox and xorond for the ArchStrike Project
-    """
-    time.sleep(3)
-    print """
-    Now you can choose an option from below.
+    print """{0}
+                        _      _____ _        _ _
+         /\            | |    / ____| |      (_) |
+        /  \   _ __ ___| |__ | (___ | |_ _ __ _| | _____
+       / /\ \ | '__/ __| '_ \ \___ \| __| '__| | |/ / _ \\
+      / ____ \| | | (__| | | |____) | |_| |  | |   <  __/
+     /_/    \_\_|  \___|_| |_|_____/ \__|_|  |_|_|\_\___|
+    {1}
+    Choose an option from below.
 
     1) Start the ArchStrike Installer (will install ArchStrike on your hard drive)
 
     99) Exit
-    """
+    """.format(COLORS['OKBLUE'], COLORS['ENDC'])
+    time.sleep(3)
+
     choice = raw_input("> Enter the number of your choice: ")
     if choice == "1":
         start()
