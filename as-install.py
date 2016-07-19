@@ -833,15 +833,17 @@ def install_archstrike():
     time.sleep(3)
     system("echo '[archstrike]' >> /mnt{0}".format(pacmanconf))
     system("echo 'Server = https://mirror.archstrike.org/$arch/$repo' >> /mnt{0}".format(pacmanconf))
-    print "Done. It's mandatory to enable multilib for x86_64. Do you want to enable multilib? (say no if it's already enabled)"
-    bit = raw_input("> [Y/n]:").lower() or 'yes'
-    if bit in yes:
-        system("""sed -i '/\[multilib]$/ {
-			N
-			/Include/s/#//g}' /mnt/%s
-        """ % (pacmanconf))
-        system('''/bin/bash -c " echo -e 'y\ny\n' |pacman -S gcc-multilib"''', True)
-        print "Multilib has been enabled."
+    cpubits = system('getconf LONG_BIT')
+    if cpubits == 64:
+        print "Done. It's mandatory to enable multilib for x86_64. Do you want to enable multilib? (say no if it's already enabled)"
+        bit = raw_input("> [Y/n]:").lower() or 'yes'
+        if bit in yes:
+            system("""sed -i '/\[multilib]$/ {
+			    N
+			    /Include/s/#//g}' /mnt/%s
+            """ % (pacmanconf))
+            system('''/bin/bash -c " echo -e 'y\ny\n' |pacman -S gcc-multilib"''', True)
+            print "Multilib has been enabled."
     else:
         print "Alright, looks like no. Continuing."
     print "I will now perform database updates, hang tight."
