@@ -833,8 +833,8 @@ def install_archstrike():
     time.sleep(3)
     system("echo '[archstrike]' >> /mnt{0}".format(pacmanconf))
     system("echo 'Server = https://mirror.archstrike.org/$arch/$repo' >> /mnt{0}".format(pacmanconf))
-    cpubits = system('getconf LONG_BIT')
-    if cpubits == 64:
+    cpubits = sp.check_output('getconf LONG_BIT', shell=True)
+    if cpubits == '64':
         print "Done. It's mandatory to enable multilib for x86_64. Do you want to enable multilib? (say no if it's already enabled)"
         bit = raw_input("> [Y/n]:").lower() or 'yes'
         if bit in yes:
