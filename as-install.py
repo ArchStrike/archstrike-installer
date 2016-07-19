@@ -44,20 +44,23 @@ def signal_handler(signal, handler):
     sys.exit()
 
 def system(command, chroot=False):
-    # don't log clear or encryption passwd
-    if command == 'clear' or command.find('printf') != -1:
-        sp.call(command, shell=True)
-        return
 
     if chroot:
         command = "arch-chroot /mnt {0}".format(command)
 
+    ret = sp.call([command], shell=True)
+
+    # don't log clear or encryption passwd
+    if command == 'clear' or command.find('printf') != -1:
+        return ret
+
     logger.debug(command)
 
-    try:
-        return sp.call([command], shell=True)
-    except:
-        logger.error(stderr)
+    if command == 'passwd':
+        return ret
+    else:
+        if ret != 0:
+            raise Exception('{0}{1}{2}'.format(COLORS['OKBLUE'], command, COLORS['ENDC']))
 
 
 def main():
@@ -568,26 +571,16 @@ def auto_partition():
     # Create Boot Partition
     system("wipefs -afq /dev/{0}".format(BOOT))
     if uefi:
-        ret = system("mkfs.vfat -F32 /dev/{0}".format(BOOT))
-        if ret != 0:
-            raise Exception("MKFS FAILURE")
+        system("mkfs.vfat -F32 /dev/{0}".format(BOOT))
     else:
-        ret = system("mkfs.ext4 /dev/{0}".format(BOOT))
-        if ret != 0:
-            raise Exception("MKFS FAILURE")
+        system("mkfs.ext4 /dev/{0}".format(BOOT))
 
     # Create Root Partition
-    ret = system("wipefs -afq /dev/{0}".format(ROOT))
-    if ret != 0:
-        raise Exception("MKFS FAILURE")
+    system("wipefs -afq /dev/{0}".format(ROOT))
     if fs == 'jfs' or fs == 'reiserfs':
-        ret = system('echo -e "y" | mkfs.{0} /dev/{1}'.format(fs, ROOT))
-        if ret != 0:
-            raise Exception("MKFS FAILURE")
+        system('echo -e "y" | mkfs.{0} /dev/{1}'.format(fs, ROOT))
     else:
-        ret = system('mkfs.{0} /dev/{1}'.format(fs, ROOT))
-        if ret != 0:
-            raise Exception("MKFS FAILURE")
+        system('mkfs.{0} /dev/{1}'.format(fs, ROOT))
 
     system("mount /dev/{0} /mnt".format(ROOT))
     system("mkdir -p /mnt/boot")
@@ -644,23 +637,15 @@ def auto_encrypt():
 
     system("wipefs -afq /dev/mapper/root")
     if fs == 'jfs' or fs == 'reiserfs':
-        ret = system('echo -e "y" | mkfs.{0} /dev/mapper/root'.format(fs))
-        if ret != 0:
-            raise Exception("MKFS FAILURE")
+        system('echo -e "y" | mkfs.{0} /dev/mapper/root'.format(fs))
     else:
-        ret = system('mkfs.{0} /dev/mapper/root'.format(fs))
-        if ret != 0:
-            raise Exception("MKFS FAILURE")
+        system('mkfs.{0} /dev/mapper/root'.format(fs))
 
     if uefi:
-        ret = system("mkfs.vfat -F32 /dev/".format(BOOT))
-        if ret != 0:
-            raise Exception("MKFS FAILURE")
+        system("mkfs.vfat -F32 /dev/".format(BOOT))
     else:
         system("wipefs -afq /dev/{0}".format(BOOT))
-        ret = system("mkfs.ext4 /dev/{0}".format(BOOT))
-        if ret != 0:
-            raise Exception("MKFS FAILURE")
+        system("mkfs.ext4 /dev/{0}".format(BOOT))
 
     system("mount /dev/mapper/root /mnt")
     system("mkdir -p /mnt/boot")
