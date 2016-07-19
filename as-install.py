@@ -683,8 +683,6 @@ def set_root_pass():
     logger.debug("Set root Pass")
     system("clear")
     print "Step 13) Setting root password"
-    print "You will be prompted to choose a root password now."
-    time.sleep(3)
     ret = -1
     while ret != 0:
         ret = system("passwd", True)
@@ -875,9 +873,16 @@ def finalize():
     system("clear")
     print "FINAL: Your system is set up! Rebooting now.."
     print "Thanks for installing ArchStrike!"
-    time.sleep(3)
     system("umount -R /mnt")
-    system("reboot")
+    while True:
+        reboot = raw_input("> Would you like to reboot now? (type yes or no): ").lower()
+        if reboot == 'yes':
+            system("reboot")
+        elif reboot == 'no':
+            break
+        else:
+            print "Please type yes or no"
+
 
 if __name__ == '__main__':
     try:
