@@ -762,9 +762,9 @@ def locale_and_time():
     """
     choice = raw_input("> Enter the number for your locale or leave empty for default.") or 1
     localesdict = {'1': 'en_US.UTF-8', '2': 'en_AU.UTF-8', '3': 'en_CA.UTF-8', '4': 'es_ES.UTF-8', '5': 'fr_FR.UTF-8', '6': 'de_DE.UTF-8', '7': 'en_GB.UTF-8', '8': 'en_MX.UTF-8', '9': 'pt_PT.UTF-8', '10': 'ro_RO.UTF-8', '11': 'ru_RU.UTF-8', '12': 'sv_SE.UTF-8'}
-    if choice in range(1,13):
+    if choice in map(str, range(1,13)):
         locale = localesdict[str(choice)]
-    elif choice == 99:
+    elif choice == '99':
         print "A full list will be listed now."
         print "Press 'q' to quit and 'Enter'/'Return' to scroll. Afterwards type in the locale you want to use."
         time.sleep(3)
