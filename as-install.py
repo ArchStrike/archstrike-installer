@@ -510,9 +510,17 @@ def check_lvm():
             system("echo -e 'y'|lvm lvremove {0}".format(lvm_dir))
 
     if part_type == 1:
-        auto_partition()
+        sure = raw_input("Automatic partitioning wipes your drive clean before proceeding. Are you sure you want to continue? [y/N] ").lower() or 'no'
+        if sure in yes:
+            auto_partition()
+        else:
+            check_lvm()
     elif part_type == 2:
-        auto_encrypt()
+        sure = raw_input("Automatic partitioning wipes your drive clean before proceeding. Are you sure you want to continue? [y/N] ").lower() or 'no'
+        if sure in yes:
+            auto_encrypt()
+        else:
+            check_lvm()
 
 def auto_partition():
     global ROOT
