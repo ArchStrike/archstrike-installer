@@ -730,10 +730,48 @@ def locale_and_time():
     system("clear")
     print "Step 9) Generating locale and setting timezone"
     print "Now you'll see an output of the locale list."
-    print "Press 'q' to quit and 'Enter'/'Return' to scroll. Afterwards type in the locale you want to use."
-    time.sleep(3)
-    system("cat /mnt/etc/locale.gen | more")
-    locale = raw_input("> Please type in the locale you want to use: ")
+    print """
+    1) United States
+
+    2) Australia
+
+    3) Canada
+
+    4) Spanish
+
+    5) French
+
+    6) German
+
+    7) Great Britain
+
+    8) Mexico
+
+    9) Portugal
+
+    10) Romanian
+
+    11) Russian
+
+    12) Swedish
+
+    99) More
+
+    Default is United States.
+
+    """
+    choice = raw_input("> Enter the number for your locale or leave empty for default.") or 'en_US.UTF-8'
+    localesdict = {'1': 'en_US.UTF-8', '2': 'en_AU.UTF-8', '3': 'en_CA.UTF-8', '4': 'es_ES.UTF-8', '5': 'fr_FR.UTF-8', '6': 'de_DE.UTF-8', '7': 'en_GB.UTF-8', '8': 'en_MX.UTF-8', '9': 'pt_PT.UTF-8', '10': 'ro_RO.UTF-8', '11': 'ru_RU.UTF-8', '12': 'sv_SE.UTF-8'}
+    if choice in range(1,13):
+        locale = localesdict[str(choice)]
+    elif choice == 99:
+        print "A full list will be listed now."
+        print "Press 'q' to quit and 'Enter'/'Return' to scroll. Afterwards type in the locale you want to use."
+        time.sleep(3)
+        system("cat /mnt/etc/locale.gen | more")
+        locale = raw_input("> Please type in the locale you want to use: ")
+    else:
+        locale_and_time()
     system("sed -i '/{0}/s/^#//g' /mnt/etc/locale.gen".format(locale))
     system("locale-gen", True)
     print "Setting up keyboard layout, will take the current one."
