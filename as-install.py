@@ -514,13 +514,13 @@ def check_lvm():
         if sure in yes:
             auto_partition()
         else:
-            check_lvm()
+            partition_menu()
     elif part_type == 2:
         sure = raw_input("Automatic partitioning wipes your drive clean before proceeding. Are you sure you want to continue? [y/N] ").lower() or 'no'
         if sure in yes:
             auto_encrypt()
         else:
-            check_lvm()
+            partition_menu()
 
 def auto_partition():
     global ROOT
