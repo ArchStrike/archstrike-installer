@@ -787,7 +787,7 @@ def set_hostname():
     print "Step 11) Setting Hostname"
     print "Your hostname will be 'archstrike'. You can change it later if you wish."
     time.sleep(3)
-    system("echo 'archstrike' > /mnt/etc/hostname", True)
+    system("echo 'archstrike' > /mnt/etc/hostname")
     setup_internet()
 
 def setup_internet():
