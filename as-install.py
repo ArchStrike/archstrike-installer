@@ -729,11 +729,13 @@ def locale_and_time():
     logger.debug("Locale and Time")
     system("clear")
     print "Step 9) Generating locale and setting timezone"
-    print "Now you will edit the locale list."
-    print "Remove the # in front of the locale your want."
+    print "Now you'll see an output of the locale list."
+    print "Press 'q' to quit and afterwards type in the locale you want to use."
     time.sleep(3)
-    system("nano /mnt/etc/locale.gen")
-    system("locale-gen", True) ## dont launch shell. just run a command
+    system("cat /mnt/etc/locale.gen | more")
+    locale = raw_input("> Please type in the locale you want to use: ")
+    system("sed -i '/{0}/s/^#//g' /mnt/etc/locale.gen".format(locale))
+    system("locale-gen", True)
     print "Setting up keyboard layout, will take the current one."
     layout = system("localectl | grep Locale | cut -d ':' -f 2")
     system("echo {0} >> /mnt/etc/vconsole.conf".format(layout))
