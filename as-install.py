@@ -62,6 +62,7 @@ def system(command, chroot=False):
 
 def main():
     logger.debug("Starting Installation")
+    system("clear")
     print """{0}
                         _      _____ _        _ _
          /\            | |    / ____| |      (_) |
@@ -375,24 +376,11 @@ def partitioner():
     Swap: %s
     """ % (drive, fs, swap_space)
     check_sure = raw_input("> Are you sure your partitions are set up correctly? [Y/n]: ").lower() or 'yes'
+
     if check_sure in yes:
-        if part_type == 1:
-            auto_partition()
-        elif part_type == 2:
-            auto_encrypt()
+        check_lvm()
     else:
         identify_devices()
-
-def check_lvm():
-
-    pvscan = sp.check_output('pvscan', shell=True)
-    vgscan = sp.check_output('vgscan', shell=True)
-    lvscan = sp.check_output('lvscan', shell=True)
-
-    if lvscan:
-        for entry in lvscan.rstrip().split('\n'):
-            lvm_dir = entry.split("'")[1]
-            system("lvm lvremove {0}".format(lvm_dir))
 
 def manual_partition():
     global partition_table
@@ -443,7 +431,6 @@ def manual_partition():
             manual_partition()
     else:
         identify_devices()
-
 
 def format_partitions():
     logger.debug("Format Partitions")
@@ -500,6 +487,32 @@ def mount_partitions(partitions):
         system("mkdir -p /mnt/boot")
 
     install_base()
+
+def check_lvm():
+
+    pvscan = sp.check_output('pvscan', shell=True)
+    vgscan = sp.check_output('vgscan', shell=True)
+    lvscan = sp.check_output('lvscan', shell=True)
+
+    if lvscan:
+        print "{0}WARNING: This will remove all LVM Partitions{1}".format(COLORS['WARNING'], COLORS['ENDC'])
+        while True:
+            cont = raw_input("> Would you like to continue? (type yes or no): ").lower()
+            if cont == 'yes':
+                break
+            elif cont == 'no':
+                partition_menu()
+            else:
+                print "Please type yes or no"
+
+        for entry in lvscan.rstrip().split('\n'):
+            lvm_dir = entry.split("'")[1]
+            system("echo -e 'y'|lvm lvremove {0}".format(lvm_dir))
+
+    if part_type == 1:
+        auto_partition()
+    elif part_type == 2:
+        auto_encrypt()
 
 def auto_partition():
     global ROOT
