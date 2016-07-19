@@ -363,10 +363,12 @@ def partition_menu():
 
         2) Auto Partition Encrypted LVM
 
+        3) Manual Partition
+
         """
         part = raw_input("> Choice: ")
         try:
-            if int(part) in range(1,3):
+            if int(part) in range(1,4):
                 part_type = int(part)
                 break
         except:
@@ -377,6 +379,8 @@ def partition_menu():
         auto_partition()
     elif part_type == 2:
         auto_encrypt()
+    elif part_type == 3:
+        manual_partition()
 
 def check_lvm():
 
@@ -388,6 +392,61 @@ def check_lvm():
         for entry in lvscan.rstrip().split('\n'):
             lvm_dir = entry.split("'")[1]
             system("lvm lvremove {0}".format(lvm_dir))
+
+def manual_partition():
+     system('clear')
+     print "Step 4) Manual Partititon (careful in this step)"
+     time.sleep(3)
+     print "I'm now going to print the current partition scheme of your drive %s" % drive
+     print "But first let's confirm everything."
+     confirm_drive = raw_input("> Please confirm that {0} is the drive you chose: ".format(drive))
+     if confirm_drive not in yes:
+        print "That doesn't look right. Let's try identifying those again."
+        identify_devices()
+     confirm_table = raw_input("> Please confirm that {0} is the partition table of {1}: ".format(partition_table, drive))
+     if confirm_table not in partition_table:
+        print "That doesn't look right. Let's try identifying those again."
+        identify_devices()
+     print "Looks like both are confirmed."
+     sp.call("lsblk {0}".format(drive), shell=True)
+     if partition_table == 'gpt':
+        print """
+     For the GPT partition table, the suggested partition scheme looks like this:
+     mountpoint        partition        partition type            boot flag        suggested size
+     _________________________________________________________________________________________
+     /boot              /dev/sdx1        EFI System Partition      Yes               260-512 MiB
+                                                                                                                                             
+     [SWAP]             /dev/sdx2        Linux swap                No                More than 512 MiB
+                                                                                                                                                     
+     /                  /dev/sdx3        Linux (ext4)              No                Remainder of the device
+                                                                                                                                                             
+                                                                                                                                                                    WARNING: If dual-booting with an existing installation of Windows on a UEFI/GPT system,
+    avoid reformatting the UEFI partition, as this includes the Windows .efi file required to boot it.
+        """
+     elif partition_table == 'dos':
+        print """
+    For the MBR partition table, the suggested partition scheme looks like this:
+    mountpoint        partition        partition type            boot flag        suggested size
+    _________________________________________________________________________________________
+    [SWAP]            /dev/sdx1        Linux swap                No                More than 512 MiB
+    /                 /dev/sdx2        Linux (ext4)              Yes               Remainder of the device
+    """
+     go_on = raw_input("> I've read this and wish to continue to the partitioner. [Y/n]: ").lower() or 'yes'
+     if go_on in yes:
+        partitioner(partition_table)
+     else:
+        partition_devices(partition_table)
+
+def partitioner(partition_table):
+    sp.call("clear", shell=True)
+    sp.call('cfdisk {0}'.format(drive), shell=True)
+    sp.call("clear", shell=True)
+    sp.call('lsblk {0}'.format(drive), shell=True)
+    check_sure = raw_input("> Are you sure your partitions are set up correctly? [Y/n]: ").lower() or 'yes'
+    if check_sure in yes:
+        format_partitions()
+    else:
+        partitioner(partition_table)
 
 def auto_partition():
     global ROOT
