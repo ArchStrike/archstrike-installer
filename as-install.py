@@ -730,7 +730,7 @@ def locale_and_time():
     system("clear")
     print "Step 9) Generating locale and setting timezone"
     print "Now you'll see an output of the locale list."
-    print "Press 'q' to quit and afterwards type in the locale you want to use."
+    print "Press 'q' to quit and 'Enter'/'Return' to scroll. Afterwards type in the locale you want to use."
     time.sleep(3)
     system("cat /mnt/etc/locale.gen | more")
     locale = raw_input("> Please type in the locale you want to use: ")
