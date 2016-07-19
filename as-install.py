@@ -56,11 +56,11 @@ def system(command, chroot=False):
 
     logger.debug(command)
 
-    if command == 'passwd':
+    if command.find('passwd') != -1:
         return ret
     else:
         if ret != 0:
-            raise Exception('{0}{1}{2}'.format(COLORS['OKBLUE'], command, COLORS['ENDC']))
+            raise Exception('{0}{1}{2}'.format(COLORS['FAIL'], command, COLORS['ENDC']))
 
 
 def main():
