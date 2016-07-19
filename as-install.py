@@ -365,6 +365,17 @@ def partition_menu():
     elif part_type == 2:
         auto_encrypt()
 
+def check_lvm():
+
+    pvscan = sp.check_output('pvscan', shell=True)
+    vgscan = sp.check_output('vgscan', shell=True)
+    lvscan = sp.check_output('lvscan', shell=True)
+
+    if lvscan:
+        for entry in lvscan.rstrip().split('\n'):
+            lvm_dir = entry.split("'")[1]
+            system("lvm lvremove {0}".format(lvm_dir))
+
 def auto_partition():
     global ROOT
     global BOOT
