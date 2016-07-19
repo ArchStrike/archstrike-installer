@@ -76,7 +76,6 @@ def main():
 
     99) Exit
     """.format(COLORS['OKBLUE'], COLORS['ENDC'])
-    time.sleep(3)
 
     choice = raw_input("> Enter the number of your choice: ")
     if choice == "1":
@@ -232,16 +231,44 @@ def set_keymap():
         if weirdfont in yes:
             system("setfont lat9w-16")
             print "Should be fixed now."
-            identify_devices()
+            partition_menu()
         else:
             ## next step
-            identify_devices()
+            partition_menu()
     elif choice in no:
         print "Going to the next step."
-        identify_devices()
+        partition_menu()
     else:
         print "Not sure what you're talking about."
         set_keymap()
+
+def partition_menu():
+    global part_type
+    logger.debug("Partition Menu")
+
+    while True:
+        system("clear")
+        print "Step 2) Partition Menu"
+        print """
+        Select Your Partition Method
+
+        1) Auto Partition Drive
+
+        2) Auto Partition Encrypted LVM
+
+        3) Manual Partition
+
+        """
+        part = raw_input("> Choice: ")
+        try:
+            if int(part) in range(1,4):
+                part_type = int(part)
+                break
+        except:
+            print "Invalid Option"
+            time.sleep(1)
+
+    identify_devices()
 
 ## function to identify devices for partitioning
 def identify_devices():
@@ -250,7 +277,7 @@ def identify_devices():
 
     logger.debug("Identify Devices")
     system("clear")
-    print "Step 2) HDD Preparation"
+    print "Step 3) HDD Preparation"
     system("swapoff -a")
     time.sleep(3)
     print "Current Devices"
@@ -265,7 +292,11 @@ def identify_devices():
     if sure in no:
         identify_devices()
     drive_size = sp.check_output("lsblk -p | grep -w %s | awk '{print $4}' | grep -o '[0-9]*' | awk 'NR==1'" % (drive), shell=True).rstrip()
-    partition_devices()
+
+    if part_type == 3:
+        manual_partition()
+    else:
+        partition_devices()
 
 def partition_devices():
     global fs
@@ -279,7 +310,7 @@ def partition_devices():
     }
     logger.debug("Partition Devices")
     system("clear")
-    print "Step 3) Selecting the Filesystem Type"
+    print "Step 4) Selecting the Filesystem Type"
     time.sleep(3)
     print """
     Select your filesystem type:
@@ -308,7 +339,7 @@ def partition_devices():
 
 def setup_swap():
     global swap_space
-    cswap = raw_input("> Step 4) Would you like to create a new swap space? [Y/n]: ").lower() or 'yes'
+    cswap = raw_input("> Step 5) Would you like to create a new swap space? [Y/n]: ").lower() or 'yes'
     if cswap in yes:
         swap_space = raw_input("> Enter your swap space size (default is 512M ): ".format(drive_size)).rstrip() or '512M'
         size = swap_space[:-1]
@@ -334,7 +365,7 @@ def partitioner():
     system("clear")
     gpt = False
     if not uefi:
-        cgpt = raw_input("> Step 5) Would you like to use GUID Partition Table? [y/N]: ").lower() or 'no'
+        cgpt = raw_input("> Step 6) Would you like to use GUID Partition Table? [y/N]: ").lower() or 'no'
         if cgpt in yes:
             gpt = True
     system("clear")
@@ -345,42 +376,12 @@ def partitioner():
     """ % (drive, fs, swap_space)
     check_sure = raw_input("> Are you sure your partitions are set up correctly? [Y/n]: ").lower() or 'yes'
     if check_sure in yes:
-        partition_menu()
+        if part_type == 1:
+            auto_partition()
+        elif part_type == 2:
+            auto_encrypt()
     else:
         identify_devices()
-
-def partition_menu():
-    global part_type
-    logger.debug("Partition Menu")
-
-    while True:
-        system("clear")
-        print "Step 6) Partition Menu"
-        print """
-        Select Your Partition Method
-
-        1) Auto Partition Drive
-
-        2) Auto Partition Encrypted LVM
-
-        3) Manual Partition
-
-        """
-        part = raw_input("> Choice: ")
-        try:
-            if int(part) in range(1,4):
-                part_type = int(part)
-                break
-        except:
-            print "Invalid Option"
-            time.sleep(1)
-
-    if part_type == 1:
-        auto_partition()
-    elif part_type == 2:
-        auto_encrypt()
-    elif part_type == 3:
-        manual_partition()
 
 def check_lvm():
 
@@ -394,36 +395,34 @@ def check_lvm():
             system("lvm lvremove {0}".format(lvm_dir))
 
 def manual_partition():
-     system('clear')
-     print "Step 4) Manual Partititon (careful in this step)"
-     time.sleep(3)
-     print "I'm now going to print the current partition scheme of your drive %s" % drive
-     print "But first let's confirm everything."
-     confirm_drive = raw_input("> Please confirm that {0} is the drive you chose: ".format(drive))
-     if confirm_drive not in yes:
+    global partition_table
+
+    system('clear')
+    print "Step 4) Manual Partititon (careful in this step)"
+    time.sleep(3)
+    print "I'm now going to print the current partition scheme of your drive %s" % drive
+    print "But first let's confirm everything."
+    confirm_drive = raw_input("> Please confirm the drive by typing {0}: ".format(drive))
+    if confirm_drive != drive:
         print "That doesn't look right. Let's try identifying those again."
         identify_devices()
-     confirm_table = raw_input("> Please confirm that {0} is the partition table of {1}: ".format(partition_table, drive))
-     if confirm_table not in partition_table:
-        print "That doesn't look right. Let's try identifying those again."
-        identify_devices()
-     print "Looks like both are confirmed."
-     sp.call("lsblk {0}".format(drive), shell=True)
-     if partition_table == 'gpt':
+    system("lsblk {0}".format(drive))
+    partition_table = sp.check_output("fdisk -l {0} | grep Disklabel | cut -d ' ' -f 3".format(drive), shell=True).rstrip()
+    if partition_table == 'gpt':
         print """
      For the GPT partition table, the suggested partition scheme looks like this:
      mountpoint        partition        partition type            boot flag        suggested size
      _________________________________________________________________________________________
      /boot              /dev/sdx1        EFI System Partition      Yes               260-512 MiB
-                                                                                                                                             
+
      [SWAP]             /dev/sdx2        Linux swap                No                More than 512 MiB
-                                                                                                                                                     
+
      /                  /dev/sdx3        Linux (ext4)              No                Remainder of the device
-                                                                                                                                                             
-                                                                                                                                                                    WARNING: If dual-booting with an existing installation of Windows on a UEFI/GPT system,
+
+    WARNING: If dual-booting with an existing installation of Windows on a UEFI/GPT system,
     avoid reformatting the UEFI partition, as this includes the Windows .efi file required to boot it.
         """
-     elif partition_table == 'dos':
+    elif partition_table == 'dos':
         print """
     For the MBR partition table, the suggested partition scheme looks like this:
     mountpoint        partition        partition type            boot flag        suggested size
@@ -431,22 +430,76 @@ def manual_partition():
     [SWAP]            /dev/sdx1        Linux swap                No                More than 512 MiB
     /                 /dev/sdx2        Linux (ext4)              Yes               Remainder of the device
     """
-     go_on = raw_input("> I've read this and wish to continue to the partitioner. [Y/n]: ").lower() or 'yes'
-     if go_on in yes:
-        partitioner(partition_table)
-     else:
-        partition_devices(partition_table)
-
-def partitioner(partition_table):
-    sp.call("clear", shell=True)
-    sp.call('cfdisk {0}'.format(drive), shell=True)
-    sp.call("clear", shell=True)
-    sp.call('lsblk {0}'.format(drive), shell=True)
-    check_sure = raw_input("> Are you sure your partitions are set up correctly? [Y/n]: ").lower() or 'yes'
-    if check_sure in yes:
-        format_partitions()
+    go_on = raw_input("> I've read this and wish to continue to the partitioner. [Y/n]: ").lower() or 'yes'
+    if go_on in yes:
+        sp.call("clear", shell=True)
+        sp.call('cfdisk {0}'.format(drive), shell=True)
+        sp.call("clear", shell=True)
+        sp.call('lsblk {0}'.format(drive), shell=True)
+        check_sure = raw_input("> Are you sure your partitions are set up correctly? [Y/n]: ").lower() or 'yes'
+        if check_sure in yes:
+            format_partitions()
+        else:
+            manual_partition()
     else:
-        partitioner(partition_table)
+        identify_devices()
+
+
+def format_partitions():
+    logger.debug("Format Partitions")
+    system("clear")
+    print "Step 5) Formatting partitions"
+    time.sleep(3)
+    print "Current partition scheme of {0}".format(drive)
+    system("lsblk %s" % drive)
+    partitions = raw_input("> Enter all the partitions you created by seperating them with a comma (e.g. /dev/sda1,/dev/sda2): ").split(',')
+    print "You sure these are the partitions?"
+    print '\n'.join(partitions)
+    sure = raw_input("> [Y/n]: ").lower() or 'yes'
+    if sure in yes:
+        print "Alright, starting to format."
+        for i in partitions:
+            print "Partition {0} will be formatted now".format(i)
+            partition_type = raw_input("> Enter the partition type (linux, uefi, swap): ").lower()
+            if partition_type == 'linux':
+                system("mkfs.ext4 {0}".format(i))
+            elif partition_type == 'uefi':
+                system("mkfs.fat -F32 {0}".format(i))
+            elif partition_type == 'swap':
+                system("mkswap {0}".format(i))
+                system("swapon {0}".format(i))
+            else:
+                print "Not sure what you're talking about."
+                format_partitions()
+        mount_partitions(partitions)
+    else:
+        format_partitions()
+
+def mount_partitions(partitions):
+    logger.debug("Mount Partitions")
+    system("clear")
+    print "Step 6) Mounting the partitions"
+    time.sleep(3)
+    ## get individual partition fs types so we can mount / in /mnt
+    print '\n'.join(partitions)
+    root = raw_input("Which one is your / mounted partition? (e.g. /dev/sda1): ")
+    if root in partitions:
+        print "Mounting {0} on /mnt".format(root)
+        system("mount {0} /mnt".format(root))
+    else:
+        mount_partitions(partitions)
+    if partition_table == 'gpt':
+        boot = raw_input("Which one is your /boot mounted partition? (e.g. /dev/sda2): ")
+        if boot in partitions:
+            print "Mounting %s on /mnt/boot" % boot
+            system("mkdir -p /mnt/boot")
+            system("mount {0} /mnt/boot".format(boot))
+        else:
+            mount_partitions(partitions)
+    else:
+        system("mkdir -p /mnt/boot")
+
+    install_base()
 
 def auto_partition():
     global ROOT
