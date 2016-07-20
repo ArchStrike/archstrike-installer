@@ -114,11 +114,15 @@ def system(command, chroot=False, **kwargs):
                 if rfd == child.stdout.fileno():
                     line = child.stdout.readline()
                     if len(line) > 0:
+                        print('{0}'.format(COLORS['BOLD']))
                         logger.log(logging.INFO, line[:-1])
+                        print('{0}'.format(COLORS['ENDC']))
                 if rfd == child.stderr.fileno():
                     line = child.stderr.readline()
                     if len(line) > 0:
+                        print('{0}'.format(COLORS['FAIL']))
                         logger.log(logging.ERROR, line[:-1])
+                        print('{0}'.format(COLORS['ENDC']))
             if event & select.POLLHUP:
                 poll.unregister(rfd)
                 pollc -= 1
