@@ -513,7 +513,7 @@ def check_lvm():
 
     pvscan = sp.check_output('pvscan', shell=True)
     vgscan = sp.check_output('vgscan', shell=True)
-    lvscan = sp.check_output('lvscanl', shell=True)
+    lvscan = sp.check_output('lvscan', shell=True)
 
     if lvscan:
         print "{0}WARNING: This will remove all LVM Partitions{1}".format(COLORS['WARNING'], COLORS['ENDC'])
