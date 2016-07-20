@@ -31,11 +31,40 @@ COLORS = {
     'UNDERLINE' : '\033[4m'
 }
 
-## Set some variables for being lazy later on
-yes = ['y', 'ye', 'yes', 'Y', 'YE', 'YES']
-no = ['n', 'no', 'N', 'NO']
 pacmanconf = "/etc/pacman.conf"
 archstrike_mirrorlist = "/etc/pacman.d/archstrike-mirrorlist"
+
+def query_yes_no(question, default="yes"):
+    """Ask a yes/no question via raw_input() and return their answer.
+
+    "question" is a string that is presented to the user.
+    "default" is the presumed answer if the user just hits <Enter>.
+        It must be "yes" (the default), "no" or None (meaning
+        an answer is required of the user).
+
+    The "answer" return value is True for "yes" or False for "no".
+    """
+    valid = {"yes": True, "y": True, "ye": True,
+             "no": False, "n": False}
+    if default is None:
+        prompt = " [y/n] "
+    elif default == "yes":
+        prompt = " [Y/n] "
+    elif default == "no":
+        prompt = " [y/N] "
+    else:
+        raise ValueError("invalid default answer: '%s'" % default)
+
+    while True:
+        sys.stdout.write(question + prompt)
+        choice = raw_input().lower()
+        if default is not None and choice == '':
+            return valid[default]
+        elif choice in valid:
+            return valid[choice]
+        else:
+            sys.stdout.write("Please respond with 'yes' or 'no' "
+                             "(or 'y' or 'n').\n")
 
 def signal_handler(signal, handler):
     sp.Popen("umount -R /mnt", stdout=FNULL, stderr=sp.STDOUT, shell=True)
@@ -226,8 +255,7 @@ def set_keymap():
     print "Step 1) Keymap Setup"
     time.sleep(3)
     print "Setting your keyboard layout now, default is US."
-    choice = raw_input("> Would you like to change the keyboard layout? [y/N]: ").lower() or 'no'
-    if choice in yes:
+    if query_yes_no("> Would you like to change the keyboard layout?", 'no'):
         system("ls /usr/share/kbd/keymaps/**/*.map.gz")
         layout = raw_input("> Enter your keyboard layout: ")
         system("loadkeys {0}".format(layout))
@@ -239,12 +267,9 @@ def set_keymap():
         else:
             ## next step
             partition_menu()
-    elif choice in no:
+    else:
         print "Going to the next step."
         partition_menu()
-    else:
-        print "Not sure what you're talking about."
-        set_keymap()
 
 def partition_menu():
     global part_type
@@ -292,8 +317,7 @@ def identify_devices():
         print "That drive does not exist"
         time.sleep(1)
         identify_devices()
-    sure = raw_input("Are you sure want to use {0}? Choosing the wrong drive may have very bad consequences!: ".format(drive))
-    if sure in no:
+    if not query_yes_no("Are you sure want to use {0}? Choosing the wrong drive may have very bad consequences!".format(drive), 'yes'):
         identify_devices()
     drive_size = sp.check_output("lsblk -p | grep -w %s | awk '{print $4}' | grep -o '[0-9]*' | awk 'NR==1'" % (drive), shell=True).rstrip()
 
@@ -343,8 +367,7 @@ def partition_devices():
 
 def setup_swap():
     global swap_space
-    cswap = raw_input("> Step 5) Would you like to create a new swap space? [Y/n]: ").lower() or 'yes'
-    if cswap in yes:
+    if query_yes_no("> Step 5) Would you like to create a new swap space?", 'yes'):
         swap_space = raw_input("> Enter your swap space size (default is 512M ): ".format(drive_size)).rstrip() or '512M'
         size = swap_space[:-1]
         if swap_space[-1] == "M":
@@ -369,8 +392,7 @@ def partitioner():
     system("clear")
     gpt = False
     if not uefi:
-        cgpt = raw_input("> Step 6) Would you like to use GUID Partition Table? [y/N]: ").lower() or 'no'
-        if cgpt in yes:
+        if query_yes_no("> Step 6) Would you like to use GUID Partition Table?", 'no'):
             gpt = True
     system("clear")
     print """
@@ -378,9 +400,7 @@ def partitioner():
     Filesystem: %s
     Swap: %s
     """ % (drive, fs, swap_space)
-    check_sure = raw_input("> Are you sure your partitions are set up correctly? [Y/n]: ").lower() or 'yes'
-
-    if check_sure in yes:
+    if query_yes_no("> Are you sure your partitions are set up correctly?", 'yes'):
         check_lvm()
     else:
         identify_devices()
@@ -421,14 +441,12 @@ def manual_partition():
     [SWAP]            /dev/sdx1        Linux swap                No                More than 512 MiB
     /                 /dev/sdx2        Linux (ext4)              Yes               Remainder of the device
     """
-    go_on = raw_input("> I've read this and wish to continue to the partitioner. [Y/n]: ").lower() or 'yes'
-    if go_on in yes:
+    if query_yes_no("> I've read this and wish to continue to the partitioner.", 'yes'):
         sp.call("clear", shell=True)
         sp.call('cfdisk {0}'.format(drive), shell=True)
         sp.call("clear", shell=True)
         sp.call('lsblk {0}'.format(drive), shell=True)
-        check_sure = raw_input("> Are you sure your partitions are set up correctly? [Y/n]: ").lower() or 'yes'
-        if check_sure in yes:
+        if query_yes_no("> Are you sure your partitions are set up correctly?", 'yes'):
             format_partitions()
         else:
             manual_partition()
@@ -493,34 +511,26 @@ def mount_partitions(partitions):
 
 def check_lvm():
 
-    pvscan = sp.check_output('pvscan', shell=True)
-    vgscan = sp.check_output('vgscan', shell=True)
-    lvscan = sp.check_output('lvscan', shell=True)
+    pvscan = sp.check_output('pvscan &> /dev/null', shell=True)
+    vgscan = sp.check_output('vgscan &> /dev/null', shell=True)
+    lvscan = sp.check_output('lvscan &> /dev/null', shell=True)
 
     if lvscan:
         print "{0}WARNING: This will remove all LVM Partitions{1}".format(COLORS['WARNING'], COLORS['ENDC'])
-        while True:
-            cont = raw_input("> Would you like to continue? (type yes or no): ").lower()
-            if cont == 'yes':
-                break
-            elif cont == 'no':
-                partition_menu()
-            else:
-                print "Please type yes or no"
+        if not query_yes_no("> Would you like to continue?: ", None):
+            partition_menu()
 
         for entry in lvscan.rstrip().split('\n'):
             lvm_dir = entry.split("'")[1]
             system("echo -e 'y'|lvm lvremove {0}".format(lvm_dir))
 
     if part_type == 1:
-        sure = raw_input("Automatic partitioning wipes your drive clean before proceeding. Are you sure you want to continue? [y/N] ").lower() or 'no'
-        if sure in yes:
+        if query_yes_no("Automatic partitioning wipes your drive clean before proceeding. Are you sure you want to continue?", 'no'):
             auto_partition()
         else:
             partition_menu()
     elif part_type == 2:
-        sure = raw_input("Automatic partitioning wipes your drive clean before proceeding. Are you sure you want to continue? [y/N] ").lower() or 'no'
-        if sure in yes:
+        if query_yes_no("Automatic partitioning wipes your drive clean before proceeding. Are you sure you want to continue?", 'no'):
             auto_encrypt()
         else:
             partition_menu()
@@ -594,8 +604,7 @@ def auto_encrypt():
     global SWAP
 
     print "WARNING! This will encrypt {0}".format(drive)
-    cont = raw_input("> Continue? [y/N]: ").lower() or 'no'
-    if cont in no:
+    if not query_yes_no("> Continue?", 'no'):
         partition_menu()
     pass_set = False
     while not pass_set:
@@ -705,8 +714,7 @@ def genfstab():
     print "Step 8) Generating fstab..."
     time.sleep(3)
     system("genfstab -U /mnt >> /mnt/etc/fstab")
-    edit = raw_input("> Would you like to edit the generated fstab? [y/N]: ").lower() or 'no'
-    if edit in yes:
+    if query_yes_no("> Would you like to edit the generated fstab?", 'no'):
         system("nano /mnt/etc/fstab")
     locale_and_time()
 
@@ -840,12 +848,10 @@ def setup_internet():
     logger.debug("Setup Internet")
     system("clear")
     print "Step 12) Setup Internet"
-    wireless = raw_input("> Do you want wireless utilities on your new install? [Y/n]: ").lower() or 'yes'
-    if wireless in yes:
+    if query_yes_no("> Do you want wireless utilities on your new install?", 'yes'):
         print "Installing Wireless utilities"
         system("pacman -S iw wpa_supplicant dialog --noconfirm", True)
-    dhcp = raw_input("> Would you like to enable DHCP? [Y/n]: ").lower() or 'yes'
-    if dhcp in yes:
+    if query_yes_no("> Would you like to enable DHCP?", 'yes'):
         print "Enabling DHCP"
         system("systemctl enable dhcpcd", True)
     set_root_pass()
@@ -868,9 +874,8 @@ def install_archstrike():
     system("echo 'Server = https://mirror.archstrike.org/$arch/$repo' >> /mnt{0}".format(pacmanconf))
     cpubits = sp.check_output('getconf LONG_BIT', shell=True).rstrip()
     if cpubits == '64':
-        print "Done. It's mandatory to enable multilib for x86_64. Do you want to enable multilib? (say no if it's already enabled)"
-        bit = raw_input("> [Y/n]:").lower() or 'yes'
-        if bit in yes:
+        print "We have detected you are running x86_64. It is adviced to enable multilib with the ArchStrike repo. Do you want to enable multilib? (say no if it's already enabled)"
+        if query_yes_no(">", 'yes'):
             system("""sed -i '/\[multilib]$/ {
 			    N
 			    /Include/s/#//g}' /mnt/%s
@@ -890,16 +895,14 @@ def install_archstrike():
     system("pacman -S archstrike-mirrorlist --noconfirm", True)
     print "Done. Editing your pacman config to use the new mirrorlist."
     system("sed -i 's|Server = https://mirror.archstrike.org/$arch/$repo|Include = /etc/pacman.d/archstrike-mirrorlist|' /mnt{0}".format(pacmanconf))
-    testing = raw_input("> Do you want to add archstrike-testing as well? [Y/n]: ").lower() or 'yes'
-    if testing in yes:
+    if query_yes_no("> Do you want to add archstrike-testing as well?", 'yes'):
         system("echo '[archstrike-testing]' >> /mnt{0}".format(pacmanconf))
         system("echo 'Include = /etc/pacman.d/archstrike-mirrorlist' >> /mnt{0}".format(pacmanconf))
     else:
           print "Alright going forward."
     print "Performing database update once more to test mirrorlist"
     system("pacman -Syy", True)
-    install_now = raw_input("> Do you want to go ahead and install all ArchStrike packages now? [y/N]: ").lower() or 'no'
-    if install_now in yes:
+    if query_yes_no("> Do you want to go ahead and install all ArchStrike packages now?", 'no'):
         system('''/bin/bash -c " echo -e 'y\n'| pacman -S cryptsetup-nuke-keys"''', True)
         system("pacman -S archstrike linux-headers --noconfirm", True)
     add_user()
@@ -911,8 +914,7 @@ def add_user():
     logger.debug("Add User")
     system("clear")
     print "Step 15) Add new User"
-    opt =  raw_input("> Would you like to add a new user? [Y/n]: ").lower() or 'yes'
-    if opt in yes:
+    if query_yes_no("> Would you like to add a new user?", 'yes'):
         while not username:
             username = raw_input("> Please enter a username: ")
         system("useradd -m -g users -G audio,network,power,storage,optical {0}".format(username), True)
@@ -920,8 +922,7 @@ def add_user():
         ret = -1
         while ret != 0:
             ret = system("passwd {0}".format(username), True)
-        admin = raw_input("> Would you like to give {0} admin privileges? [Y/n]: ".format(username)).lower() or 'yes'
-        if admin in yes:
+        if query_yes_no("> Would you like to give {0} admin privileges?".format(username), 'yes'):
             system("sed -i '/%wheel ALL=(ALL) ALL/s/^#//' /mnt/etc/sudoers")
             system("usermod -a -G wheel {0}".format(username), True)
     set_video_utils(username)
@@ -937,8 +938,7 @@ def set_video_utils(user):
     logger.debug("Set Video Utils")
     system("clear")
     print "Step 16) Setting up video and desktop environment"
-    choice = raw_input("> Would you like to set up video utilities? [Y/n]: ").lower() or 'yes'
-    if choice in yes:
+    if query_yes_no("> Would you like to set up video utilities?", 'yes'):
         print "To setup video utilities select your GPU. (Leave empty if unsure)"
         print """
 
@@ -958,8 +958,7 @@ def set_video_utils(user):
             print "Not a valid option"
             set_video_utils(username)
 
-    desktop = raw_input("> Would you like to install a Desktop Environment or Window Manager? [Y/n]: ") or 'yes'
-    if desktop in yes:
+    if query_yes_no("> Would you like to install a Desktop Environment or Window Manager?", 'yes'):
         opt = ''
         while not opt:
             print """
@@ -1022,21 +1021,17 @@ def set_video_utils(user):
         system("cp -a /home/archstrike/.config/terminator /mnt/home/{0}/.config".format(username))
         system("cp -a /home/archstrike/.config/terminator /mnt/root/.config/")
 
-    lm = raw_input("> Would you like to install a login manager? [Y/n]: ").lower() or 'yes'
-    if lm in yes:
+    if query_yes_no("> Would you like to install a login manager?", 'yes'):
         system("pacman -S lightdm lightdm-gtk-greeter --noconfirm", True)
         system("systemctl enable lightdm.service", True)
 
-    vb = raw_input("> Would you like to install virtualbox utils? [Y/n]: ").lower() or 'yes'
-    if vb in yes:
+    if query_yes_no("> Would you like to install virtualbox utils?", 'yes'):
         system("pacman -S virtualbox-guest-utils linux-headers mesa-libgl --noconfirm", True)
 
-    touchpad = raw_input("> Would you like to add touchpad support? [y/N]: ").lower() or 'no'
-    if  touchpad in yes:
+    if query_yes_no("> Would you like to add touchpad support?", 'no'):
         system("pacman -S xf86-input-synaptics --noconfirm", True)
 
-    bluetooth = raw_input("> Would you like to add bluetooth support? [y/N]: ").lower() or 'no'
-    if bluetooth in yes:
+    if query_yes_no("> Would you like to add bluetooth support?", 'no'):
         system("pacman -S blueman --noconfirm", True)
 
     finalize()
@@ -1047,14 +1042,8 @@ def finalize():
     print "FINAL: Your system is set up! Rebooting now.."
     print "Thanks for installing ArchStrike!"
     system("umount -R /mnt")
-    while True:
-        reboot = raw_input("> Would you like to reboot now? (type yes or no): ").lower()
-        if reboot == 'yes':
-            system("reboot")
-        elif reboot == 'no':
-            break
-        else:
-            print "Please type yes or no"
+    if query_yes_no("> Would you like to reboot now?", None):
+        system("reboot")
 
 
 if __name__ == '__main__':
