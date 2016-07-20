@@ -34,6 +34,21 @@ COLORS = {
 pacmanconf = "/etc/pacman.conf"
 archstrike_mirrorlist = "/etc/pacman.d/archstrike-mirrorlist"
 
+def print_error(msg):
+    print('''{0}{1}{2}'''.format(COLORS['FAIL'],msg, COLORS['ENDC']))
+
+def print_warning(msg):
+    print('''{0}{1}{2}'''.format(COLORS['HEADER'],msg, COLORS['ENDC']))
+
+def print_command(msg):
+    print('''{0}{1}{2}'''.format(COLORS['OKBLUE'],msg, COLORS['ENDC']))
+
+def print_title(msg):
+    print('''{0}{1}{2}'''.format(COLORS['HEADER'],msg, COLORS['ENDC']))
+
+def print_info(msg):
+    print('''{0}{1}{2}'''.format(COLORS['OKGREEN'],msg, COLORS['ENDC']))
+
 def query_yes_no(question, default="yes"):
     """Ask a yes/no question via raw_input() and return their answer.
 
@@ -56,20 +71,19 @@ def query_yes_no(question, default="yes"):
         raise ValueError("invalid default answer: '%s'" % default)
 
     while True:
-        sys.stdout.write(question + prompt)
+        sys.stdout.write('{0}{1}{2}{3}'.format(COLORS['OKBLUE'],question,prompt,COLORS['ENDC']))
         choice = raw_input().lower()
         if default is not None and choice == '':
             return valid[default]
         elif choice in valid:
             return valid[choice]
         else:
-            sys.stdout.write("Please respond with 'yes' or 'no' "
-                             "(or 'y' or 'n').\n")
+            sys.stdout.write("{0}Please respond with 'yes' or 'no' (or 'y' or 'n').\n{1}".format(COLORS['FAIL'],COLORS['ENDC']))
 
 def signal_handler(signal, handler):
     sp.Popen("umount -R /mnt", stdout=FNULL, stderr=sp.STDOUT, shell=True)
     FNULL.close()
-    print "\n\nGood Bye"
+    print_info("\n\nGood Bye")
     sys.exit()
 
 def system(command, chroot=False):
@@ -77,7 +91,9 @@ def system(command, chroot=False):
     if chroot:
         command = "arch-chroot /mnt {0}".format(command)
 
+    print('{0}'.format(COLORS['BOLD']))
     ret = sp.call([command], shell=True)
+    print('{0}'.format(COLORS['ENDC']))
 
     # don't log clear or encryption passwd
     if command == 'clear' or command.find('printf') != -1:
@@ -90,7 +106,6 @@ def system(command, chroot=False):
     else:
         if ret != 0:
             raise Exception('{0}{1}{2}'.format(COLORS['FAIL'], command, COLORS['ENDC']))
-
 
 def main():
     logger.debug("Starting Installation")
@@ -107,17 +122,17 @@ def main():
 
     1) Start the ArchStrike Installer (will install ArchStrike on your hard drive)
 
-    99) Exit
-    """.format(COLORS['OKBLUE'], COLORS['ENDC'])
+    99) Exit{2}
+    """.format(COLORS['OKBLUE'], COLORS['OKGREEN'], COLORS['ENDC'])
 
-    choice = raw_input("> Enter the number of your choice: ")
+    choice = raw_input("{0}> Enter the number of your choice: {1}".format(COLORS['OKBLUE'],COLORS['ENDC']))
     if choice == "1":
         start()
     elif choice == "99":
-        print "Alright, see you later!"
+        print_info("Alright, see you later!")
         sys.exit()
     else:
-        print "Not sure what you're talking about."
+        print_error("Not sure what you're talking about.")
         main()
 
 def menu():
@@ -209,14 +224,15 @@ def menu():
 def start():
     logger.debug("Performing Checks")
     system("clear")
-    print "Performing some checks before we continue.."
+    print_info("Performing some checks before we continue..")
     time.sleep(3)
     if internet_on() == False:
-        print "Looks like you're not connected to the internet. Exiting."
+        print_error("Looks like you're not connected to the internet. Exiting.")
         sys.exit()
         print "Checks done. The installation process will now begin."
     if os.geteuid() != 0:
-        exit("Run as root/sudo please.\nExiting now")
+        print_error("Run as root/sudo please.\nExiting now")
+        sys.exit()
     ## update system clock
     system("timedatectl set-ntp true")
     check_uefi()
@@ -244,7 +260,7 @@ def check_uefi():
         uefi = True
     except OSError:
         # Dir doesnt exist
-        print "Your computer doesnt seem to be running a UEFI board. Continuing.."
+        print_title("Your computer doesnt seem to be running a UEFI board. Continuing..")
         uefi = False
         set_keymap()
 
@@ -252,9 +268,9 @@ def check_uefi():
 def set_keymap():
     logger.debug("Set Keymap")
     system("clear")
-    print "Step 1) Keymap Setup"
+    print_title("Step 1) Keymap Setup")
     time.sleep(3)
-    print "Setting your keyboard layout now, default is US."
+    print_info("Setting your keyboard layout now, default is US.")
     if query_yes_no("> Would you like to change the keyboard layout?", 'no'):
         system("ls /usr/share/kbd/keymaps/**/*.map.gz")
         layout = raw_input("> Enter your keyboard layout: ")
@@ -262,13 +278,13 @@ def set_keymap():
         weirdfont = raw_input("> Try typing in here to test. If some characters are coming up different, delete it all and type 'Y': ")
         if weirdfont in yes:
             system("setfont lat9w-16")
-            print "Should be fixed now."
+            print_info("Should be fixed now.")
             partition_menu()
         else:
             ## next step
             partition_menu()
     else:
-        print "Going to the next step."
+        print_info("Going to the next step.")
         partition_menu()
 
 def partition_menu():
@@ -277,8 +293,8 @@ def partition_menu():
 
     while True:
         system("clear")
-        print "Step 2) Partition Menu"
-        print """
+        print_title("Step 2) Partition Menu")
+        print_info("""
         Select Your Partition Method
 
         1) Auto Partition Drive
@@ -287,14 +303,14 @@ def partition_menu():
 
         3) Manual Partition
 
-        """
-        part = raw_input("> Choice: ")
+        """)
+        part = raw_input("{0}> Choice: {1}".format(COLORS['OKBLUE'],COLORS['ENDC']))
         try:
             if int(part) in range(1,4):
                 part_type = int(part)
                 break
         except:
-            print "Invalid Option"
+            print_error("Invalid Option")
             time.sleep(1)
 
     identify_devices()
@@ -306,18 +322,18 @@ def identify_devices():
 
     logger.debug("Identify Devices")
     system("clear")
-    print "Step 3) HDD Preparation"
+    print_title("Step 3) HDD Preparation")
     system("swapoff -a")
     time.sleep(3)
-    print "Current Devices"
+    print_info("Current Devices")
     system(''' lsblk -p | grep "disk" | awk '{print $1" "$4}' ''')
     available_drives = sp.check_output(''' lsblk -p | grep "disk" | awk '{print $1}' ''', shell=True).split('\n')[:-1]
-    drive = raw_input("> Please choose the drive you would like to install ArchStrike on (default: /dev/sda ): ") or '/dev/sda'
+    drive = raw_input("{0}> Please choose the drive you would like to install ArchStrike on (default: /dev/sda ): {1}".format(COLORS['OKBLUE'],COLORS['ENDC'])) or '/dev/sda'
     if drive not in available_drives:
         print "That drive does not exist"
         time.sleep(1)
         identify_devices()
-    if not query_yes_no("Are you sure want to use {0}? Choosing the wrong drive may have very bad consequences!".format(drive), 'yes'):
+    if not query_yes_no("{0}Are you sure want to use {1}? Choosing the wrong drive may have very bad consequences!".format(COLORS['WARNING'],drive), 'yes'):
         identify_devices()
     drive_size = sp.check_output("lsblk -p | grep -w %s | awk '{print $4}' | grep -o '[0-9]*' | awk 'NR==1'" % (drive), shell=True).rstrip()
 
@@ -338,9 +354,9 @@ def partition_devices():
     }
     logger.debug("Partition Devices")
     system("clear")
-    print "Step 4) Selecting the Filesystem Type"
+    print_title("Step 4) Selecting the Filesystem Type")
     time.sleep(3)
-    print """
+    print_info("""
     Select your filesystem type:
 
     1) ext4
@@ -354,32 +370,32 @@ def partition_devices():
     5) jfs
 
     6) reiserfs
-    """
+    """)
     try:
-        fsc = raw_input("> Choice (Default is ext4): ").strip() or 1
+        fsc = raw_input("{0}> Choice (Default is ext4): {1}".format(COLORS['OKBLUE'],COLORS['ENDC'])).strip() or 1
         if int(fsc) not in range(1,7):
             raise Exception("Invalid Option")
         fs = types[int(fsc)]
     except:
-        print "Invalid Option"
+        print_error("Invalid Option")
         partition_devices()
     setup_swap()
 
 def setup_swap():
     global swap_space
     if query_yes_no("> Step 5) Would you like to create a new swap space?", 'yes'):
-        swap_space = raw_input("> Enter your swap space size (default is 512M ): ".format(drive_size)).rstrip() or '512M'
+        swap_space = raw_input("{0}> Enter your swap space size (default is 512M ): {1}".format(COLORS['OKBLUE'],COLORS['ENDC'])).rstrip() or '512M'
         size = swap_space[:-1]
         if swap_space[-1] == "M":
             if int(size) >= (int(drive_size)*1024 - 4096):
-                print "Your swap space is too large"
+                print_error("Your swap space is too large")
                 setup_swap()
         elif swap_space[-1] == "G":
             if int(size) >= (int(drive_size) - 4):
-                print "Your swap space is too large"
+                print_error("Your swap space is too large")
                 setup_swap()
         else:
-            print "Swap space must be in M or G"
+            print_error("Swap space must be in M or G")
             setup_swap()
     else:
         swap_space = 'None'
@@ -395,11 +411,11 @@ def partitioner():
         if query_yes_no("> Step 6) Would you like to use GUID Partition Table?", 'no'):
             gpt = True
     system("clear")
-    print """
+    print_info("""
     Device: %s
     Filesystem: %s
     Swap: %s
-    """ % (drive, fs, swap_space)
+    """ % (drive, fs, swap_space))
     if query_yes_no("> Are you sure your partitions are set up correctly?", 'yes'):
         check_lvm()
     else:
@@ -409,18 +425,18 @@ def manual_partition():
     global partition_table
 
     system('clear')
-    print "Step 4) Manual Partititon (careful in this step)"
+    print_title("Step 4) Manual Partititon (careful in this step)")
     time.sleep(3)
-    print "I'm now going to print the current partition scheme of your drive %s" % drive
-    print "But first let's confirm everything."
-    confirm_drive = raw_input("> Please confirm the drive by typing {0}: ".format(drive))
+    print_info("I'm now going to print the current partition scheme of your drive %s" % drive)
+    print_info("But first let's confirm everything.")
+    confirm_drive = raw_input("{0}> Please confirm the drive by typing {1}: {2}".format(COLORS['OKBLUE'],drive, COLORS['ENDC']))
     if confirm_drive != drive:
-        print "That doesn't look right. Let's try identifying those again."
+        print_error("That doesn't look right. Let's try identifying those again.")
         identify_devices()
     system("lsblk {0}".format(drive))
     partition_table = sp.check_output("fdisk -l {0} | grep Disklabel | cut -d ' ' -f 3".format(drive), shell=True).rstrip()
     if partition_table == 'gpt':
-        print """
+        print_info("""
      For the GPT partition table, the suggested partition scheme looks like this:
      mountpoint        partition        partition type            boot flag        suggested size
      _________________________________________________________________________________________
@@ -432,15 +448,15 @@ def manual_partition():
 
     WARNING: If dual-booting with an existing installation of Windows on a UEFI/GPT system,
     avoid reformatting the UEFI partition, as this includes the Windows .efi file required to boot it.
-        """
+        """)
     elif partition_table == 'dos':
-        print """
+        print_info("""
     For the MBR partition table, the suggested partition scheme looks like this:
     mountpoint        partition        partition type            boot flag        suggested size
     _________________________________________________________________________________________
     [SWAP]            /dev/sdx1        Linux swap                No                More than 512 MiB
     /                 /dev/sdx2        Linux (ext4)              Yes               Remainder of the device
-    """
+    """)
     if query_yes_no("> I've read this and wish to continue to the partitioner.", 'yes'):
         sp.call("clear", shell=True)
         sp.call('cfdisk {0}'.format(drive), shell=True)
@@ -456,19 +472,17 @@ def manual_partition():
 def format_partitions():
     logger.debug("Format Partitions")
     system("clear")
-    print "Step 5) Formatting partitions"
+    print_title("Step 5) Formatting partitions")
     time.sleep(3)
-    print "Current partition scheme of {0}".format(drive)
+    print_info("Current partition scheme of {0}".format(drive))
     system("lsblk %s" % drive)
-    partitions = raw_input("> Enter all the partitions you created by seperating them with a comma (e.g. /dev/sda1,/dev/sda2): ").split(',')
-    print "You sure these are the partitions?"
-    print '\n'.join(partitions)
-    sure = raw_input("> [Y/n]: ").lower() or 'yes'
-    if sure in yes:
+    partitions = raw_input("{0}> Enter all the partitions you created by seperating them with a comma (e.g. /dev/sda1,/dev/sda2): {1}".format(COLORS['OKBLUE'],COLORS['ENDC'])).split(',')
+    print_info("You sure these are the partitions?\n{0}".format('\n'.join(partitions)))
+    if query_yes_no("> ", 'yes'):
         print "Alright, starting to format."
         for i in partitions:
-            print "Partition {0} will be formatted now".format(i)
-            partition_type = raw_input("> Enter the partition type (linux, uefi, swap): ").lower()
+            print_warning("Partition {0} will be formatted now".format(i))
+            partition_type = raw_input("{0}> Enter the partition type (linux, uefi, swap): {1}".format(COLORS['OKBLUE'],COLORS['ENDC'])).lower()
             if partition_type == 'linux':
                 system("mkfs.ext4 {0}".format(i))
             elif partition_type == 'uefi':
@@ -477,7 +491,7 @@ def format_partitions():
                 system("mkswap {0}".format(i))
                 system("swapon {0}".format(i))
             else:
-                print "Not sure what you're talking about."
+                print_error("Not sure what you're talking about.")
                 format_partitions()
         mount_partitions(partitions)
     else:
@@ -486,20 +500,20 @@ def format_partitions():
 def mount_partitions(partitions):
     logger.debug("Mount Partitions")
     system("clear")
-    print "Step 6) Mounting the partitions"
+    print_title("Step 6) Mounting the partitions")
     time.sleep(3)
     ## get individual partition fs types so we can mount / in /mnt
-    print '\n'.join(partitions)
-    root = raw_input("Which one is your / mounted partition? (e.g. /dev/sda1): ")
+    print_info('\n'.join(partitions))
+    root = raw_input("{0}Which one is your / mounted partition? (e.g. /dev/sda1): {1}".format(COLORS['OKBLUE'],COLORS['ENDC']))
     if root in partitions:
-        print "Mounting {0} on /mnt".format(root)
+        print_info("Mounting {0} on /mnt".format(root))
         system("mount {0} /mnt".format(root))
     else:
         mount_partitions(partitions)
     if partition_table == 'gpt':
-        boot = raw_input("Which one is your /boot mounted partition? (e.g. /dev/sda2): ")
+        boot = raw_input("{0}Which one is your /boot mounted partition? (e.g. /dev/sda2): {1}".format(COLORS['OKBLUE'],COLORS['ENDC']))
         if boot in partitions:
-            print "Mounting %s on /mnt/boot" % boot
+            print_info("Mounting %s on /mnt/boot" % boot)
             system("mkdir -p /mnt/boot")
             system("mount {0} /mnt/boot".format(boot))
         else:
@@ -516,7 +530,7 @@ def check_lvm():
     lvscan = sp.check_output('lvscan', shell=True)
 
     if lvscan:
-        print "{0}WARNING: This will remove all LVM Partitions{1}".format(COLORS['WARNING'], COLORS['ENDC'])
+        print_warning("WARNING: This will remove all LVM Partitions")
         if not query_yes_no("> Would you like to continue?: ", None):
             partition_menu()
 
@@ -526,13 +540,13 @@ def check_lvm():
 
     if part_type == 1:
         system("clear")
-        if query_yes_no("Automatic partitioning wipes your drive clean before proceeding. Are you sure you want to continue?", 'no'):
+        if query_yes_no("{0}Automatic partitioning wipes your drive clean before proceeding. Are you sure you want to continue?".format(COLORS['WARNING']), 'no'):
             auto_partition()
         else:
             partition_menu()
     elif part_type == 2:
         system("clear")
-        if query_yes_no("Automatic partitioning wipes your drive clean before proceeding. Are you sure you want to continue?", 'no'):
+        if query_yes_no("{0}Automatic partitioning wipes your drive clean before proceeding. Are you sure you want to continue?".format(COLORS['WARNING']), 'no'):
             auto_encrypt()
         else:
             partition_menu()
@@ -544,7 +558,7 @@ def auto_partition():
 
     logger.debug("Format Partitions")
     system("clear")
-    print "Step 6) Formatting Drive..."
+    print_title("Step 6) Formatting Drive...")
     system("sgdisk --zap-all {0}".format(drive))
     if gpt:
         if uefi:
@@ -605,7 +619,7 @@ def auto_encrypt():
     global BOOT
     global SWAP
 
-    print "WARNING! This will encrypt {0}".format(drive)
+    print_warning("WARNING! This will encrypt {0}".format(drive))
     if not query_yes_no("> Continue?", 'no'):
         partition_menu()
     pass_set = False
@@ -669,8 +683,8 @@ def install_base():
     base = 1
     while True:
         system("clear")
-        print "Step 7) Install System Base"
-        print """
+        print_title("Step 7) Install System Base")
+        print_info("""
         Select Your Base
 
         1) Arch-Linux-Base
@@ -682,14 +696,14 @@ def install_base():
         4) Arch-Linux-LTS-Base
 
         5) Arch-Linux-LTS-Base-Devel
-        """
-        choice = raw_input("> Choice (Default is Arch-Linux-Base): ") or 1
+        """)
+        choice = raw_input("{0}> Choice (Default is Arch-Linux-Base): {1}".format(COLORS['OKBLUE'],COLORS['ENDC'])) or 1
         try:
             if int(choice) in range(1,6):
                 base = int(choice)
                 break
         except:
-            print "Invalid Option"
+            print_error("Invalid Option")
             time.sleep(1)
 
     if base == 1:
@@ -713,7 +727,7 @@ def install_base():
 def genfstab():
     logger.debug("Genfstab")
     system("clear")
-    print "Step 8) Generating fstab..."
+    print_title("Step 8) Generating fstab...")
     time.sleep(3)
     system("genfstab -U /mnt >> /mnt/etc/fstab")
     if query_yes_no("> Would you like to edit the generated fstab?", 'no'):
@@ -723,9 +737,9 @@ def genfstab():
 def locale_and_time():
     logger.debug("Locale and Time")
     system("clear")
-    print "Step 9) Generating locale and setting timezone"
-    print "Now you'll see an output of the locale list."
-    print """
+    print_title("Step 9) Generating locale and setting timezone")
+    print_info("Now you'll see an output of the locale list.")
+    print_info("""
     1) United States
 
     2) Australia
@@ -754,25 +768,25 @@ def locale_and_time():
 
     Default is United States.
 
-    """
-    choice = raw_input("> Enter the number for your locale or leave empty for default: ") or '1'
+    """)
+    choice = raw_input("{0}> Enter the number for your locale or leave empty for default: {1}".format(COLORS['OKBLUE'],COLORS['ENDC'])) or '1'
     localesdict = {'1': 'en_US.UTF-8', '2': 'en_AU.UTF-8', '3': 'en_CA.UTF-8', '4': 'es_ES.UTF-8', '5': 'fr_FR.UTF-8', '6': 'de_DE.UTF-8', '7': 'en_GB.UTF-8', '8': 'en_MX.UTF-8', '9': 'pt_PT.UTF-8', '10': 'ro_RO.UTF-8', '11': 'ru_RU.UTF-8', '12': 'sv_SE.UTF-8'}
     if choice in map(str, range(1,13)):
         locale = localesdict[str(choice)]
     elif choice == '99':
-        print "A full list will be listed now."
-        print "Press 'q' to quit and 'Enter'/'Return' to scroll. Afterwards type in the locale you want to use."
+        print_info("A full list will be listed now.")
+        print_info("Press 'q' to quit and 'Enter'/'Return' to scroll. Afterwards type in the locale you want to use.")
         time.sleep(3)
         system("cat /mnt/etc/locale.gen | more")
-        locale = raw_input("> Please type in the locale you want to use: ")
+        locale = raw_input("{0}> Please type in the locale you want to use: {1}".format(COLORS['OKBLUE'],COLORS['ENDC']))
     else:
         locale_and_time()
     system("sed -i '/{0}/s/^#//g' /mnt/etc/locale.gen".format(locale))
     system("locale-gen", True)
-    print "Setting up keyboard layout, will take the current one."
+    print_info("Setting up keyboard layout, will take the current one.")
     layout = system("localectl | grep Locale | cut -d ':' -f 2")
     system("echo {0} >> /mnt/etc/vconsole.conf".format(layout))
-    print "Setting up timezone."
+    print_info("Setting up timezone.")
     system("tzselect > /tmp/archstrike-timezone", True)
     system("ln -s /usr/share/zoneinfo/$(cat /tmp/archstrike-timezone) /etc/localtime", True)
     system("hwclock --systohc --utc")
@@ -782,7 +796,7 @@ def gen_initramfs():
     if part_type !=2 and not uefi:
         logger.debug("Gen Initramfs")
         system("clear")
-        print "Step 10) Generate initramfs image..."
+        print_title("Step 10) Generate initramfs image...")
         time.sleep(3)
         system("mkinitcpio -p linux", True)
 
@@ -792,7 +806,7 @@ def gen_initramfs():
 def setup_bootloader():
     logger.debug("Setup Bootloader")
     system("clear")
-    print "Setting up GRUB bootloader"
+    print_title("Setting up GRUB bootloader")
     time.sleep(3)
 
     system("pacman -S grub --noconfirm", True)
@@ -817,7 +831,7 @@ def setup_bootloader():
     configure_system()
 
 def configure_system():
-    print "Configuring System"
+    print_title("Configuring System")
     time.sleep(1)
 
     if part_type == 2 and uefi:
@@ -840,8 +854,8 @@ def configure_system():
 def set_hostname():
     logger.debug("Set Hostname")
     system("clear")
-    print "Step 11) Setting Hostname"
-    print "Your hostname will be 'archstrike'. You can change it later if you wish."
+    print_title("Step 11) Setting Hostname")
+    print_info("Your hostname will be 'archstrike'. You can change it later if you wish.")
     time.sleep(3)
     system("echo 'archstrike' > /mnt/etc/hostname")
     setup_internet()
@@ -849,19 +863,19 @@ def set_hostname():
 def setup_internet():
     logger.debug("Setup Internet")
     system("clear")
-    print "Step 12) Setup Internet"
+    print_title("Step 12) Setup Internet")
     if query_yes_no("> Do you want wireless utilities on your new install?", 'yes'):
-        print "Installing Wireless utilities"
+        print_info("Installing Wireless utilities")
         system("pacman -S iw wpa_supplicant dialog --noconfirm", True)
     if query_yes_no("> Would you like to enable DHCP?", 'yes'):
-        print "Enabling DHCP"
+        print_info("Enabling DHCP")
         system("systemctl enable dhcpcd", True)
     set_root_pass()
 
 def set_root_pass():
     logger.debug("Set root Pass")
     system("clear")
-    print "Step 13) Setting root password"
+    print_title("Step 13) Setting root password")
     ret = -1
     while ret != 0:
         ret = system("passwd", True)
@@ -870,38 +884,38 @@ def set_root_pass():
 def install_archstrike():
     logger.debug("Install ArchStrike")
     system("clear")
-    print "Step 14) Installing the ArchStrike repositories..."
+    print_title("Step 14) Installing the ArchStrike repositories...")
     time.sleep(3)
     system("echo '[archstrike]' >> /mnt{0}".format(pacmanconf))
     system("echo 'Server = https://mirror.archstrike.org/$arch/$repo' >> /mnt{0}".format(pacmanconf))
     cpubits = sp.check_output('getconf LONG_BIT', shell=True).rstrip()
     if cpubits == '64':
-        print "We have detected you are running x86_64. It is advised to enable multilib with the ArchStrike repo. Do you want to enable multilib? (say no if it's already enabled)"
+        print_info("We have detected you are running x86_64. It is advised to enable multilib with the ArchStrike repo. Do you want to enable multilib? (say no if it's already enabled)")
         if query_yes_no(">", 'yes'):
             system("""sed -i '/\[multilib]$/ {
 			    N
 			    /Include/s/#//g}' /mnt/%s
             """ % (pacmanconf))
             system('''/bin/bash -c " echo -e 'y\ny\n' |pacman -S gcc-multilib"''', True)
-            print "Multilib has been enabled."
+            print_info("Multilib has been enabled.")
     else:
-        print "Alright, looks like no. Continuing."
-    print "I will now perform database updates, hang tight."
+        print_info("Alright, looks like no. Continuing.")
+    print_info("I will now perform database updates, hang tight.")
     system("pacman -Syy", True)
-    print "Installing ArchStrike keyring and mirrorlist.."
+    print_info("Installing ArchStrike keyring and mirrorlist..")
     system("pacman-key --init", True)
     system("dirmngr < /dev/null", True)
     system("pacman-key -r 7CBC0D51", True)
     system("pacman-key --lsign-key 7CBC0D51", True)
     system("pacman -S archstrike-keyring --noconfirm", True)
     system("pacman -S archstrike-mirrorlist --noconfirm", True)
-    print "Done. Editing your pacman config to use the new mirrorlist."
+    print_info("Done. Editing your pacman config to use the new mirrorlist.")
     system("sed -i 's|Server = https://mirror.archstrike.org/$arch/$repo|Include = /etc/pacman.d/archstrike-mirrorlist|' /mnt{0}".format(pacmanconf))
     if query_yes_no("> Do you want to add archstrike-testing as well?", 'yes'):
         system("echo '[archstrike-testing]' >> /mnt{0}".format(pacmanconf))
         system("echo 'Include = /etc/pacman.d/archstrike-mirrorlist' >> /mnt{0}".format(pacmanconf))
     else:
-          print "Alright going forward."
+          print_info("Alright going forward.")
     print "Performing database update once more to test mirrorlist"
     system("pacman -Syy", True)
     if query_yes_no("> Do you want to go ahead and install all ArchStrike packages now?", 'no'):
@@ -915,12 +929,12 @@ def add_user():
 
     logger.debug("Add User")
     system("clear")
-    print "Step 15) Add new User"
+    print_title("Step 15) Add new User")
     if query_yes_no("> Would you like to add a new user?", 'yes'):
         while not username:
-            username = raw_input("> Please enter a username: ")
+            username = raw_input("{0}> Please enter a username: {1}".format(COLORS['OKBLUE'],COLORS['ENDC']))
         system("useradd -m -g users -G audio,network,power,storage,optical {0}".format(username), True)
-        print "> Please enter the password for {0}: ".format(username)
+        print_command("> Please enter the password for {0}: ".format(username))
         ret = -1
         while ret != 0:
             ret = system("passwd {0}".format(username), True)
@@ -939,10 +953,10 @@ def set_video_utils(user):
     }
     logger.debug("Set Video Utils")
     system("clear")
-    print "Step 16) Setting up video and desktop environment"
+    print_title("Step 16) Setting up video and desktop environment")
     if query_yes_no("> Would you like to set up video utilities?", 'yes'):
-        print "To setup video utilities select your GPU. (Leave empty if unsure)"
-        print """
+        print_info("To setup video utilities select your GPU. (Leave empty if unsure)")
+        print_info("""
 
         1) mesa-libgl
 
@@ -951,19 +965,19 @@ def set_video_utils(user):
         3) xf86-video-ati
 
         4) xf86-video-intel
-        """
-        gpu = raw_input("> Choose an option or leave empty for default: ") or '5'
+        """)
+        gpu = raw_input("{0}> Choose an option or leave empty for default: {1}".format(COLORS['OKBLUE'],COLORS['ENDC'])) or '5'
         try:
             sel = gpus[gpu]
             system("pacman -S xorg-server xorg-server-utils xorg-xinit xterm {0} --noconfirm".format(sel), True)
         except KeyError:
-            print "Not a valid option"
+            print_error("Not a valid option")
             set_video_utils(username)
 
     if query_yes_no("> Would you like to install a Desktop Environment or Window Manager?", 'yes'):
         opt = ''
         while not opt:
-            print """
+            print_info("""
             Available Options:
 
             1) OpenBox
@@ -973,8 +987,8 @@ def set_video_utils(user):
             3) i3wm
 
             4) All
-            """
-            opt = raw_input("> Choice: ")
+            """)
+            opt = raw_input("{0}> Choice: {1}".format(COLORS['OKBLUE'],COLORS['ENDC']))
             if opt == '4':
                 opt = '123'
             elif opt not in '1234':
@@ -1041,8 +1055,8 @@ def set_video_utils(user):
 def finalize():
     logger.debug("Finalize")
     system("clear")
-    print "FINAL: Your system is set up! Rebooting now.."
-    print "Thanks for installing ArchStrike!"
+    print_info("FINAL: Your system is set up! Rebooting now..")
+    print_info("Thanks for installing ArchStrike!")
     system("umount -R /mnt")
     if query_yes_no("> Would you like to reboot now?", None):
         system("reboot")
@@ -1056,5 +1070,5 @@ if __name__ == '__main__':
     except Exception as e:
         logger.error(e)
         sp.Popen("umount -R /mnt", stdout=FNULL, stderr=sp.STDOUT, shell=True)
-        print "\n\nAn error has occured, see /tmp/archstrike-installer.log for details."
+        print_error("\n\nAn error has occured, see /tmp/archstrike-installer.log for details.")
         FNULL.close()
