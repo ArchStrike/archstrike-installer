@@ -511,9 +511,9 @@ def mount_partitions(partitions):
 
 def check_lvm():
 
-    pvscan = sp.check_output('pvscan &> /dev/null', shell=True)
-    vgscan = sp.check_output('vgscan &> /dev/null', shell=True)
-    lvscan = sp.check_output('lvscan &> /dev/null', shell=True)
+    pvscan = sp.check_output('pvscan', shell=True)
+    vgscan = sp.check_output('vgscan', shell=True)
+    lvscan = sp.check_output('lvscanl', shell=True)
 
     if lvscan:
         print "{0}WARNING: This will remove all LVM Partitions{1}".format(COLORS['WARNING'], COLORS['ENDC'])
@@ -525,11 +525,13 @@ def check_lvm():
             system("echo -e 'y'|lvm lvremove {0}".format(lvm_dir))
 
     if part_type == 1:
+        system("clear")
         if query_yes_no("Automatic partitioning wipes your drive clean before proceeding. Are you sure you want to continue?", 'no'):
             auto_partition()
         else:
             partition_menu()
     elif part_type == 2:
+        system("clear")
         if query_yes_no("Automatic partitioning wipes your drive clean before proceeding. Are you sure you want to continue?", 'no'):
             auto_encrypt()
         else:
