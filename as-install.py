@@ -225,7 +225,7 @@ def start():
 def internet_on():
     logger.debug("Checking Internet connection")
     try:
-        response=urllib2.urlopen('http://google.com',timeout=1)
+        response=urllib2.urlopen('http://google.com',timeout=5)
         logger.info("Connection Successful")
         return True
     except urllib2.URLError as err:
