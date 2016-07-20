@@ -876,7 +876,7 @@ def install_archstrike():
     system("echo 'Server = https://mirror.archstrike.org/$arch/$repo' >> /mnt{0}".format(pacmanconf))
     cpubits = sp.check_output('getconf LONG_BIT', shell=True).rstrip()
     if cpubits == '64':
-        print "We have detected you are running x86_64. It is adviced to enable multilib with the ArchStrike repo. Do you want to enable multilib? (say no if it's already enabled)"
+        print "We have detected you are running x86_64. It is advised to enable multilib with the ArchStrike repo. Do you want to enable multilib? (say no if it's already enabled)"
         if query_yes_no(">", 'yes'):
             system("""sed -i '/\[multilib]$/ {
 			    N
