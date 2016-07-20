@@ -656,7 +656,7 @@ def auto_encrypt():
             pass_set = True
         else:
             print "Password do not Match."
-
+    del passwd_chk
     if gpt:
         if uefi:
             system('echo -e "n\n\n\n512M\nef00\nn\n\n\n\n\nw\ny" | gdisk {0}'.format(drive))
@@ -685,7 +685,7 @@ def auto_encrypt():
 
     system("printf {0} | cryptsetup luksFormat -c aes-xts-plain64 -s 512 /dev/lvm/lvroot -".format(passwd))
     system("printf {0} | cryptsetup open --type luks /dev/lvm/lvroot root -".format(passwd))
-
+    del passwd
     system("wipefs -afq /dev/mapper/root")
     if fs == 'jfs' or fs == 'reiserfs':
         system('echo -e "y" | mkfs.{0} /dev/mapper/root'.format(fs))
