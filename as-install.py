@@ -107,6 +107,13 @@ def system(command, chroot=False):
         if ret != 0:
             raise Exception('{0}{1}{2}'.format(COLORS['FAIL'], command, COLORS['ENDC']))
 
+def system_output(command):
+    print('{0}'.format(COLORS['BOLD']))
+    ret = sp.check_output([command], shell=True).rstrip()
+    print('{0}'.format(COLORS['ENDC']))
+
+    return ret
+
 def main():
     logger.debug("Starting Installation")
     system("clear")
