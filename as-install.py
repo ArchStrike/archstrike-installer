@@ -16,7 +16,7 @@ log_file = '/tmp/archstrike-installer.log'
 logger = logging.getLogger('ArchStrike-Installer')
 logger.setLevel(logging.DEBUG)
 
-fh = logging.FileHandler(log_file)
+fh = logging.FileHandler(log_file, mode='w')
 formatter = logging.Formatter('%(levelname)s - %(message)s')
 fh.setFormatter(formatter)
 logger.addHandler(fh)
