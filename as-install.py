@@ -3,22 +3,28 @@ from getpass import getpass
 import subprocess as sp
 import logging
 import signal
+import select
 import urllib2
 import time
 import sys
 import os
 
-# Setup Logging
-logging.basicConfig(filename='/tmp/archstrike-installer.log',
-                    filemode='w',
-                    level=logging.DEBUG,
-                    format='%(levelname)s - %(message)s')
+pacmanconf = "/etc/pacman.conf"
+archstrike_mirrorlist = "/etc/pacman.d/archstrike-mirrorlist"
+log_file = '/tmp/archstrike-installer.log'
+
+logger = logging.getLogger('ArchStrike-Installer')
+logger.setLevel(logging.DEBUG)
+
+fh = logging.FileHandler(log_file)
+formatter = logging.Formatter('%(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+logger.addHandler(fh)
+
 console = logging.StreamHandler()
 console.setLevel(logging.INFO)
-formatter = logging.Formatter('%(levelname)s - %(message)s')
-console.setFormatter(formatter)
-logging.getLogger(__name__).addHandler(console)
-logger = logging.getLogger(__name__)
+console.setFormatter(logging.Formatter('%(message)s'))
+logger.addHandler(console)
 
 COLORS = {
     'HEADER' : '\033[95m',
@@ -31,8 +37,6 @@ COLORS = {
     'UNDERLINE' : '\033[4m'
 }
 
-pacmanconf = "/etc/pacman.conf"
-archstrike_mirrorlist = "/etc/pacman.d/archstrike-mirrorlist"
 
 def print_error(msg):
     print('''{0}{1}{2}'''.format(COLORS['FAIL'],msg, COLORS['ENDC']))
@@ -86,26 +90,41 @@ def signal_handler(signal, handler):
     print_info("\n\nGood Bye")
     sys.exit()
 
-def system(command, chroot=False):
+def system(command, chroot=False, **kwargs):
 
     if chroot:
         command = "arch-chroot /mnt {0}".format(command)
 
-    print('{0}'.format(COLORS['BOLD']))
-    ret = sp.call([command], shell=True)
-    print('{0}'.format(COLORS['ENDC']))
-
     # don't log clear or encryption passwd
-    if command == 'clear' or command.find('printf') != -1:
-        return ret
+    if command == 'clear' or command.find('printf') != -1 or command.find('passwd') != -1:
+        return sp.call([command], shell=True)
 
-    logger.debug(command)
+    child = sp.Popen([command], stdout=sp.PIPE, stderr=sp.PIPE, shell=True, **kwargs)
 
-    if command.find('passwd') != -1:
-        return ret
-    else:
-        if ret != 0:
-            raise Exception('{0}{1}{2}'.format(COLORS['FAIL'], command, COLORS['ENDC']))
+    logger.log(logging.DEBUG, command)
+
+    poll = select.poll()
+    poll.register(child.stdout, select.POLLIN | select.POLLHUP)
+    poll.register(child.stderr, select.POLLIN | select.POLLHUP)
+    pollc = 2
+    events = poll.poll()
+    while pollc > 0 and len(events) > 0:
+        for rfd, event in events:
+            if event & select.POLLIN:
+                if rfd == child.stdout.fileno():
+                    line = child.stdout.readline()
+                    if len(line) > 0:
+                        logger.log(logging.INFO, line[:-1])
+                if rfd == child.stderr.fileno():
+                    line = child.stderr.readline()
+                    if len(line) > 0:
+                        logger.log(logging.ERROR, line[:-1])
+            if event & select.POLLHUP:
+                poll.unregister(rfd)
+                pollc -= 1
+            if pollc > 0:
+                events = poll.poll()
+    return child.wait()
 
 def system_output(command):
     print('{0}'.format(COLORS['BOLD']))
