@@ -124,7 +124,10 @@ def system(command, chroot=False, **kwargs):
                 pollc -= 1
             if pollc > 0:
                 events = poll.poll()
-    return child.wait()
+    ret = child.wait()
+    if ret != 0:
+        raise Exception(command)
+    return ret
 
 def system_output(command):
     print('{0}'.format(COLORS['BOLD']))
@@ -1094,7 +1097,7 @@ if __name__ == '__main__':
         signal.signal(signal.SIGINT, signal_handler)
         main()
     except Exception as e:
-        logger.error(e)
+        logger.error('{0}{1}{2}'.format(COLORS['FAIL'], e, COLORS['ENDC']))
         sp.Popen("umount -R /mnt", stdout=FNULL, stderr=sp.STDOUT, shell=True)
         print_error("\n\nAn error has occured, see /tmp/archstrike-installer.log for details.")
         FNULL.close()
