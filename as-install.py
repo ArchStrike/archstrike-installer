@@ -718,11 +718,11 @@ def install_base():
     elif base == 2:
         base_install = "base-devel"
     elif base == 3:
-        base_install = "linux-grsec sudo"
+        base_install = "linux-grsec linux-grsec-headers sudo"
     elif base == 4:
-        base_install = "linux-lts sudo"
+        base_install = "linux-lts linux-lts-headers sudo"
     elif base == 5:
-        base_install = "base-devel linux-lts"
+        base_install = "base-devel linux-lts linux-lts-headers sudo"
 
     if uefi:
         base_install += " efibootmgr"
