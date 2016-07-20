@@ -334,7 +334,7 @@ def identify_devices():
     time.sleep(3)
     print_info("Current Devices")
     system(''' lsblk -p | grep "disk" | awk '{print $1" "$4}' ''')
-    available_drives = sp.check_output(''' lsblk -p | grep "disk" | awk '{print $1}' ''', shell=True).split('\n')[:-1]
+    available_drives = system_output(''' lsblk -p | grep "disk" | awk '{print $1}' ''').split('\n')
     drive = raw_input("{0}> Please choose the drive you would like to install ArchStrike on (default: /dev/sda ): {1}".format(COLORS['OKBLUE'],COLORS['ENDC'])) or '/dev/sda'
     if drive not in available_drives:
         print "That drive does not exist"
@@ -342,7 +342,7 @@ def identify_devices():
         identify_devices()
     if not query_yes_no("{0}Are you sure want to use {1}? Choosing the wrong drive may have very bad consequences!".format(COLORS['WARNING'],drive), 'yes'):
         identify_devices()
-    drive_size = sp.check_output("lsblk -p | grep -w %s | awk '{print $4}' | grep -o '[0-9]*' | awk 'NR==1'" % (drive), shell=True).rstrip()
+    drive_size = system_output("lsblk -p | grep -w %s | awk '{print $4}' | grep -o '[0-9]*' | awk 'NR==1'" % (drive))
 
     if part_type == 3:
         manual_partition()
@@ -441,7 +441,7 @@ def manual_partition():
         print_error("That doesn't look right. Let's try identifying those again.")
         identify_devices()
     system("lsblk {0}".format(drive))
-    partition_table = sp.check_output("fdisk -l {0} | grep Disklabel | cut -d ' ' -f 3".format(drive), shell=True).rstrip()
+    partition_table = system_output("fdisk -l {0} | grep Disklabel | cut -d ' ' -f 3".format(drive))
     if partition_table == 'gpt':
         print_info("""
      For the GPT partition table, the suggested partition scheme looks like this:
@@ -532,9 +532,9 @@ def mount_partitions(partitions):
 
 def check_lvm():
 
-    pvscan = sp.check_output('pvscan', shell=True)
-    vgscan = sp.check_output('vgscan', shell=True)
-    lvscan = sp.check_output('lvscan', shell=True)
+    pvscan = system_output('pvscan')
+    vgscan = system_output('vgscan')
+    lvscan = system_output('lvscan')
 
     if lvscan:
         print_warning("WARNING: This will remove all LVM Partitions")
@@ -571,36 +571,36 @@ def auto_partition():
         if uefi:
             if swap_space != 'None':
                 system('echo -e "n\n\n\n512M\nef00\nn\n3\n\n+{0}\n8200\nn\n\n\n\n\nw\ny" | gdisk {1}'.format(swap_space, drive))
-                SWAP = sp.check_output("lsblk | grep %s | awk '{ if (NR==4) print substr ($1,3) }'" % (drive[-3:]), shell=True).rstrip()
+                SWAP = system_output("lsblk | grep %s | awk '{ if (NR==4) print substr ($1,3) }'" % (drive[-3:]))
                 system("wipefs -afq /dev/{0}".format(SWAP))
                 system("mkswap /dev/{0}".format(SWAP))
                 system("swapon /dev/{0}".format(SWAP))
             else:
                 system('echo -e "n\n\n\n512M\nef00\nn\n\n\n\n\nw\ny" | gdisk {0}'.format(drive))
-            BOOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==2) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
-            ROOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==3) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
+            BOOT = system_output(''' lsblk | grep %s |  awk '{ if (NR==2) print substr ($1,3) }' ''' % (drive[-3:]))
+            ROOT = system_output(''' lsblk | grep %s |  awk '{ if (NR==3) print substr ($1,3) }' ''' % (drive[-3:]))
         else:
             if swap_space != 'None':
                 system('echo -e "o\ny\nn\n1\n\n+100M\n\nn\n2\n\n+1M\nEF02\nn\n4\n\n+{0}\n8200\nn\n3\n\n\n\nw\ny" | gdisk {1}'.format(swap_space, drive))
-                SWAP = sp.check_output("lsblk | grep %s |  awk '{ if (NR==5) print substr ($1,3) }'" % (drive[-3:]), shell=True).rstrip()
+                SWAP = system_output("lsblk | grep %s |  awk '{ if (NR==5) print substr ($1,3) }'" % (drive[-3:]), shell=True).rstrip()
                 system("wipefs -afq /dev/{0}".format(SWAP))
                 system("mkswap /dev/{0}".format(SWAP))
                 system("swapon /dev/{0}".format(SWAP))
             else:
                 system('echo -e "o\ny\nn\n1\n\n+100M\n\nn\n2\n\n+1M\nEF02\nn\n3\n\n\n\nw\ny" | gdisk {0}'.format(drive))
-            BOOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==2) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
-            ROOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==4) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
+            BOOT = system_output(''' lsblk | grep %s |  awk '{ if (NR==2) print substr ($1,3) }' ''' % (drive[-3:]))
+            ROOT = system_output(''' lsblk | grep %s |  awk '{ if (NR==4) print substr ($1,3) }' ''' % (drive[-3:]))
     else:
         if swap_space != 'None':
             system('echo -e "o\nn\np\n1\n\n+100M\nn\np\n3\n\n+{0}\nt\n\n82\nn\np\n2\n\n\nw" | fdisk {1}'.format(swap_space, drive))
-            SWAP = sp.check_output("lsblk | grep %s |  awk '{ if (NR==4) print substr ($1,3) }'" % (drive[-3:]), shell=True).rstrip()
+            SWAP = system_output("lsblk | grep %s |  awk '{ if (NR==4) print substr ($1,3) }'" % (drive[-3:]))
             system("wipefs -afq /dev/{0}".format(SWAP))
             system("mkswap /dev/{0}".format(SWAP))
             system("swapon /dev/{0}".format(SWAP))
         else:
             system('echo -e "o\nn\np\n1\n\n+100M\nn\np\n2\n\n\nw" | fdisk {0}'.format(drive))
-        BOOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==2) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
-        ROOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==3) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
+        BOOT = system_output(''' lsblk | grep %s |  awk '{ if (NR==2) print substr ($1,3) }' ''' % (drive[-3:]))
+        ROOT = system_output(''' lsblk | grep %s |  awk '{ if (NR==3) print substr ($1,3) }' ''' % (drive[-3:]))
     # Create Boot Partition
     system("wipefs -afq /dev/{0}".format(BOOT))
     if uefi:
@@ -641,16 +641,16 @@ def auto_encrypt():
     if gpt:
         if uefi:
             system('echo -e "n\n\n\n512M\nef00\nn\n\n\n\n\nw\ny" | gdisk {0}'.format(drive))
-            BOOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==2) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
-            ROOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==3) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
+            BOOT = system_output(''' lsblk | grep %s |  awk '{ if (NR==2) print substr ($1,3) }' ''' % (drive[-3:]))
+            ROOT = system_output(''' lsblk | grep %s |  awk '{ if (NR==3) print substr ($1,3) }' ''' % (drive[-3:]))
         else:
             system('echo -e "o\ny\nn\n1\n\n+100M\n\nn\n2\n\n+1M\nEF02\nn\n3\n\n\n\nw\ny" | gdisk {0}'.format(drive))
-            BOOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==4) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
-            ROOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==2) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
+            BOOT = system_output(''' lsblk | grep %s |  awk '{ if (NR==4) print substr ($1,3) }' ''' % (drive[-3:]))
+            ROOT = system_output(''' lsblk | grep %s |  awk '{ if (NR==2) print substr ($1,3) }' ''' % (drive[-3:]))
     else:
         system('echo -e "o\nn\np\n1\n\n+100M\nn\np\n2\n\n\nw" | fdisk {0}'.format(drive))
-        BOOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==2) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
-        ROOT = sp.check_output(''' lsblk | grep %s |  awk '{ if (NR==3) print substr ($1,3) }' ''' % (drive[-3:]), shell=True).rstrip()
+        BOOT = system_output(''' lsblk | grep %s |  awk '{ if (NR==2) print substr ($1,3) }' ''' % (drive[-3:]))
+        ROOT = system_output(''' lsblk | grep %s |  awk '{ if (NR==3) print substr ($1,3) }' ''' % (drive[-3:]))
 
     system("wipefs -afq /dev/{0}".format(ROOT))
     system("wipefs -afq /dev/{0}".format(BOOT))
@@ -895,7 +895,7 @@ def install_archstrike():
     time.sleep(3)
     system("echo '[archstrike]' >> /mnt{0}".format(pacmanconf))
     system("echo 'Server = https://mirror.archstrike.org/$arch/$repo' >> /mnt{0}".format(pacmanconf))
-    cpubits = sp.check_output('getconf LONG_BIT', shell=True).rstrip()
+    cpubits = system_output('getconf LONG_BIT')
     if cpubits == '64':
         print_info("We have detected you are running x86_64. It is advised to enable multilib with the ArchStrike repo. Do you want to enable multilib? (say no if it's already enabled)")
         if query_yes_no(">", 'yes'):
