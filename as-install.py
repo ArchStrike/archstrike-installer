@@ -5,6 +5,7 @@ import logging
 import signal
 import select
 import urllib2
+import platform
 import time
 import sys
 import os
@@ -1099,6 +1100,7 @@ if __name__ == '__main__':
     try:
         FNULL = open(os.devnull, 'w')
         signal.signal(signal.SIGINT, signal_handler)
+        logger.info(platform.uname())
         main()
     except Exception as e:
         logger.error('{0}{1}{2}'.format(COLORS['FAIL'], e, COLORS['ENDC']))
