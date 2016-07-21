@@ -904,7 +904,7 @@ def setup_internet():
     print_title("Step 12) Setup Internet")
     if query_yes_no("> Do you want wireless utilities on your new install?", 'yes'):
         print_info("Installing Wireless utilities")
-        system("pacman -S iw wpa_supplicant dialog --noconfirm", True)
+        system("pacman -S iw wpa_supplicant dialog netctl --noconfirm", True)
     if query_yes_no("> Would you like to enable DHCP?", 'yes'):
         print_info("Enabling DHCP")
         system("systemctl enable dhcpcd", True)
