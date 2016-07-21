@@ -844,6 +844,10 @@ def setup_bootloader():
     time.sleep(3)
 
     system("pacman -S grub --noconfirm", True)
+    intelornot = sp.check_output('cat /proc/cpuinfo | grep vendor | uniq | cut -d ' ' -f 2', shell=True)
+    if intelornot == GenuineIntel:
+        if query_yes_no('We have detected you have an Intel CPU. Is that correct?', 'yes'):
+            system("pacman -S intel-ucode --noconfirm", True
 
     #Encrypted
     if part_type == 2:
