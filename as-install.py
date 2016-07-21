@@ -847,7 +847,7 @@ def setup_bootloader():
     intelornot = system_output("cat /proc/cpuinfo | grep -m1 vendor_id |awk '{print $NF}'")
     if intelornot == 'GenuineIntel':
         if query_yes_no('We have detected you have an Intel CPU. Is that correct?', 'yes'):
-            system("pacman -S intel-ucode --noconfirm", True
+            system("pacman -S intel-ucode --noconfirm", True)
 
     #Encrypted
     if part_type == 2:
