@@ -845,7 +845,7 @@ def setup_bootloader():
 
     system("pacman -S grub --noconfirm", True)
     intelornot = sp.check_output('cat /proc/cpuinfo | grep vendor | uniq | cut -d ' ' -f 2', shell=True)
-    if intelornot == GenuineIntel:
+    if intelornot == 'GenuineIntel':
         if query_yes_no('We have detected you have an Intel CPU. Is that correct?', 'yes'):
             system("pacman -S intel-ucode --noconfirm", True
 
