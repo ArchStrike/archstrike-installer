@@ -292,6 +292,7 @@ def check_uefi():
     try:
         os.listdir('/sys/firmware/efi/efivars')
         uefi = True
+        set_keymap()
     except OSError:
         # Dir doesnt exist
         print_title("Your computer doesnt seem to be running a UEFI board. Continuing..")
