@@ -610,7 +610,7 @@ def auto_partition():
         else:
             if swap_space != 'None':
                 system('echo -e "o\ny\nn\n1\n\n+100M\n\nn\n2\n\n+1M\nEF02\nn\n4\n\n+{0}\n8200\nn\n3\n\n\n\nw\ny" | gdisk {1}'.format(swap_space, drive))
-                SWAP = system_output("lsblk | grep %s |  awk '{ if (NR==5) print substr ($1,3) }'" % (drive[-3:]), shell=True).rstrip()
+                SWAP = system_output("lsblk | grep %s |  awk '{ if (NR==5) print substr ($1,3) }'" % (drive[-3:])).rstrip()
                 system("wipefs -afq /dev/{0}".format(SWAP))
                 system("mkswap /dev/{0}".format(SWAP))
                 system("swapon /dev/{0}".format(SWAP))
