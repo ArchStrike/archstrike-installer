@@ -307,7 +307,7 @@ def set_keymap():
     time.sleep(3)
     print_info("Setting your keyboard layout now, default is US.")
     if query_yes_no("> Would you like to change the keyboard layout?", 'no'):
-        system("ls /usr/share/kbd/keymaps/**/*.map.gz")
+        system("find /usr/share/kbd/keymaps/** -name '*.map.gz' | awk -F '/' '{print $NF}'")
         layout = raw_input("> Enter your keyboard layout: ")
         if query_yes_no(">Setting {0} as your keymap, is that correct?".format(layout), 'yes')
             system("loadkeys {0}".format(layout))
