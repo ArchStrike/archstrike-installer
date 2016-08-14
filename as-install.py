@@ -309,9 +309,9 @@ def set_keymap():
     if query_yes_no("> Would you like to change the keyboard layout?", 'no'):
         system("ls /usr/share/kbd/keymaps/**/*.map.gz")
         layout = raw_input("> Enter your keyboard layout: ")
-        system("loadkeys {0}".format(layout))
-        weirdfont = raw_input("> Try typing in here to test. If some characters are coming up different, delete it all and type 'Y': ")
-        if weirdfont in yes:
+        if query_yes_no(">Setting {0} as your keymap, is that correct?".format(layout), 'yes')
+            system("loadkeys {0}".format(layout))
+        if query_yes_no("> Try typing in here to test. If some characters are coming up different, delete it all and type 'Y': ", 'no')
             system("setfont lat9w-16")
             print_info("Should be fixed now.")
             partition_menu()
