@@ -307,10 +307,10 @@ def set_keymap():
     time.sleep(3)
     print_info("Setting your keyboard layout now, default is US.")
     if query_yes_no("> Would you like to change the keyboard layout?", 'no'):
-        system("find /usr/share/kbd/keymaps/** -name '*.map.gz' | awk -F '/' '{print $NF}'")
+		system("find /usr/share/X11/xkb/symbols -type f | awk -F '/' '{print$NF}' | sort | uniq")
         layout = raw_input("> Enter your keyboard layout: ")
         if query_yes_no(">Setting {0} as your keymap, is that correct?".format(layout), 'yes')
-            system("loadkeys {0}".format(layout))
+            system("setxkbmap {0}".format(layout))
         if query_yes_no("> Try typing in here to test. If some characters are coming up different, delete it all and type 'Y': ", 'no')
             system("setfont lat9w-16")
             print_info("Should be fixed now.")
