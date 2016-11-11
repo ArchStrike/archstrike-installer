@@ -310,6 +310,7 @@ def set_keymap():
     if query_yes_no("> Would you like to change the keyboard layout?", 'no'):
         system("find /usr/share/X11/xkb/symbols -type f | awk -F '/' '{print$NF}' | sort | uniq")
         layout = raw_input("> Enter your keyboard layout: ")
+        logger.log(logging.INFO, "Keyboard Layout: {0}".format(layout))
         if query_yes_no(">Setting {0} as your keymap, is that correct?".format(layout), 'yes'):
             system("setxkbmap {0}".format(layout))
         if query_yes_no("> Try typing in here to test. If some characters are coming up different, delete it all and type 'Y': ", 'no'):
@@ -344,6 +345,7 @@ def partition_menu():
         try:
             if int(part) in range(1,4):
                 part_type = int(part)
+                logger.log(logging.INFO, "Partition Menu: {0}".format(part_type))
                 break
         except:
             print_error("Invalid Option")
@@ -412,6 +414,7 @@ def partition_devices():
         if int(fsc) not in range(1,7):
             raise Exception("Invalid Option")
         fs = types[int(fsc)]
+        logger.log(logging.INFO, "Filesystem type: {0}".format(fs))
     except:
         print_error("Invalid Option")
         partition_devices()
@@ -435,6 +438,7 @@ def setup_swap():
             setup_swap()
     else:
         swap_space = 'None'
+    logger.log(logging.INFO, "Swap Size: {0}".format(swap_space))
     partitioner()
 
 def partitioner():
@@ -513,12 +517,14 @@ def format_partitions():
     print_info("Current partition scheme of {0}".format(drive))
     system("lsblk %s" % drive)
     partitions = raw_input("{0}> Enter all the partitions you created by seperating them with a comma (e.g. /dev/sda1,/dev/sda2): {1}".format(COLORS['OKBLUE'],COLORS['ENDC'])).split(',')
+    logger.log(logging.INFO, "System Partitions: {0}".format(partitions))
     print_info("You sure these are the partitions?\n{0}".format('\n'.join(partitions)))
     if query_yes_no("> ", 'yes'):
         print "Alright, starting to format."
         for i in partitions:
             print_warning("Partition {0} will be formatted now".format(i))
             partition_type = raw_input("{0}> Enter the partition type (linux, uefi, swap): {1}".format(COLORS['OKBLUE'],COLORS['ENDC'])).lower()
+            logger.log(logging.INFO, "Partition Type: {0}".format(partition_type))
             if partition_type == 'linux':
                 system("mkfs.ext4 {0}".format(i))
             elif partition_type == 'uefi':
@@ -541,6 +547,7 @@ def mount_partitions(partitions):
     ## get individual partition fs types so we can mount / in /mnt
     print_info('\n'.join(partitions))
     root = raw_input("{0}Which one is your / mounted partition? (e.g. /dev/sda1): {1}".format(COLORS['OKBLUE'],COLORS['ENDC']))
+    logger.log(logging.INFO, "/ is {0}".format(root))
     if root in partitions:
         print_info("Mounting {0} on /mnt".format(root))
         system("mount {0} /mnt".format(root))
@@ -548,6 +555,7 @@ def mount_partitions(partitions):
         mount_partitions(partitions)
     if partition_table == 'gpt':
         boot = raw_input("{0}Which one is your /boot mounted partition? (e.g. /dev/sda2): {1}".format(COLORS['OKBLUE'],COLORS['ENDC']))
+        logger.log(logging.INFO, "/boot is {0}".format(boot))
         if boot in partitions:
             print_info("Mounting %s on /mnt/boot" % boot)
             system("mkdir -p /mnt/boot")
@@ -737,6 +745,7 @@ def install_base():
         try:
             if int(choice) in range(1,6):
                 base = int(choice)
+                logger.log(logging.INFO, "Base install: {0}".format(base))
                 break
         except:
             print_error("Invalid Option")
@@ -817,6 +826,7 @@ def locale_and_time():
         locale = raw_input("{0}> Please type in the locale you want to use: {1}".format(COLORS['OKBLUE'],COLORS['ENDC']))
     else:
         locale_and_time()
+    logger.log(logging.INFO, "locale: {0}".format(locale))
     system("sed -i '/{0}/s/^#//g' /mnt/etc/locale.gen".format(locale))
     system("locale-gen", True)
     print_info("Setting up keyboard layout, will take the current one.")
@@ -973,6 +983,7 @@ def add_user():
     if query_yes_no("> Would you like to add a new user?", 'yes'):
         while not username:
             username = raw_input("{0}> Please enter a username: {1}".format(COLORS['OKBLUE'],COLORS['ENDC']))
+            loggger.log(logging.INFO, "Adding user {0}".format(username))
         system("useradd -m -g users -G audio,network,power,storage,optical {0}".format(username), True)
         print_command("> Please enter the password for {0}: ".format(username))
         ret = -1
@@ -1009,6 +1020,7 @@ def set_video_utils(user):
         gpu = raw_input("{0}> Choose an option or leave empty for default: {1}".format(COLORS['OKBLUE'],COLORS['ENDC'])) or '5'
         try:
             sel = gpus[gpu]
+            logger.log(logging.INFO, "Video Utils: {0}".format(sel))
             system("pacman -S xorg-server xorg-server-utils xorg-xinit xterm {0} --noconfirm".format(sel), True)
         except KeyError:
             print_error("Not a valid option")
@@ -1033,6 +1045,7 @@ def set_video_utils(user):
                 opt = '123'
             elif opt not in '1234':
                 opt = ''
+            logger.log(logging.INFO, "DE/WM: {0}".format(opt))
 
         if '1' in opt:
             system("pacman -S archstrike-openbox-config --noconfirm", True)
@@ -1112,4 +1125,4 @@ if __name__ == '__main__':
         logger.error('{0}{1}{2}'.format(COLORS['FAIL'], e, COLORS['ENDC']))
         sp.Popen("umount -R /mnt", stdout=FNULL, stderr=sp.STDOUT, shell=True)
         print_error("\n\nAn error has occured, see /tmp/archstrike-installer.log for details.")
-        FNULL.close()
+        NULL.close()
