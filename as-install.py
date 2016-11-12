@@ -337,7 +337,7 @@ def set_keymap():
     print_info("Setting your keyboard layout now, default is US.")
     if query_yes_no("> Would you like to change the keyboard layout?", 'no'):
         system('''find /usr/share/X11/xkb/symbols -type f | \
-awk -F '/' '{print$NF}' | sort | uniq''')
+awk -F '/' '{print $NF}' | sort | uniq''')
         layout = raw_input("> Enter your keyboard layout: ")
         logger.log(logging.INFO, "Keyboard Layout: {0}".format(layout))
         if query_yes_no('''>Setting {0} as your keymap, \
