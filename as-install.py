@@ -1064,8 +1064,11 @@ def set_root_pass():
 def install_archstrike():
     logger.debug("Install ArchStrike")
     system("clear")
-    print_title("Step 14) Installing the ArchStrike repositories...")
+    print_title("Step 14) Installing the ArchStrike repositories")
     time.sleep(3)
+    print_info("Syncronizing clock...")
+    system("pacman -S ntp --no-confirm")
+    system("ntpd -qg")
     system("echo '[archstrike]' >> /mnt{0}".format(pacmanconf))
     system('''echo 'Server = https://mirror.archstrike.org/$arch/$repo' >> \
 /mnt{0}'''.format(pacmanconf))
