@@ -1083,7 +1083,7 @@ Do you want to enable multilib? (say no if it's already enabled)''')
                 /Include/s/#//g}' /mnt/%s
             """ % (pacmanconf))
             system('''/bin/bash -c " echo -e 'y\ny\n' |\
-                   pacman -S gcc-multilib"''', True)
+pacman -S gcc-multilib"''', True)
             print_info("Multilib has been enabled.")
     else:
         print_info("Alright, looks like no. Continuing.")
