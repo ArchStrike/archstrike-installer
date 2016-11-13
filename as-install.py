@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 from getpass import getpass
 import subprocess as sp
+import configparser
 import logging
 import signal
 import select
@@ -27,6 +28,9 @@ console = logging.StreamHandler()
 console.setLevel(logging.INFO)
 console.setFormatter(logging.Formatter('%(message)s'))
 logger.addHandler(console)
+
+config = configparser.ConfigParser()
+CONFIG_FILE = '/tmp/archstrike-installer.ini'
 
 COLORS = {
     'HEADER': '\033[95m',
