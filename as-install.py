@@ -192,7 +192,8 @@ def load_config():
             try:
                 config = json.loads(fr)
             except TypeError:
-                raise Exception("{0} is corrupt. Please delete the file".format(CONFIG_FILE))
+                raise Exception("{0} is corrupt.".format(CONFIG_FILE) \
+                + "Please delete the file")
     else:
         config = {}
 
