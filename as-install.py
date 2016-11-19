@@ -1,12 +1,12 @@
 #!/usr/bin/env python2
 from getpass import getpass
 import subprocess as sp
-import configparser
 import logging
 import signal
 import select
 import urllib2
 import platform
+import json
 import time
 import sys
 import os
@@ -29,8 +29,7 @@ console.setLevel(logging.INFO)
 console.setFormatter(logging.Formatter('%(message)s'))
 logger.addHandler(console)
 
-config = configparser.ConfigParser()
-CONFIG_FILE = '/tmp/archstrike-installer.ini'
+CONFIG_FILE = '/tmp/as-config.json'
 
 COLORS = {
     'HEADER': '\033[95m',
@@ -65,7 +64,7 @@ swap_space = None
 BOOT = None
 ROOT = None
 username = None
-
+config = None
 
 def print_error(msg):
     print('''{0}{1}{2}'''.format(COLORS['FAIL'], msg, COLORS['ENDC']))
@@ -182,6 +181,20 @@ def system_output(command):
     print('{0}'.format(COLORS['ENDC']))
 
     return ret
+
+
+def load_config():
+    global config
+
+    # Check if config file exists
+    if os.path.isfile(CONFIG_FILE):
+        with open(CONFIG_FILE) as fr:
+            try:
+                config = json.loads(fr)
+            except TypeError:
+                raise Exception("{0} is corrupt. Please delete the file".format(CONFIG_FILE))
+    else:
+        config = {}
 
 
 def main():
