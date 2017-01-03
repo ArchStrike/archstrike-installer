@@ -19,7 +19,6 @@ def partition_menu():
         part = cinput("> Choice: ", COLORS['OKBLUE'])
 
         try:
-            part = int(part)
             if menus.partition_methods[part]:
                 usr_cfg['partition_type'] = part
                 break
