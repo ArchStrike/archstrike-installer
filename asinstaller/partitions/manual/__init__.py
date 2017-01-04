@@ -1,6 +1,6 @@
 import sys
 from utils import format_partition, mount
-from asinstaller.utils import system
+from asinstaller.utils import *
 from asinstaller.config import usr_cfg, setup_logger
 
 logger = setup_logger(__name__)
