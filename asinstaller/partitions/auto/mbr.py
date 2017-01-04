@@ -16,7 +16,7 @@ def format():
         usr_cfg['swap'] = SWAP
     else:
         system('echo -e "o\nn\np\n1\n\n+100M\nn\np\n2\n\n\nw" | ' \
-               + 'fdisk {0}'.format(drive))
+               + 'fdisk {0}'.format(usr_cfg['drive']))
 
     usr_cfg['boot'] = system_output("lsblk | " \
                 + "grep {0} | ".format(usr_cfg['drive'][-3:]) \
