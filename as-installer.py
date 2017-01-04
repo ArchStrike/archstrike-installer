@@ -29,7 +29,7 @@ def main():
 
         check_uefi()
         system("timedatectl set-ntp true")
-        print usr_cfg
+
         set_keymap()
 
         devices.partition_menu()
@@ -46,10 +46,10 @@ def main():
 
             confirmed = devices.confirm_settings()
 
-        if usr_cfg['partition_type'] == 1:
+        if usr_cfg['partition_type'] == '1':
             devices.check_lvm()
             auto.partition()
-        elif usr_cfg['partition_type'] == 2:
+        elif usr_cfg['partition_type'] == '2':
             devices.check_lvm()
             encrypted.partition()
         else:
