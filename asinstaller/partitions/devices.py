@@ -52,7 +52,7 @@ def identify():
             continue
         break
 
-    drive_size = system_output("lsblk -p | grep -w %s | ".format(drive) \
+    drive_size = system_output("lsblk -p | grep -w {0} | ".format(drive) \
             + "awk '{print $4}' | grep -o '[0-9]*' | awk 'NR==1' ")
 
     usr_cfg['drive'] = drive
@@ -92,12 +92,12 @@ def set_swap():
             logger.log(logging.INFO, "Swap Size: {0}".format(swap_space))
             size = swap_space[:-1]
             if swap_space[-1] == "M":
-                if int(size) >= (int(drive_size)*1024 - 4096):
+                if int(size) >= (int(usr_cfg['drive_size'])*1024 - 4096):
                     print_error("Your swap space is too large")
                     time.sleep(1)
                 break
             elif swap_space[-1] == "G":
-                if int(size) >= (int(drive_size) - 4):
+                if int(size) >= (int(usr_cfg['drive_size']) - 4):
                     print_error("Your swap space is too large")
                     time.sleep(1)
                 break
@@ -124,8 +124,8 @@ def set_gpt():
 def confirm_settings():
     logger.debug("Confirm Settings")
     system("clear")
-    print_info('Device: {0}\n'.format(usr_cfg['drvie']) \
-               + 'Filesystem: {0}\n'.format(usr_cfg['filesystem']) \
+    print_info('Device: {0}\n'.format(usr_cfg['drive']) \
+               + 'Filesystem: {0}\n'.format(menus.filesystems[usr_cfg['filesystem']]) \
                + 'Swap: {0}'.format(usr_cfg['swap_space']))
 
     if query_yes_no("> Are you sure your partitions are set up correctly?",
