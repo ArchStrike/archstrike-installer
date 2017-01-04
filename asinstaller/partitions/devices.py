@@ -71,10 +71,11 @@ def set_filesystem():
             print_info('{0}) {1}'.format(k, menus.filesystems[k]))
 
         try:
-            fsc = cinput('> Choice (Default is ext4):', COLORS['OKBLUE']) or 1
+            fsc = cinput('> Choice (Default is ext4):', COLORS['OKBLUE']) or '1'
             if menus.filesystems[fsc]:
                 usr_cfg['filesystem'] = fsc
                 logger.log(logging.INFO, "Filesystem type: {0}".format(fsc))
+                break
         except KeyError:
             print_error("Invalid Option")
             time.sleep(1)
