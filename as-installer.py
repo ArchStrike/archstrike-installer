@@ -46,10 +46,10 @@ def main():
 
             confirmed = devices.confirm_settings()
 
-        if usr_cfg['partition_type'] == '1':
+        if usr_cfg['partition_type'] == 'Auto Partition Drive':
             devices.check_lvm()
             auto.partition()
-        elif usr_cfg['partition_type'] == '2':
+        elif usr_cfg['partition_type'] == 'Auto Partition Encrypted LVM':
             devices.check_lvm()
             encrypted.partition()
         else:
