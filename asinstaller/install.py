@@ -223,7 +223,7 @@ def archstrike():
     time.sleep(1)
 
     print_info("Syncronizing clock...")
-    system("pacman -S ntp --no-confirm")
+    system("pacman -S ntp --noconfirm")
     system("ntpd -qg")
 
     system("echo '[archstrike]' >> /mnt{0}".format(pacmanconf))
