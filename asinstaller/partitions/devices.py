@@ -20,7 +20,7 @@ def partition_menu():
 
         try:
             if menus.partition_methods[part]:
-                usr_cfg['partition_type'] = part
+                usr_cfg['partition_type'] = menus.partition_methods[part]
                 break
         except KeyError:
             print_error("Invalid Option")
@@ -73,7 +73,7 @@ def set_filesystem():
         try:
             fsc = cinput('> Choice (Default is ext4):', COLORS['OKBLUE']) or '1'
             if menus.filesystems[fsc]:
-                usr_cfg['filesystem'] = fsc
+                usr_cfg['filesystem'] = menus.filesystems[fsc]
                 logger.log(logging.INFO, "Filesystem type: {0}".format(fsc))
                 break
         except KeyError:
@@ -125,7 +125,7 @@ def confirm_settings():
     logger.debug("Confirm Settings")
     system("clear")
     print_info('Device: {0}\n'.format(usr_cfg['drive']) \
-               + 'Filesystem: {0}\n'.format(menus.filesystems[usr_cfg['filesystem']]) \
+               + 'Filesystem: {0}\n'.format(usr_cfg['filesystem']) \
                + 'Swap: {0}'.format(usr_cfg['swap_space']))
 
     if query_yes_no("> Are you sure your partitions are set up correctly?",

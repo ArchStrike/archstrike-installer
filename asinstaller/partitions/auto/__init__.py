@@ -1,6 +1,7 @@
 import gpt
 import mbr
 
+from asinstaller import menus
 from asinstaller.utils import system
 from asinstaller.config import usr_cfg, setup_logger
 
@@ -19,7 +20,7 @@ def partition():
 
     # Create Boot Partition
     system("wipefs -afq /dev/{0}".format(usr_cfg['boot']))
-    if uefi:
+    if usr_cfg['uefi']:
         system("mkfs.vfat -F32 /dev/{0}".format(usr_cfg['boot']))
     else:
         system("mkfs.ext4 /dev/{0}".format(usr_cfg['boot']))
@@ -27,9 +28,11 @@ def partition():
     # Create Root Partition
     system("wipefs -afq /dev/{0}".format(usr_cfg['root']))
     if usr_cfg['filesystem'] == 'jfs' or usr_cfg['filesystem'] == 'reiserfs':
-        system('echo -e "y" | mkfs.{0} /dev/{1}'.format(fs, usr_cfg['root']))
+        system('echo -e "y" | mkfs.{0} /dev/{1}'.format(usr_cfg['filesystem'],
+            usr_cfg['root']))
     else:
-        system('mkfs.{0} /dev/{1}'.format(fs, usr_cfg['root']))
+        system('mkfs.{0} /dev/{1}'.format(usr_cfg['filesystem'],
+            usr_cfg['root']))
 
     system("mount /dev/{0} /mnt".format(usr_cfg['root']))
     system("mkdir -p /mnt/boot")
