@@ -172,11 +172,13 @@ def start_screen():
 def internet_enabled():
     logger.debug("Checking Internet Connection")
     try:
-        keyfile = urllib2.urlopen('https://archstrike.org/keyfile.asc',
+        opener = urllib2.build_opener()
+        opener.add_headers = [('User-Agent', 'ArchStrike Installer')]
+        keyfile = opener.open('https://archstrike.org/keyfile.asc',
                         timeout=5)
         with open('keyfile.asc', 'wb') as fw:
             fw.write(keyfile.read())
-            
+
         return True
     except urllib2.URLError as err:
         pass
