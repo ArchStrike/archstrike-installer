@@ -238,13 +238,17 @@ def archstrike():
         if query_yes_no(">", 'yes'):
             system("""sed -i "/\[multilib\]/,/Include/"'s/^#//' """ \
                 + "/mnt/{0}".format(pacmanconf))
+            print_info("I will now perform database updates, hang tight.")
+            time.sleep(1)
+            system("pacman -Syy", True)
             system('''/bin/bash -c " echo -e 'y\ny\n' | ''' \
                 + 'pacman -S gcc-multilib"', True)
             print_info("Multilib has been enabled.")
-
-    print_info("I will now perform database updates, hang tight.")
-    time.sleep(1)
-    system("pacman -Syy", True)
+        else:
+            print_info("I will now perform database updates, hang tight.")
+            time.sleep(1)
+            system("pacman -Syy", True)
+            
     print_info("Installing ArchStrike keyring and mirrorlist...")
     system("pacman-key --init", True)
     system("dirmngr < /dev/null", True)
