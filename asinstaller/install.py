@@ -3,6 +3,7 @@ from utils import *
 import menus
 import time
 import shutil
+import os
 
 logger = setup_logger(__name__)
 
@@ -234,7 +235,7 @@ def archstrike():
     if system_output('getconf LONG_BIT') == '64':
         print_info("We have detected you are running x86_64. It is advised " \
             + "to enable multilib with the ArchStrike repo. Do you want to " \
-            + "enable multilib? (say no if it's already enabled)")
+            + "enable multilib?")
 
         if query_yes_no(">", 'yes'):
             system("""sed -i "/\[multilib\]/,/Include/"'s/^#//' """ \
@@ -301,7 +302,7 @@ def new_user():
             system("sed -i '/%wheel ALL=(ALL) ALL/s/^#//' /mnt/etc/sudoers")
             system("usermod -a -G wheel {0}".format(username), True)
 
-    usr_cfg['usrname'] = username
+    usr_cfg['username'] = username
 
 
 def video_utils():
@@ -349,7 +350,7 @@ def wm_de():
                     sel = '123'
 
                 username = usr_cfg['username']
-                if '1' in opt:
+                if '1' in sel:
                     system("pacman -S archstrike-openbox-config --noconfirm",
                         True)
                     if username:
@@ -367,7 +368,7 @@ def wm_de():
                     system('cp -a /mnt/usr/share/archstrike-openbox-config' \
                         + '/etc/*  /mnt/root/.config/''')
 
-                if '2' in opt:
+                if '2' in sel:
                     system("pacman -S xfce4 xfce4-goodies --noconfirm", True)
                     system("pacman -S archstrike-xfce-config --noconfirm", True)
                     if username:
@@ -390,7 +391,7 @@ def wm_de():
                     system('cp -a /mnt/usr/share/archstrike-xfce-config' \
                         + '/wallpapers/* /mnt/usr/share/backgrounds/xfce/')
 
-                if '3' in opt:
+                if '3' in sel:
                     system("pacman -S archstrike-i3-config --noconfirm", True)
                     if username:
                         system("mkdir -p /mnt/home/{0}/".format(username) \
@@ -420,10 +421,13 @@ def wm_de():
                     system('cp -a /mnt/usr/share/archstrike-i3-config' \
                         + '/gtkrc-2.0 /mnt/root/.gtkrc-2.0')
 
-                system('cp -a /home/archstrike/.config/terminator '\
-                    + '/mnt/home/{0}/.config'.format(username))
-                system("cp -a /home/archstrike/.config/terminator " \
-                    + "/mnt/root/.config/")
+                if os.path.isdir('/home/archstrike/.config/terminator'):
+                    if username:
+                        system('cp -a /home/archstrike/.config/terminator '\
+                            + '/mnt/home/{0}/.config'.format(username))
+
+                    system("cp -a /home/archstrike/.config/terminator " \
+                        + "/mnt/root/.config/")
 
                 break
             except KeyError:
