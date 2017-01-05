@@ -179,10 +179,10 @@ def internet_enabled():
         with open('keyfile.asc', 'wb') as fw:
             fw.write(keyfile.read())
 
-        return True
     except urllib2.URLError as err:
-        pass
-    return False
+        return False
+
+    return True
 
 
 def check_uefi():
