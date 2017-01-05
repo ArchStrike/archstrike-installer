@@ -236,10 +236,8 @@ def archstrike():
             + "enable multilib? (say no if it's already enabled)")
 
         if query_yes_no(">", 'yes'):
-            system("""sed -i '/\[multilib]$/ {
-                N
-                /Include/s/#//g}' /mnt/%s
-            """ % (pacmanconf))
+            system("""sed -i "/\[multilib\]/,/Include/"'s/^#//' """ \
+                + "/mnt/{0}".format(pacmanconf))
             system('''/bin/bash -c " echo -e 'y\ny\n' | ''' \
                 + 'pacman -S gcc-multilib"', True)
             print_info("Multilib has been enabled.")
@@ -250,7 +248,7 @@ def archstrike():
     print_info("Installing ArchStrike keyring and mirrorlist...")
     system("pacman-key --init", True)
     system("dirmngr < /dev/null", True)
-    system("pacman-key -r 7CBC0D51", True)
+    system("pacman-key --add keyfile.asc", True)
     system("pacman-key --lsign-key 7CBC0D51", True)
     system("pacman -S archstrike-keyring --noconfirm", True)
     system("pacman -S archstrike-mirrorlist --noconfirm", True)

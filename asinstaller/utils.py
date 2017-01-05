@@ -172,7 +172,11 @@ def start_screen():
 def internet_enabled():
     logger.debug("Checking Internet Connection")
     try:
-        response=urllib2.urlopen('https://google.com',timeout=5)
+        keyfile = urllib2.urlopen('https://archstrike.org/keyfile.asc',
+                        timeout=5)
+        with open('keyfile.asc', 'wb') as fw:
+            fw.write(keyfile.read())
+            
         return True
     except urllib2.URLError as err:
         pass
