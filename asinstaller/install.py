@@ -346,11 +346,11 @@ def wm_de():
 
             try:
                 sel = menus.wm_de[choice]
-                if sel == '4':
-                    sel = '123'
+                if sel == 'All':
+                    choice = '123'
 
                 username = usr_cfg['username']
-                if '1' in sel:
+                if '1' in choice:
                     system("pacman -S archstrike-openbox-config --noconfirm",
                         True)
                     if username:
@@ -368,7 +368,7 @@ def wm_de():
                     system('cp -a /mnt/usr/share/archstrike-openbox-config' \
                         + '/etc/*  /mnt/root/.config/''')
 
-                if '2' in sel:
+                if '2' in choice:
                     system("pacman -S xfce4 xfce4-goodies --noconfirm", True)
                     system("pacman -S archstrike-xfce-config --noconfirm", True)
                     if username:
@@ -391,7 +391,7 @@ def wm_de():
                     system('cp -a /mnt/usr/share/archstrike-xfce-config' \
                         + '/wallpapers/* /mnt/usr/share/backgrounds/xfce/')
 
-                if '3' in sel:
+                if '3' in choice:
                     system("pacman -S archstrike-i3-config --noconfirm", True)
                     if username:
                         system("mkdir -p /mnt/home/{0}/".format(username) \
