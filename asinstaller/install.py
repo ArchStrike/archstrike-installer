@@ -2,6 +2,7 @@ from config import *
 from utils import *
 import menus
 import time
+import shutil
 
 logger = setup_logger(__name__)
 
@@ -248,7 +249,8 @@ def archstrike():
             print_info("I will now perform database updates, hang tight.")
             time.sleep(1)
             system("pacman -Syy", True)
-            
+
+    shutil.move('keyfile.asc', '/mnt/keyfile.asc')
     print_info("Installing ArchStrike keyring and mirrorlist...")
     system("pacman-key --init", True)
     system("dirmngr < /dev/null", True)
