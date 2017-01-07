@@ -70,7 +70,7 @@ def query_yes_no(question, default="yes"):
         sys.stdout.write('{0}{1}{2}{3}'.format(COLORS['OKBLUE'], question,
                                                prompt, COLORS['ENDC']))
         choice = raw_input().lower()
-        logger.log(logging.INFO, '{0} : {1}'.format(question, choice))
+        # logger.log(logging.INFO, '{0} : {1}'.format(question, choice))
         if default is not None and choice == '':
             return valid[default]
         elif choice in valid:
