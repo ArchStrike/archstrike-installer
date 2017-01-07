@@ -20,7 +20,7 @@ def partition_menu():
 
         try:
             if menus.partition_methods[part]:
-                usr_cfg['partition_type'] = menus.partition_methods[part]
+                usr_cfg['partition_type'] = part
                 break
         except KeyError:
             print_error("Invalid Option")

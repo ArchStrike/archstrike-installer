@@ -99,7 +99,7 @@ def locale_time():
 
 def initramfs():
     logger.debug("initramfs")
-    if usr_cfg['partition_type'] != 2 and not usr_cfg['uefi']:
+    if usr_cfg['partition_type'] != '2' and not usr_cfg['uefi']:
         system("clear")
         print_title("Step 10) Generate initramfs image...")
         time.sleep(1)
@@ -120,7 +120,7 @@ def grub():
                 + 'Is that correct?', 'yes'):
             system("pacman -S intel-ucode --noconfirm", True)
 
-    if usr_cfg['partition_type'] == 2:
+    if usr_cfg['partition_type'] == '2':
         system("sed -i 's!quiet!cryptdevice=/dev/lvm/lvroot:root "\
             + "root=/dev/mapper/root!' /mnt/etc/default/grub")
     else:
@@ -132,7 +132,7 @@ def grub():
         system('mv /mnt/boot/EFI/boot/grubx64.efi '\
                 + '/mnt/boot/EFI/boot/bootx64.efi')
 
-        if usr_cfg['partition_type'] != 2:
+        if usr_cfg['partition_type'] != '2':
             system("mkinitcpio -p linux", True)
     else:
         system("grub-install {0}".format(usr_cfg['drive']), True)
@@ -151,19 +151,19 @@ def configuration():
     print_title("Configuring System...")
     time.sleep(1)
 
-    if usr_cfg['partition_type'] == 2 and usr_cfg['uefi']:
+    if usr_cfg['partition_type'] == '2' and usr_cfg['uefi']:
         system('echo "/dev/{0}'.format(usr_cfg['boot']) \
             + '              /boot           vfat         '\
             + 'rw,relatime,fmask=0022,dmask=0022,codepage=437,'\
             + 'iocharset=iso8859-1,shortname=mixed,errors=remount-ro        0'\
             + '2" > /mnt/etc/fstab')
-    elif usr_cfg['partition_type'] == 2:
+    elif usr_cfg['partition_type'] == 'Auto Partition Encrypted LVM':
         system('echo "/dev/{0}'.format(usr_cfg['boot']) \
             + '              /boot           ' \
             +'{0}         '.format(usr_cfg['filesystem']) \
             + 'defaults        0       2" > /mnt/etc/fstab')
 
-    if usr_cfg['partition_type'] == 2:
+    if usr_cfg['partition_type'] == '2':
         system('echo "/dev/mapper/root        /               ' \
             + '{0}         '.format(usr_cfg['filesystem']) \
             + 'defaults        0       1" >> /mnt/etc/fstab')
