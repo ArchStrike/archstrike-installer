@@ -119,30 +119,31 @@ def system(command, chroot=False, **kwargs):  # noqa
                 if rfd == child.stdout.fileno():
                     line = child.stdout.readline()
                     if len(line) > 0:
-                        print('{0}'.format(COLORS['BOLD']))
+                        print('{0}'.format(COLORS['BOLD']), end='')
                         logger.log(logging.INFO, line[:-1])
-                        print('{0}'.format(COLORS['ENDC']))
+                        print('{0}'.format(COLORS['ENDC']), end='')
                 if rfd == child.stderr.fileno():
                     line = child.stderr.readline()
                     if len(line) > 0:
-                        print('{0}'.format(COLORS['FAIL']))
+                        print('{0}'.format(COLORS['FAIL']), end='')
                         logger.log(logging.ERROR, line[:-1])
-                        print('{0}'.format(COLORS['ENDC']))
+                        print('{0}'.format(COLORS['ENDC']), end='')
             if event & select.POLLHUP:
                 poll.unregister(rfd)
                 pollc -= 1
             if pollc > 0:
                 events = poll.poll()
     ret = child.wait()
+    print()
     if ret != 0:
         raise Exception(command)
     return ret
 
 
 def system_output(command):
-    print('{0}'.format(COLORS['BOLD']))
+    print('{0}'.format(COLORS['BOLD']), end='')
     ret = sp.check_output([command], shell=True).rstrip()
-    print('{0}'.format(COLORS['ENDC']))
+    print('{0}'.format(COLORS['ENDC']), end='')
 
     return ret
 
