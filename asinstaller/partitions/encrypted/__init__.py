@@ -1,12 +1,13 @@
 from getpass import getpass
-
+import gpt
+import mbr
 from asinstaller.utils import *
 from asinstaller.config import usr_cfg, setup_logger
 
 logger = setup_logger(__name__)
 
 def partition():
-    print_warning("WARNING! This will encrypt {0}".format(drive))
+    print_warning("WARNING! This will encrypt {0}".format(usr_cfg['drive']))
     if not query_yes_no("> Continue?", 'no'):
         return
 
@@ -53,7 +54,7 @@ def partition():
     else:
         system('mkfs.{0} /dev/mapper/root'.format(usr_cfg['filesystem']))
 
-    if uefi:
+    if usr_cfg['uefi']:
         system("mkfs.vfat -F32 /dev/".format(usr_cfg['boot']))
     else:
         system("wipefs -afq /dev/{0}".format(usr_cfg['boot']))
