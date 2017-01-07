@@ -21,7 +21,7 @@ def non_uefi():
 
     usr_cfg['boot'] = system_output("fdisk -l | " \
                 + "grep {0} | ".format(usr_cfg['drive'][-3:]) \
-                + "awk '{ if (NR==2) print substr ($1,6) }' ")
+                + "awk '{ if (NR==4) print substr ($1,6) }' ")
     usr_cfg['root'] = system_output("fdisk -l | " \
                 + "grep {0} |  ".format(usr_cfg['drive'][-3:]) \
-                + "awk '{ if (NR==4) print substr ($1,6) }' ")
+                + "awk '{ if (NR==2) print substr ($1,6) }' ")
