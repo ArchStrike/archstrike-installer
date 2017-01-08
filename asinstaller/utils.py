@@ -104,7 +104,7 @@ def system(command, chroot=False, **kwargs):  # noqa
         return sp.call([command], shell=True)
 
     child = sp.Popen([command], stdout=sp.PIPE, stderr=sp.PIPE,
-                     shell=True, **kwargs)
+                     close_fds=True, shell=True, **kwargs)
 
     logger.log(logging.DEBUG, command)
 
@@ -142,7 +142,7 @@ def system(command, chroot=False, **kwargs):  # noqa
 
 def system_output(command):
     print('{0}'.format(COLORS['BOLD']), end='')
-    ret = sp.check_output([command], shell=True).rstrip()
+    ret = sp.check_output([command], close_fds=True, shell=True).rstrip()
     print('{0}'.format(COLORS['ENDC']), end='')
 
     return ret
