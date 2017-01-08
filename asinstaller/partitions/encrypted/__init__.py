@@ -40,7 +40,7 @@ def partition():
         system("lvm lvcreate -L {0} -n swap lvm ".format(usr_cfg['swap_space']))
 
     system("lvm lvcreate -L 500M -n tmp lvm")
-    system("lvm lvcreate -l 100%FREE -n lvroot lvm")
+    system("echo -e 'y' | lvm lvcreate -l 100%FREE -n lvroot lvm")
 
     system('printf {0} | '.format(passwd) \
         + 'cryptsetup luksFormat -c aes-xts-plain64 -s 512 /dev/lvm/lvroot -')
