@@ -360,7 +360,7 @@ def wm_de():
                             + "/mnt/home/{0}/.xinitrc".format(username))
                         system('cp -a /mnt/usr/share/archstrike-openbox-config'\
                             + '/etc/* /mnt/home/{0}/.config/'.format(username))
-                        system('chown {0}:users -R /home/' \
+                        system('chown {0}:users -R /home/'.format(username) \
                             + '{0}/.config '.format(username) \
                             + '/home/{0}/.xinitrc'.format(username), True)
                     system("echo 'exec openbox-session' > /mnt/root/.xinitrc")
@@ -408,7 +408,7 @@ def wm_de():
                             + '/gtkrc-2.0 /mnt/home/{0}/'.format(username)
                             + '.gtkrc-2.0')
                         system('chown {0}:users -R /home/{0}'.format(username) \
-                            + '/.config '.format(username) \
+                            + '/.config ' \
                             + '/home/{0}/.xinitrc '.format(username) \
                             + '/home/{0}/.Xresources '.format(username) \
                             + '/home/{0}/.gtkrc-2.0'.format(username), True)
