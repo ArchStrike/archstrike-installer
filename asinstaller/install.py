@@ -45,6 +45,8 @@ def base():  # noqa
     if usr_cfg['uefi']:
         base_install += " efibootmgr"
 
+    system("pacman-key --refresh-keys")
+    system("pacman -Syy")
     system("pacstrap /mnt base {0}".format(base_install))
 
 
@@ -242,6 +244,7 @@ def archstrike():
                 + "/mnt/{0}".format(pacmanconf))
             print_info("I will now perform database updates, hang tight.")
             time.sleep(1)
+            system("pacman-key --refresh-keys", True)
             system("pacman -Syy", True)
             system('''/bin/bash -c " echo -e 'y\ny\n' | ''' \
                 + 'pacman -S gcc-multilib"', True)
@@ -249,6 +252,7 @@ def archstrike():
         else:
             print_info("I will now perform database updates, hang tight.")
             time.sleep(1)
+            system("pacman-key --refresh-keys", True)
             system("pacman -Syy", True)
 
     shutil.move('keyfile.asc', '/mnt/keyfile.asc')
