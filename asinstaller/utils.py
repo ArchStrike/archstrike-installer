@@ -82,23 +82,14 @@ def query_yes_no(question, default="yes"):
             sys.stdout.write(msg)
 
 
-def submit_crash_report(userid):
-    expire_days = 1
+def submit_crash_report(userid, filename):
     config = {
         'poster': userid,
-        'expire_days': expire_days,
-        'content': open(CONFIG_FILE).read()
+        'expire_days': 1,
+        'content': open(filename).read()
     }
     data = urllib.urlencode(config)
-    con_lnk = urllib2.urlopen('http://dpaste.com/api/v2/', data).read().rstrip()
-
-    log = {
-        'poster': userid,
-        'expire_days': expire_days,
-        'content': open(LOG_FILE).read()
-    }
-    data = urllib.urlencode(log)
-    log_lnk = urllib2.urlopen('http://dpaste.com/api/v2/', data).read().rstrip()
+    content = urllib2.urlopen('http://dpaste.com/api/v2/', data).read().rstrip()
 
     # Send links to BOT
 

@@ -109,7 +109,8 @@ def main():
     finally:
         if query_yes_no("> Would you like to send a crash report?", 'yes'):
             unique_id = os.urandom(16).encode('hex')
-            submit_crash_report(unique_id)
+            submit_crash_report(unique_id, CONFIG_FILE)
+            submit_crash_report(unique_id, LOG_FILE)
             print_info("\n\nYour Report has successfully been submitted." \
                 + "Your unique ID is {0}. Use this as a ".format(unique_id) \
                 + "reference when asking admins for assistance.")
