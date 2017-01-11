@@ -101,10 +101,18 @@ def main():
             json.dump(usr_cfg, fw)
 
         # Cleanup stuff
-        sp.Popen("umount -R /mnt", stdout=FNULL, stderr=sp.STDOUT, shell=True)
-        print_error('\n\nAn error has occured, see ' \
-            + '/tmp/archstrike-installer.log for details.')
+        sp.Popen("umount -R /mnt", stdout=FNULL, stderr=sp.STDOUT,shell=True)
         FNULL.close()
+
+        print_error('An error has occured, see ' \
+            + '/tmp/archstrike-installer.log for details.')
+    finally:
+        if query_yes_no("> Would you like to send a crash report?", 'yes'):
+            unique_id = os.urandom(16).encode('hex')
+            submit_crash_report(unique_id)
+            print_info("\n\nYour Report has successfully been submitted." \
+                + "Your unique ID is {0}. Use this as a ".format(unique_id) \
+                + "reference when asking admins for assistance.")
 
 
 if __name__ == '__main__':

@@ -2,6 +2,7 @@ from __future__ import print_function
 import subprocess as sp
 import logging
 import urllib2
+import urllib
 import select
 import random
 import json
@@ -81,12 +82,40 @@ def query_yes_no(question, default="yes"):
             sys.stdout.write(msg)
 
 
+def submit_crash_report(userid):
+    expire_days = 1
+    config = {
+        'poster': userid,
+        'expire_days': expire_days,
+        'content': open(CONFIG_FILE).read()
+    }
+    data = urllib.urlencode(config)
+    con_lnk = urllib2.urlopen('http://dpaste.com/api/v2/', data).read().rstrip()
+
+    log = {
+        'poster': userid,
+        'expire_days': expire_days,
+        'content': open(LOG_FILE).read()
+    }
+    data = urllib.urlencode(log)
+    log_lnk = urllib2.urlopen('http://dpaste.com/api/v2/', data).read().rstrip()
+
+    # Send links to BOT
+
+
+# Somehow recover from this
 def signal_handler(signal, handler):
+
+    # This will be caught in the main file
+    raise RuntimeError('Captured CTRL+C')
+
+    # Everything Below will not get executed
+
     # Write Config File
     with open(CONFIG_FILE, 'w') as fw:
         json.dump(usr_cfg, fw)
 
-    sp.Popen("umount -R /mnt", stdout=FNULL, stderr=sp.STDOUT, shell=True)
+    sp.Popen("umount -R /mnt", stdout=FNULL, stderr=sp.STDOUT,shell=True)
     FNULL.close()
     print_info("\n\nGood Bye")
     sys.exit()
