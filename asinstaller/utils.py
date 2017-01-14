@@ -91,7 +91,7 @@ def save_crash_files(userid, filenames):
             'content': open(filename).read()
         })
         request = urllib2.urlopen('http://dpaste.com/api/v2/', data)
-        content = request.read().rstrip()
+        content = request.read().rstrip() + '.txt'
         urls.append(content)
     return urls
 
