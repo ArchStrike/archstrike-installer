@@ -94,7 +94,7 @@ def locale_time():
     system("echo {0} >> /mnt/etc/vconsole.conf".format(layout))
     print_info("Setting timezone...")
     system("tzselect > /tmp/archstrike-timezone", True)
-    system('ln -s /usr/share/zoneinfo/$(cat /tmp/archstrike-timezone) '\
+    system('ln -sf /usr/share/zoneinfo/$(cat /tmp/archstrike-timezone) '\
         + '/etc/localtime', True)
     system("hwclock --systohc --utc")
 
