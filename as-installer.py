@@ -108,9 +108,11 @@ def main():
             + '/tmp/archstrike-installer.log for details.')
 
         if query_yes_no("> Would you like to send a crash report?", 'yes'):
-            unique_id = os.urandom(16).encode('hex')
-            submit_crash_report(unique_id, CONFIG_FILE)
-            submit_crash_report(unique_id, LOG_FILE)
+            print_info('Submitting crash report...')
+            unique_id = 'as' + os.urandom(14).encode('hex')
+            LogHandler(unique_id,
+                save_crash_files(unique_id, [CONFIG_FILE, LOG_FILE]))
+
             print_info("\n\nYour Report has successfully been submitted." \
                 + "Your unique ID is {0}. Use this as a ".format(unique_id) \
                 + "reference when asking admins for assistance.")

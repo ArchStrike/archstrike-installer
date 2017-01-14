@@ -6,9 +6,10 @@ usr_cfg = {}
 pacmanconf = "/etc/pacman.conf"
 archstrike_mirrorlist = "/etc/pacman.d/archstrike-mirrorlist"
 LOG_FILE = '/tmp/archstrike-installer.log'
-
 CONFIG_FILE = '/tmp/as-config.json'
-
+IRC_SERVER = 'irc.freenode.net'
+IRC_PORT = 6697
+IRC_BOT_NICK = 'dontlookatme'
 COLORS = {
     'HEADER': '\033[95m',
     'OKBLUE': '\033[94m',

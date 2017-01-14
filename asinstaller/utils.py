@@ -82,16 +82,18 @@ def query_yes_no(question, default="yes"):
             sys.stdout.write(msg)
 
 
-def submit_crash_report(userid, filename):
-    config = {
-        'poster': userid,
-        'expire_days': 1,
-        'content': open(filename).read()
-    }
-    data = urllib.urlencode(config)
-    content = urllib2.urlopen('http://dpaste.com/api/v2/', data).read().rstrip()
-
-    # Send links to BOT
+def save_crash_files(userid, filenames):
+    urls  = []
+    for filename in filenames:
+        data = urllib.urlencode({
+            'poster': userid,
+            'expire_days': 1,
+            'content': open(filename).read()
+        })
+        request = urllib2.urlopen('http://dpaste.com/api/v2/', data)
+        content = request.read().rstrip()
+        urls.append(content)
+    return urls
 
 
 # Somehow recover from this

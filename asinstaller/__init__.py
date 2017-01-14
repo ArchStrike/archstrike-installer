@@ -8,6 +8,7 @@ import install
 from . import menus
 from .config import *
 from .utils import *
+from .irc import LogHandler
 from partitions import devices, auto, encrypted, manual
 
 # Load Config
