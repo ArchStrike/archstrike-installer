@@ -185,7 +185,7 @@ def start_screen():
             break
         elif choice == "99":
             print_info("Alright, see you later!")
-            exit()
+            sys.exit()
         else:
             print_error("Invalid Option")
 
@@ -200,9 +200,13 @@ def internet_enabled():
         with open('keyfile.asc', 'wb') as fw:
             fw.write(keyfile.read())
 
-    except urllib2.URLError as err:
-        return False
-
+    except:
+        print_warning("No Internet Connection Detected.")
+        if query_yes_no("> Would you like to connect to WiFi?", "yes"):
+            system("wifi-menu")
+            return internet_enabled()
+        else:
+            return False
     return True
 
 
