@@ -106,7 +106,7 @@ def main():
 
         print_error('An error has occured, see ' \
             + '/tmp/archstrike-installer.log for details.')
-    finally:
+
         if query_yes_no("> Would you like to send a crash report?", 'yes'):
             unique_id = os.urandom(16).encode('hex')
             submit_crash_report(unique_id, CONFIG_FILE)
