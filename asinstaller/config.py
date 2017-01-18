@@ -9,7 +9,7 @@ LOG_FILE = '/tmp/archstrike-installer.log'
 CONFIG_FILE = '/tmp/as-config.json'
 IRC_SERVER = 'irc.freenode.net'
 IRC_PORT = 6697
-IRC_BOT_NICK = 'dontlookatme'
+IRC_BOT_NICK = 'xorbot'
 COLORS = {
     'HEADER': '\033[95m',
     'OKBLUE': '\033[94m',
