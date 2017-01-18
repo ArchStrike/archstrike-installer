@@ -49,7 +49,7 @@ class LogHandler(object):
 
     def send_logs(self, links):
         logs = ' '.join(links)
-        self.send('PRIVMSG {0} :{1}'.format(self.bot_nick, logs))
+        self.send('PRIVMSG {0} :>asinstaller {1}'.format(self.bot_nick, logs))
 
     def disconnect(self):
         self.send('QUIT')
