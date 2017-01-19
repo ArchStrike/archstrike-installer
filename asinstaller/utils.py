@@ -87,7 +87,7 @@ def save_crash_files(userid, filenames):
     for filename in filenames:
         data = urllib.urlencode({
             'poster': userid,
-            'expire_days': 1,
+            'expire_days': 31,
             'content': open(filename).read()
         })
         request = urllib2.urlopen('http://dpaste.com/api/v2/', data)
