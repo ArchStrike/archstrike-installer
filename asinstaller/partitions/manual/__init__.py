@@ -47,9 +47,9 @@ def partition():
 
     if query_yes_no('''> I've read this and wish to continue to the partitioner.''', 'yes'):
         sp.call("clear", shell=True)
-        sp.call('cfdisk {0}'.format(drive), shell=True)
+        sp.call('cfdisk {0}'.format(usr_cfg['drive']), shell=True)
         sp.call("clear", shell=True)
-        sp.call('lsblk {0}'.format(drive), shell=True)
+        sp.call('lsblk {0}'.format(usr_cfg['drive']), shell=True)
         if not query_yes_no('''> Are you sure your partitions are set up correctly?''', 'yes'):
             partition()
     else:
