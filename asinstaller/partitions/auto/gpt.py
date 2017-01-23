@@ -17,7 +17,7 @@ def uefi():
         usr_cfg['swap'] = SWAP
     else:
         system('echo -e "n\n\n\n512M\nef00\nn\n\n\n\n\nw\ny" | ' \
-            + 'gdisk {0}'.format(drive))
+            + 'gdisk {0}'.format(usr_cfg['drive']))
 
     usr_cfg['boot'] = system_output("fdisk -l | " \
                 + "grep {0} | ".format(usr_cfg['drive'][-3:]) \
