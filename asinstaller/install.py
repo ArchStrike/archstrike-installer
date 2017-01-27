@@ -45,8 +45,11 @@ def base():  # noqa
     if usr_cfg['uefi']:
         base_install += " efibootmgr"
 
-    system("pacman-key --refresh-keys")
     system("pacman -Syy")
+    system("pacman -S ntp --noconfirm")
+    system("ntpd -qg")
+    system("hwclock --systohc")
+    system("pacman-key --refresh-keys --keyserver pgp.mit.edu")
     system("pacstrap /mnt base {0}".format(base_install))
 
 
@@ -227,8 +230,8 @@ def archstrike():
     time.sleep(1)
 
     print_info("Syncronizing clock...")
-    system("pacman -S ntp --noconfirm")
-    system("ntpd -qg")
+    system("pacman -S ntp --noconfirm", True)
+    system("ntpd -qg", True)
 
     system("echo '[archstrike]' >> /mnt{0}".format(pacmanconf))
     system("echo 'Server = https://mirror.archstrike.org/$arch/$repo' >> "\
@@ -244,7 +247,8 @@ def archstrike():
                 + "/mnt/{0}".format(pacmanconf))
             print_info("I will now perform database updates, hang tight.")
             time.sleep(1)
-            system("pacman-key --refresh-keys", True)
+            system("hwclock --systohc", True)
+            system("pacman-key --refresh-keys --keyserver pgp.mit.edu", True)
             system("pacman -Syy", True)
             system('''/bin/bash -c " echo -e 'y\ny\n' | ''' \
                 + 'pacman -S gcc-multilib"', True)
@@ -252,7 +256,8 @@ def archstrike():
         else:
             print_info("I will now perform database updates, hang tight.")
             time.sleep(1)
-            system("pacman-key --refresh-keys", True)
+            system("hwclock --systohc", True)
+            system("pacman-key --refresh-keys --keyserver pgp.mit.edu", True)
             system("pacman -Syy", True)
 
     shutil.move('keyfile.asc', '/mnt/keyfile.asc')
