@@ -206,6 +206,7 @@ def internet_enabled():
         print_warning("No Internet Connection Detected.")
         if query_yes_no("> Would you like to connect to WiFi?", "yes"):
             system("wifi-menu")
+            time.sleep(10)  # Wait for DHCP
             return internet_enabled()
         else:
             return False
