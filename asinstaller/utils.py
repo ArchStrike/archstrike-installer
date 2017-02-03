@@ -205,8 +205,13 @@ def internet_enabled():
     except:
         print_warning("No Internet Connection Detected.")
         if query_yes_no("> Would you like to connect to WiFi?", "yes"):
-            system("wifi-menu")
-            time.sleep(10)  # Wait for DHCP
+            try:
+                system_output("wifi-menu")
+                python = sys.executable
+                os.execl(python, python, *sys.argv)
+            except Exception as e:
+                system("clear")
+                logger.error("WIFI: {0}".format(e))
             return internet_enabled()
         else:
             return False
