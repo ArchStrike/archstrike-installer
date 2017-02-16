@@ -113,12 +113,12 @@ def set_swap():
 def set_gpt():
     logger.debug("Setting GPT")
     system("clear")
+    gpt = False
     if not usr_cfg['uefi']:
         if query_yes_no('> Step 6) Would you like to use GUID Partition '\
             + 'Table?', 'no'):
-            usr_cfg['gpt'] = True
-        else:
-            usr_cfg['gpt'] = False
+            gpt = True
+    usr_cfg['gpt'] = gpt
 
 
 def confirm_settings():
