@@ -55,7 +55,7 @@ def partition():
         system('mkfs.{0} /dev/mapper/root'.format(usr_cfg['filesystem']))
 
     if usr_cfg['uefi']:
-        system("mkfs.vfat -F32 /dev/".format(usr_cfg['boot']))
+        system("mkfs.vfat -F32 /dev/{0}".format(usr_cfg['boot']))
     else:
         system("wipefs -afq /dev/{0}".format(usr_cfg['boot']))
         system("mkfs.ext4 /dev/{0}".format(usr_cfg['boot']))
