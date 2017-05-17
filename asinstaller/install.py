@@ -337,7 +337,7 @@ def video_utils():
 
             try:
                 sel = menus.gpus[gpu]
-                system('pacman -S xorg-server xorg-server-utils xorg-xinit ' \
+                system('pacman -S xorg-server xorg-apps xorg-xinit ' \
                     + 'xterm {0} --noconfirm'''.format(sel), True)
                 break
             except KeyError:
