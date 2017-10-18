@@ -47,9 +47,17 @@ def base():  # noqa
 
     system("pacman -Syy")
     try:
+        # Check if ntp command exists
         system("pacman -Qs ntp >/dev/null 2>&1")
     except:
+        # Install ntp if command does not exists
         system("pacman -S ntp --noconfirm")
+    else:
+        # Verify ntp command is owned by ntp and not opentpd
+        _conflict_check = '$(pacman -Qo /usr/bin/ntpd | grep -o "is owned by ntp ")'
+        _err_msg = 'A package other than ntp owns /usr/bin/ntpd. Please install ntp manually.\n'
+        _cmd = '[[ -z "{}" ]] && printf "{}" >&2'.format(_conflict_check, _err_msg)
+        system(_cmd)
     system("ntpd -qg >/dev/null 2>&1")
     system("hwclock --systohc")
     system("pacman-key --refresh-keys --keyserver pgp.mit.edu  >/dev/null 2>&1")
