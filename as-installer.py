@@ -92,30 +92,30 @@ def main():
         system("umount -R /mnt")
         if query_yes_no("> Would you like to reboot now?", None):
             system("reboot")
-
-    except Exception as e:
+    except RuntimeError as e:
+        # User-input prompted exit
         logger.error('{0}{1}{2}'.format(COLORS['FAIL'], e, COLORS['ENDC']))
-
-        # Write Config File
+    except Exception as e:
+        # Crash occurred prompted exit
+        logger.error('{0}{1}{2}'.format(COLORS['FAIL'], e, COLORS['ENDC']))
+        # Write config file
         with open(CONFIG_FILE, 'w') as fw:
             json.dump(usr_cfg, fw)
-
-        # Cleanup stuff
-        sp.Popen("umount -R /mnt", stdout=FNULL, stderr=sp.STDOUT,shell=True)
-        FNULL.close()
-
+        # Ask to report crash
         print_error('An error has occured, see ' \
             + '/tmp/archstrike-installer.log for details.')
-
         if query_yes_no("> Would you like to send a crash report?", 'yes'):
             print_info('Submitting crash report...')
             unique_id = 'as' + os.urandom(14).encode('hex')
             LogHandler(unique_id,
                 save_crash_files(unique_id, [CONFIG_FILE, LOG_FILE]))
-
             print_info("\n\nYour Report has successfully been submitted." \
                 + "Your unique ID is {0}. Use this as a ".format(unique_id) \
                 + "reference when asking admins for assistance.")
+    finally:
+        # Cleanup stuff
+        sp.Popen("umount -R /mnt", stdout=FNULL, stderr=sp.STDOUT,shell=True)
+        FNULL.close()
 
 
 if __name__ == '__main__':
