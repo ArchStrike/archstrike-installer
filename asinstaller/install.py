@@ -62,6 +62,12 @@ def base():  # noqa
     system("[[ ! -z $(systemctl status ntpd | grep 'Active: inactive') ]] &&  ntpd -qg >/dev/null 2>&1")
     system("hwclock --systohc")
     system("pacman-key --refresh-keys --keyserver pgp.mit.edu  >/dev/null 2>&1")
+    try:
+        # Check if pacstrap command exists
+        system("pacman -Qs pacstrap >/dev/null 2>&1")
+    except:
+        # Install arch-install-scripts if pacstrap does not exist
+        system("pacman -S arch-install-scripts --noconfirm")
     system("pacstrap /mnt base {0}".format(base_install))
 
 
