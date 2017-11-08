@@ -265,7 +265,6 @@ def archstrike():
             print_info("I will now perform database updates, hang tight.")
             time.sleep(1)
             system("hwclock --systohc", True)
-            system("pacman-key --refresh-keys --keyserver pgp.mit.edu >/dev/null 2>&1", True)
             system("pacman -Syy", True)
             system('''/bin/bash -c " echo -e 'y\ny\n' | ''' \
                 + 'pacman -S gcc-multilib"', True)
@@ -274,7 +273,6 @@ def archstrike():
             print_info("I will now perform database updates, hang tight.")
             time.sleep(1)
             system("hwclock --systohc", True)
-            system("pacman-key --refresh-keys --keyserver pgp.mit.edu", True)
             system("pacman -Syy", True)
 
     shutil.move('keyfile.asc', '/mnt/keyfile.asc')
