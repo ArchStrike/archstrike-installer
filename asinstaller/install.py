@@ -67,7 +67,7 @@ def base():  # noqa
     system("pacman -Su --noconfirm >/dev/null 2>&1")
     try:
         # Check if pacstrap command exists
-        system("pacman -Qs pacstrap >/dev/null 2>&1")
+        system("pacman -Qo pacstrap >/dev/null 2>&1")
     except:
         # Install arch-install-scripts if pacstrap does not exist
         system("pacman -S arch-install-scripts --noconfirm")
