@@ -61,7 +61,10 @@ def base():  # noqa
     # if not ntpd.service is inactive, then set time with ntpd. otherwise, pass so exits 0
     system("[[ ! -z $(systemctl status ntpd | grep 'Active: inactive') ]] &&  ntpd -qg >/dev/null 2>&1 || :")
     system("hwclock --systohc")
-    system("pacman-key --refresh-keys --keyserver pgp.mit.edu  >/dev/null 2>&1")
+    # the following should be the same as pacman-key --refresh-keys --keyserver pgp.mit.edu
+    # however, keyservers are too slow for my taste
+    system("pacman -S archlinux-keyring --noconfirm >/dev/null 2>&1")
+    system("pacman -Su --noconfirm >/dev/null 2>&1")
     try:
         # Check if pacstrap command exists
         system("pacman -Qs pacstrap >/dev/null 2>&1")
