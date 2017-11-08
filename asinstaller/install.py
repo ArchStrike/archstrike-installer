@@ -58,8 +58,8 @@ def base():  # noqa
         _err_msg = 'A package other than ntp owns /usr/bin/ntpd. Please install ntp manually.\n'
         _cmd = '[[ -z "{}" ]] && printf "{}" >&2'.format(_conflict_check, _err_msg)
         system(_cmd)
-    # Set time if ntpd.service is inactive, otherwise assume time set properly
-    system("[[ ! -z $(systemctl status ntpd | grep 'Active: inactive') ]] &&  ntpd -qg >/dev/null 2>&1")
+    # if not ntpd.service is inactive, then set time with ntpd. otherwise, pass so exits 0
+    system("[[ ! -z $(systemctl status ntpd | grep 'Active: inactive') ]] &&  ntpd -qg >/dev/null 2>&1 || :")
     system("hwclock --systohc")
     system("pacman-key --refresh-keys --keyserver pgp.mit.edu  >/dev/null 2>&1")
     try:
