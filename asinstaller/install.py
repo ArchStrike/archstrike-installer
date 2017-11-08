@@ -247,13 +247,6 @@ def archstrike():
     print_title("Step 14) Installing the ArchStrike repositories")
     time.sleep(1)
 
-    print_info("Syncronizing clock...")
-    try:
-        system("pacman -Qs ntp >/dev/null 2>&1", True)
-    except:
-        system("pacman -S ntp --noconfirm", True)
-    system("ntpd -qg >/dev/null >/dev/null 2>&1", True)
-
     system("echo '[archstrike]' >> /mnt{0}".format(pacmanconf))
     system("echo 'Server = https://mirror.archstrike.org/$arch/$repo' >> "\
         + "/mnt{0}".format(pacmanconf))
