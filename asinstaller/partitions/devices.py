@@ -136,12 +136,16 @@ def confirm_settings():
 
 
 def check_lvm():
+    """Logical volume lvm/lvroot is used by another device  -> `blkdeactivate -u /dev/lvm/lvroot` to resolve. `lvmchange -ay /dev/lvm/lvroot` to unresolve
+    if system_output('pvscan -n | grep {}'.format(usr_cfg['drive'])) then nogroup otherwise in group
+    """
     logger.debug("Checking LVM")
-    system_output('pvscan')
-    system_output('vgscan')
-    lvscan = system_output('lvscan')
+    system_output('pvscan')  # physical volumes
+    system_output('vgscan')  # volume groups
+    lvscan = system_output('lvscan')  # logical volumes
 
     if lvscan:
         for entry in lvscan.rstrip().split('\n'):
             lvm_dir = entry.split("'")[1]
+            if 'ACTIVE' in entry: system('blkdeactivate -u {}'.format(lvm_dir))
             system("echo -e 'y'|lvm lvremove {0}".format(lvm_dir))
