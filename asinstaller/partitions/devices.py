@@ -136,16 +136,24 @@ def confirm_settings():
 
 
 def check_lvm():
-    """Logical volume lvm/lvroot is used by another device  -> `blkdeactivate -u /dev/lvm/lvroot` to resolve. `lvmchange -ay /dev/lvm/lvroot` to unresolve
-    if system_output('pvscan -n | grep {}'.format(usr_cfg['drive'])) then nogroup otherwise in group
+    """
+    Reason for if 'ACTIVE':
+        Logical volume lvm/lvroot is used by another device  -> `blkdeactivate -u /dev/lvm/lvroot` to resolve. `lvmchange -ay /dev/lvm/lvroot` to unresolve
+    Reason for if _partition:
+        Must remove physical volumn
     """
     logger.debug("Checking LVM")
-    system_output('pvscan')  # physical volumes
-    system_output('vgscan')  # volume groups
     lvscan = system_output('lvscan')  # logical volumes
+    vgscan = system_output('vgscan')  # volume groups
+    pvscan = system_output('pvscan')  # physical volumes
 
     if lvscan:
         for entry in lvscan.rstrip().split('\n'):
             lvm_dir = entry.split("'")[1]
             if 'ACTIVE' in entry: system('blkdeactivate -u {}'.format(lvm_dir))
             system("echo -e 'y'|lvm lvremove {0}".format(lvm_dir))
+
+    if pvscan:
+        for entry in vgscan.rstrip().split('\n'):
+            _partition = system_output('pvscan | grep "{}" | grep -o "VG [^ ]*"| grep -o "[^ ]*$" || exit 0'.format(usr_cfg['drive']))
+            if _partition: system_output('pvremove -ff {}'.format(_partition))
