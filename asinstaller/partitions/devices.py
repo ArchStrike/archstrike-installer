@@ -77,6 +77,7 @@ def set_filesystem():
                 logger.log(logging.INFO, "Filesystem type: {0}".format(fsc))
             if menus.filesystems[fsc] == 'btrfs':
                 system("pacman -S --noconfirm btrfs-progs")
+            break
         except KeyError:
             print_error("Invalid Option")
             time.sleep(1)
