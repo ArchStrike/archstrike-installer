@@ -125,6 +125,8 @@ def locale_time():
 
 def initramfs():
     logger.debug("initramfs")
+    if usr_cfg['filesystem'] == 'btrfs':
+        system("pacman -S --noconfirm btrfs-progs", True)
     if usr_cfg['partition_type'] != '2' and not usr_cfg['uefi']:
         system("clear")
         print_title("Step 10) Generate initramfs image...")
