@@ -91,10 +91,10 @@ def main():
             system("reboot")
     except RuntimeError as e:
         # User-input prompted exit
-        logger.error('{0}{1}{2}'.format(COLORS['FAIL'], e, COLORS['ENDC']))
+        logger.exception('{0}{1}{2}'.format(COLORS['FAIL'], e, COLORS['ENDC']))
     except Exception as e:
         # Crash occurred prompted exit
-        logger.error('{0}{1}{2}'.format(COLORS['FAIL'], e, COLORS['ENDC']))
+        logger.exception('{0}{1}{2}'.format(COLORS['FAIL'], e, COLORS['ENDC']))
         # Write config file
         with open(CONFIG_FILE, 'w') as fw:
             json.dump(usr_cfg, fw)

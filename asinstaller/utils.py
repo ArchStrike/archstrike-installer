@@ -43,7 +43,9 @@ def print_banner():
 
 
 def cinput(msg, color):
-    return raw_input('''{1}{0}{2}'''.format(msg, color, COLORS['ENDC'])).strip()
+    response = raw_input('''{1}{0}{2}'''.format(msg, color, COLORS['ENDC'])).strip()
+    logger.debug('prompt: {}\n{}response: {}'.format(msg, ' '*8, response))
+    return response
 
 
 def query_yes_no(question, default="yes"):
