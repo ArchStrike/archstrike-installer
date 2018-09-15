@@ -29,10 +29,12 @@ localesdict = {'1': 'en_US.UTF-8', '2': 'en_AU.UTF-8', '3': 'en_CA.UTF-8',
 
 FNULL = open(os.devnull, 'w')
 
+
 class WhitespaceRemovingFormatter(logging.Formatter):
     def format(self, record):
         record.msg = record.msg.strip()
         return super(WhitespaceRemovingFormatter, self).format(record)
+
 
 def setup_logger(filename):
     logger = logging.getLogger(filename)

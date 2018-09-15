@@ -15,6 +15,7 @@ from config import *
 
 logger = setup_logger(__name__)
 
+
 def print_error(msg):
     print('''{0}{1}{2}'''.format(COLORS['FAIL'], msg, COLORS['ENDC']))
 
@@ -80,12 +81,12 @@ def query_yes_no(question, default="yes"):
             return valid[choice]
         else:
             msg = "{0}Please respond with 'yes'".format(COLORS['FAIL']) \
-            + " or 'no' (or 'y' or 'n').\n{0}".format(COLORS['ENDC'])
+                + " or 'no' (or 'y' or 'n').\n{0}".format(COLORS['ENDC'])
             sys.stdout.write(msg)
 
 
 def save_crash_files(userid, filenames):
-    urls  = []
+    urls = []
     for filename in filenames:
         data = urllib.urlencode({
             'poster': userid,
@@ -110,7 +111,7 @@ def signal_handler(signal, handler):
     with open(CONFIG_FILE, 'w') as fw:
         json.dump(usr_cfg, fw)
 
-    sp.Popen("umount -R /mnt", stdout=FNULL, stderr=sp.STDOUT,shell=True)
+    sp.Popen("umount -R /mnt", stdout=FNULL, stderr=sp.STDOUT, shell=True)
     FNULL.close()
     print_info("\n\nGood Bye")
     sys.exit()
@@ -237,16 +238,15 @@ def set_keymap():
 
     layout = 'us'
     if query_yes_no("> Would you like to change the keyboard layout? ", 'no'):
-        print(system_output("find /usr/share/X11/xkb/symbols -type f | "\
+        print(system_output("find /usr/share/X11/xkb/symbols -type f | "
                             + "awk -F '/' '{print $NF}' | sort | uniq"""))
         layout = raw_input("> Enter your keyboard layout: ")
 
-        if query_yes_no('>Setting "{0}" as your keymap, '.format(layout) \
+        if query_yes_no('>Setting "{0}" as your keymap, '.format(layout)
                         + 'is that correct? ', 'yes'):
             system("setxkbmap {0}".format(layout))
 
-
-        if query_yes_no('> Try typing in here to test. \n'\
+        if query_yes_no('> Try typing in here to test. \n'
                         + "Input 'Y' if settings are incorrect"
                         + " and 'N' to save.:", 'no'):
             system("setfont lat9w-16")

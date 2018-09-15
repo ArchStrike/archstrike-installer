@@ -5,6 +5,7 @@ from config import *
 
 logger = setup_logger(__name__)
 
+
 class LogHandler(object):
 
     def __init__(self, nick, logs):
@@ -17,10 +18,8 @@ class LogHandler(object):
         self.send_logs(logs)
         self.disconnect()
 
-
     def send(self, msg):
         self.sock.sendall('{0}\r\n'.format(msg))
-
 
     def connect(self):
         # Create context for verifying host
@@ -45,7 +44,6 @@ class LogHandler(object):
                 data = self.sock.recv(1024)
             except ssl.SSLError:
                 break
-
 
     def send_logs(self, links):
         logs = ' '.join(links)

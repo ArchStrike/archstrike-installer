@@ -7,6 +7,7 @@ from asinstaller import *
 
 logger = setup_logger(__name__)
 
+
 def main():
     try:
         # Pre-checks
@@ -19,7 +20,7 @@ def main():
 
         # TODO: If there is a cfg then the user has prev ran the installer
         if usr_cfg:
-            pass # Goto Menu
+            pass  # Goto Menu
 
         # First time, ask the user if they want to proceed
         start_screen()
@@ -99,19 +100,19 @@ def main():
         with open(CONFIG_FILE, 'w') as fw:
             json.dump(usr_cfg, fw)
         # Ask to report crash
-        print_error('An error has occured, see ' \
-            + '/tmp/archstrike-installer.log for details.')
+        print_error('An error has occured, see '
+                    + '/tmp/archstrike-installer.log for details.')
         if query_yes_no("> Would you like to send a crash report?", 'yes'):
             print_info('Submitting crash report...')
             unique_id = 'as' + os.urandom(14).encode('hex')
             LogHandler(unique_id,
-                save_crash_files(unique_id, [CONFIG_FILE, LOG_FILE]))
-            print_info("\n\nYour Report has successfully been submitted." \
-                + "Your unique ID is {0}. Use this as a ".format(unique_id) \
-                + "reference when asking admins for assistance.")
+                       save_crash_files(unique_id, [CONFIG_FILE, LOG_FILE]))
+            print_info("\n\nYour Report has successfully been submitted."
+                       + "Your unique ID is {0}. Use this as a ".format(unique_id)
+                       + "reference when asking admins for assistance.")
     finally:
         # Cleanup stuff
-        sp.Popen("umount -R /mnt", stdout=FNULL, stderr=sp.STDOUT,shell=True)
+        sp.Popen("umount -R /mnt", stdout=FNULL, stderr=sp.STDOUT, shell=True)
         FNULL.close()
 
 
