@@ -36,8 +36,8 @@ def main():
         devices.partition_menu()
 
         confirmed = True if usr_cfg['partition_type'] == '3' else False
+        devices.identify()
         while not confirmed:
-            devices.identify()
 
             devices.set_filesystem()
 
