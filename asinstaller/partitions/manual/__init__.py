@@ -17,8 +17,8 @@ def partition():
         partition()
     system("lsblk {0}".format(usr_cfg['drive']))
 
-    partition_table = system_output('fdisk -l {0} '.format(usr_cfg['drive']) \
-        + '| grep Disklabel | cut -d ' ' -f 3')
+    _table_cmd = "fdisk -l {0} | grep Disklabel | cut -d ' ' -f 3"
+    partition_table = system_output(_table_cmd.format(usr_cfg['drive']))
 
     if partition_table == 'gpt':
         print_info("For the GPT partition table, the suggested partition " \
