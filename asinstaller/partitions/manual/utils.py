@@ -9,7 +9,7 @@ def format_partition():
     print_title("Step 5) Formatting partitions")
     time.sleep(1)
 
-    system("lsblk %s".format(usr_cfg['drive']))
+    system("lsblk {}".format(usr_cfg['drive']))
     partitions = cinput('> Enter all the partitions you created by ' \
         + 'seperating them with a comma (e.g. /dev/sda1,/dev/sda2): ' \
         , COLORS['OKBLUE']).split(',')
@@ -24,10 +24,13 @@ def format_partition():
             logger.log(logging.INFO, 'Partition Type: ' \
                 + '{0}'.format(partition_type))
             if partition_type == 'linux':
+                satisfy_dep("mkfs.ext4")
                 system("mkfs.ext4 {0}".format(i))
             elif partition_type == 'uefi':
+                satisfy_dep("mkfs.fat")
                 system("mkfs.fat -F32 {0}".format(i))
             elif partition_type == 'swap':
+                satisfy_dep("mkswap")  # mkswap and swapon have same owner
                 system("mkswap {0}".format(i))
                 system("swapon {0}".format(i))
             else:

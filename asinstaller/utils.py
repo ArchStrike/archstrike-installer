@@ -4,6 +4,7 @@ import logging
 import urllib2
 import urllib
 import select
+import re
 import random
 import json
 import time
@@ -251,3 +252,23 @@ def set_keymap():
                         + " and 'N' to save.:", 'no'):
             system("setfont lat9w-16")
     usr_cfg['keymap'] = layout
+
+
+def _pacman_fs_re():
+    repos = ['testing', 'core', 'extra', 'community-testing', 'community', 'multilib-testing', 'multilib',
+             'archstrike', 'archstrike-testing']
+    return re.compile(r'^(?:{})/(?P<pkgname>[^\s]+) '.format('|'.join(repos)), re.M)
+
+
+PAC_FS_RE = _pacman_fs_re()
+
+
+def satisfy_dep(command):
+    output = system_output('pacman -Fs {}'.format(command))
+    match = PAC_FS_RE.search(output)
+    pkg = match.group('pkgname') if match else None
+    if pkg:
+        sys_cmd = "command -v {} > /dev/null || pacman -S --noconfirm {}"
+        system(sys_cmd.format(command, pkg)) 
+    else:
+        logger.warning('Failed to locate "{}" owning package'.format(command))
