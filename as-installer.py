@@ -5,7 +5,10 @@ from sys import exit
 
 from asinstaller import *
 
+
+__version__ = '2.1.9'
 logger = setup_logger(__name__)
+logger.debug('Version: {}'.format(__version__))
 
 
 def main():
