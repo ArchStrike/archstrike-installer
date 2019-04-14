@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from .config import *
 from .utils import *
-import menus
+from . import menus
 import time
 import shutil
 import os
@@ -118,7 +118,8 @@ def locale_time():
     layout = system("localectl | grep Locale | cut -d ':' -f 2")
     system("echo {0} >> /mnt/etc/vconsole.conf".format(layout))
     print_info("Setting timezone...")
-    system("tzselect > /tmp/archstrike-timezone", True)
+    tzcmd = "$SHELL -c '(tzselect 3>&2 2>&1 1>&3) 2> /tmp/archstrike-timezone'"  # swap stdout/stderr so level is info
+    system(tzcmd, True)
     system('ln -sf /usr/share/zoneinfo/$(cat /tmp/archstrike-timezone) '
            + '/etc/localtime', True)
     system("hwclock --systohc --utc")

@@ -45,17 +45,22 @@ root_logger.setLevel(logging.NOTSET)
 logger = logging.getLogger(TOPLEVEL_NAME)
 if all([hndlr.name not in set([FHANDLE_NAME, SHANDLE_NAME]) for hndlr in logger.handlers]) or True:
     logger.setLevel(logging.DEBUG)  # NOTSET only traverses until another level is found, so DEBUG is preferred
+    # add a file handle to LOG_FILE (fhandle), handle for standard io (stdio_handle), and a handle for unit testing (shandle)
     fhandle = logging.FileHandler(LOG_FILE, mode='a+')
     fhandle.name = FHANDLE_NAME
     fhandle.setLevel(logging.DEBUG)
     shandle = logging.StreamHandler(cStringIO.StringIO())
     shandle.name = SHANDLE_NAME
     shandle.setLevel(logging.DEBUG)
+    stdio_handle = logging.StreamHandler()
+    stdio_handle.setLevel(logging.INFO)
     fmt = logging.Formatter(fmt='%(levelname)s - %(message)s', datefmt='%m-%d %H:%M')
     fhandle.setFormatter(fmt)
     shandle.setFormatter(fmt)
-    logger.addHandler(shandle)
+    stdio_handle.setFormatter(fmt)
     logger.addHandler(fhandle)
+    logger.addHandler(shandle)
+    logger.addHandler(stdio_handle)
 
 
 logger = logging.getLogger(__name__)
