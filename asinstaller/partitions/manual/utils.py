@@ -15,6 +15,7 @@ def format_partition_type(i):
     logger.log(logging.INFO, 'Partition Type: {0}'.format(partition_type))
     if partition_type == 'linux':
         satisfy_dep("mkfs.ext4")
+        usr_cfg['filesystem'] = 'ext4'
         system("mkfs.ext4 {0}".format(i))
     elif partition_type == 'uefi':
         satisfy_dep("mkfs.fat")
