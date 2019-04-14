@@ -1,9 +1,9 @@
+from __future__ import absolute_import
 import logging
 import time
-from asinstaller.utils import print_error, print_warning, print_title, print_info,\
+from ...config import usr_cfg, setup_logger, COLORS
+from ...utils import print_error, print_warning, print_title, print_info,\
     cinput, query_yes_no, system, satisfy_dep
-from config import COLORS
-from asinstaller.config import usr_cfg, setup_logger
 
 
 logger = setup_logger(__name__)

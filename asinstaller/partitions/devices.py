@@ -1,9 +1,12 @@
+from __future__ import absolute_import
 import time
-from asinstaller.utils import *
-from asinstaller.config import usr_cfg
-from asinstaller import menus
+from ..utils import *
+from ..config import usr_cfg
+from .. import menus
+
 
 logger = logging.getLogger(__name__)
+
 
 def partition_menu():
     logger.debug("Partition Menu")

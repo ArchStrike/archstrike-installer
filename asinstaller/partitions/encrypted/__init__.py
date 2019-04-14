@@ -1,10 +1,13 @@
+from __future__ import absolute_import
 from getpass import getpass
-import gpt
-import mbr
-from asinstaller.utils import *
-from asinstaller.config import usr_cfg, setup_logger
+from . import gpt
+from . import mbr
+from ...utils import *
+from ...config import usr_cfg, setup_logger
+
 
 logger = setup_logger(__name__)
+
 
 def partition():
     print_warning("WARNING! This will encrypt {0}".format(usr_cfg['drive']))

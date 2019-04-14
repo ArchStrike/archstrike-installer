@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from asinstaller.utils import *
 from asinstaller.config import usr_cfg, setup_logger
 

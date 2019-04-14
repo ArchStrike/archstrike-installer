@@ -1,7 +1,10 @@
-from asinstaller.utils import *
-from asinstaller.config import usr_cfg, setup_logger
+from __future__ import absolute_import
+from ...utils import *
+from ...config import usr_cfg, setup_logger
+
 
 logger = setup_logger(__name__)
+
 
 def format():
     system('echo -e "o\nn\np\n1\n\n+100M\nn\np\n2\n\n\nw" | ' \

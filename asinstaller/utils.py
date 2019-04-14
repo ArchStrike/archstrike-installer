@@ -1,18 +1,19 @@
-from __future__ import print_function
-import subprocess as sp
+from __future__ import absolute_import, print_function
+import json
+import functools
 import logging
+import os
+import random
+import re
+import subprocess as sp
+import sys
 import urllib2
 import urllib
-import select
-import re
-import random
-import json
-import time
-import sys
-import os
+from threading import Thread, Lock
+# installer modules
+from . import menus
+from .config import COLORS, setup_logger, CONFIG_FILE, usr_cfg, FNULL
 
-import menus
-from config import *
 
 logger = setup_logger(__name__)
 
@@ -46,7 +47,7 @@ def print_banner():
 
 def cinput(msg, color):
     response = raw_input('''{1}{0}{2}'''.format(msg, color, COLORS['ENDC'])).strip()
-    logger.debug('prompt: {}\n{}response: {}'.format(msg, ' '*8, response))
+    logger.debug('prompt: {}\n{}response: {}'.format(msg, ' ' * 8, response))
     return response
 
 
@@ -118,51 +119,48 @@ def signal_handler(signal, handler):
     sys.exit()
 
 
-def system(command, chroot=False, **kwargs):  # noqa
+write_lock = Lock()
 
+
+def _write(log, color, line):
+    write_lock.acquire()
+    print('{0}'.format(COLORS[color]), end='')
+    log(line.strip())
+    print('{0}'.format(COLORS['ENDC']), end='')
+    write_lock.release()
+
+
+def _read(write, pipe):
+    for line in iter(pipe.readline, b''):
+        if line:
+            write(line)
+    pipe.close()
+
+
+def system(command, chroot=False, **kwargs):  # noqa
     if chroot:
         command = "arch-chroot /mnt {0}".format(command)
 
     # don't log clear or encryption passwd
-    if (command == 'clear' or
-            command.find('printf') != -1 or
-            command.find('passwd') != -1):
+    if command == 'clear' or command.find('printf') != -1 or command.find('passwd') != -1:
         return sp.call([command], shell=True)
 
-    child = sp.Popen([command], stdout=sp.PIPE, stderr=sp.PIPE,
-                     close_fds=True, shell=True, **kwargs)
+    child = sp.Popen([command], stdout=sp.PIPE, stderr=sp.PIPE, close_fds=True, shell=True, **kwargs)
+    # Process output from command
+    write_out = functools.partial(_write, logger.info, 'BOLD')
+    write_err = functools.partial(_write, logger.error, 'FAIL')
+    stdout_thread = Thread(target=_read, args=(write_out, child.stdout))
+    stderr_thread = Thread(target=_read, args=(write_err, child.stderr))
+    for t in (stdout_thread, stderr_thread):
+        t.daemon = True
+        t.start()
+    child.wait()
+    [t.join() for t in (stdout_thread, stderr_thread)]  # make sure the output is done writing
+    ret = child.returncode
 
-    logger.log(logging.DEBUG, command)
-
-    poll = select.poll()
-    poll.register(child.stdout, select.POLLIN | select.POLLHUP)
-    poll.register(child.stderr, select.POLLIN | select.POLLHUP)
-    pollc = 2
-    events = poll.poll()
-    while pollc > 0 and len(events) > 0:
-        for rfd, event in events:
-            if event & select.POLLIN:
-                if rfd == child.stdout.fileno():
-                    line = child.stdout.readline()
-                    if len(line) > 0:
-                        print('{0}'.format(COLORS['BOLD']), end='')
-                        logger.log(logging.INFO, line[:-1])
-                        print('{0}'.format(COLORS['ENDC']), end='')
-                if rfd == child.stderr.fileno():
-                    line = child.stderr.readline()
-                    if len(line) > 0:
-                        print('{0}'.format(COLORS['FAIL']), end='')
-                        logger.log(logging.ERROR, line[:-1])
-                        print('{0}'.format(COLORS['ENDC']), end='')
-            if event & select.POLLHUP:
-                poll.unregister(rfd)
-                pollc -= 1
-            if pollc > 0:
-                events = poll.poll()
-    ret = child.wait()
     print()
     if ret != 0:
-        raise Exception(command)
+        raise Exception("Exit code {} for command: {}".format(ret, command))
     return ret
 
 
@@ -206,7 +204,7 @@ def internet_enabled():
         with open('keyfile.asc', 'wb') as fw:
             fw.write(keyfile.read())
 
-    except:
+    except Exception:
         print_warning("No Internet Connection Detected.")
         if query_yes_no("> Would you like to connect to WiFi?", "yes"):
             try:
@@ -269,6 +267,6 @@ def satisfy_dep(command):
     pkg = match.group('pkgname') if match else None
     if pkg:
         sys_cmd = "command -v {} > /dev/null || pacman -S --noconfirm {}"
-        system(sys_cmd.format(command, pkg)) 
+        system(sys_cmd.format(command, pkg))
     else:
         logger.warning('Failed to locate "{}" owning package'.format(command))

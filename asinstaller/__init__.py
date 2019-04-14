@@ -1,15 +1,14 @@
+from __future__ import absolute_import
 import platform
-import logging
 import signal
 import json
 import os
-
-import install
-from . import menus
 from .config import *
+from . import install
+from . import menus
 from .utils import *
 from .irc import LogHandler
-from partitions import devices, auto, encrypted, manual
+from .partitions import devices, auto, encrypted, manual
 
 # Load Config
 try:

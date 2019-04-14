@@ -1,9 +1,12 @@
+from __future__ import absolute_import
 import sys
-from utils import format_partition, mount
-from asinstaller.utils import *
-from asinstaller.config import usr_cfg, setup_logger
+from .utils import format_partition, mount
+from ...utils import *
+from ...config import usr_cfg, setup_logger
+
 
 logger = setup_logger(__name__)
+
 
 def partition():
     system('clear')

@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 import socket
 import ssl
+from .config import *
 
-from config import *
 
 logger = setup_logger(__name__)
 

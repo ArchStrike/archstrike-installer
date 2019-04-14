@@ -1,5 +1,8 @@
-import os
+from __future__ import absolute_import
+import cStringIO
+import inspect
 import logging
+import os
 
 usr_cfg = {}
 
@@ -30,24 +33,40 @@ localesdict = {'1': 'en_US.UTF-8', '2': 'en_AU.UTF-8', '3': 'en_CA.UTF-8',
 FNULL = open(os.devnull, 'w')
 
 
+TOPLEVEL_NAME = 'asinstaller'  # imports 
+FHANDLE_NAME = 'Installer Log'
+SHANDLE_NAME = 'Unit Test String Buffer'
+# by default the root logger is created with a log level of warning; gotta catch 'em all, so set to NOTSET
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.NOTSET)
+# asinstaller is the top-level logger and all modules follow the period-separated hierarchical structure. So,
+# for all loggers asinstaller is an ancestor. Given messages are propagated to ancestors and their handles,
+# it is sufficient to configure asinstaller.
+logger = logging.getLogger(TOPLEVEL_NAME)
+if all([hndlr.name not in set([FHANDLE_NAME, SHANDLE_NAME]) for hndlr in logger.handlers]) or True:
+    logger.setLevel(logging.DEBUG)  # NOTSET only traverses until another level is found, so DEBUG is preferred
+    fhandle = logging.FileHandler(LOG_FILE, mode='a+')
+    fhandle.name = FHANDLE_NAME
+    fhandle.setLevel(logging.DEBUG)
+    shandle = logging.StreamHandler(cStringIO.StringIO())
+    shandle.name = SHANDLE_NAME
+    shandle.setLevel(logging.DEBUG)
+    fmt = logging.Formatter(fmt='%(levelname)s - %(message)s', datefmt='%m-%d %H:%M')
+    fhandle.setFormatter(fmt)
+    shandle.setFormatter(fmt)
+    logger.addHandler(shandle)
+    logger.addHandler(fhandle)
+
+
+logger = logging.getLogger(__name__)
+
+
 class WhitespaceRemovingFormatter(logging.Formatter):
     def format(self, record):
         record.msg = record.msg.strip()
         return super(WhitespaceRemovingFormatter, self).format(record)
 
 
+
 def setup_logger(filename):
-    logger = logging.getLogger(filename)
-    logger.setLevel(logging.DEBUG)
-
-    fh = logging.FileHandler(LOG_FILE, mode='a+')
-    formatter = logging.Formatter('%(levelname)s - %(message)s')
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
-
-    console = logging.StreamHandler()
-    console.setLevel(logging.INFO)
-    console.setFormatter(WhitespaceRemovingFormatter('%(message)s'))
-    logger.addHandler(console)
-
-    return logger
+    return logging.getLogger(filename)

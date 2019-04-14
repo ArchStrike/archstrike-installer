@@ -1,5 +1,6 @@
-from config import *
-from utils import *
+from __future__ import absolute_import
+from .config import *
+from .utils import *
 import menus
 import time
 import shutil
@@ -63,11 +64,11 @@ def base():  # noqa
     system("hwclock --systohc")
     # the following should be the same as pacman-key --refresh-keys --keyserver pgp.mit.edu
     # however, keyservers are too slow for my taste
-    system("pacman -S archlinux-keyring --noconfirm >/dev/null 2>&1")
-    system("pacman -Su --noconfirm >/dev/null 2>&1")
+    system("pacman -S archlinux-keyring --noconfirm >/dev/null")
+    system("pacman -Su --noconfirm >/dev/null")
     try:
         # Check if pacstrap command exists
-        system("pacman -Qo pacstrap >/dev/null 2>&1")
+        system("pacman -Qo pacstrap >/dev/null")
     except:
         # Install arch-install-scripts if pacstrap does not exist
         system("pacman -S arch-install-scripts --noconfirm")

@@ -1,11 +1,13 @@
-import gpt
-import mbr
+from __future__ import absolute_import
+from . import gpt
+from . import mbr
+from ... import menus
+from ...utils import system
+from ...config import usr_cfg, setup_logger
 
-from asinstaller import menus
-from asinstaller.utils import system
-from asinstaller.config import usr_cfg, setup_logger
 
 logger = setup_logger(__name__)
+
 
 def partition():
     system("sgdisk --zap-all {0}".format(usr_cfg['drive']))

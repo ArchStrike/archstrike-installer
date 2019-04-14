@@ -1,7 +1,10 @@
-from asinstaller.utils import *
-from asinstaller.config import usr_cfg, setup_logger
+from __future__ import absolute_import
+from ...utils import *
+from ...config import usr_cfg, setup_logger
+
 
 logger = setup_logger(__name__)
+
 
 def uefi():
     system('echo -e "n\n\n\n512M\nef00\nn\n\n\n\n\nw\ny" | ' \
