@@ -35,9 +35,9 @@ def base():  # noqa
     if base == 1:
         base_install = "sudo"
     elif base == 2:
-        base_install = "base-devel"
+        base_install = "base-devel sudo"
     elif base == 3:
-        base_install = "linux-grsec linux-grsec-headers sudo"
+        base_install = "linux-hardened linux-hardened-headers sudo"
     elif base == 4:
         base_install = "linux-lts linux-lts-headers sudo"
     elif base == 5:

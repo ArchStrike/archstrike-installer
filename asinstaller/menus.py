@@ -46,7 +46,7 @@ filesystems = {
 base = {
     '1': 'Arch-Linux-Base',
     '2': 'Arch-Linux-Base-Devel',
-    '3': 'Arch-Linux-GrSec',
+    '3': 'Arch-Linux-Hardened',
     '4': 'Arch-Linux-LTS-Base',
     '5': 'Arch-Linux-LTS-Base-Devel'
 }
