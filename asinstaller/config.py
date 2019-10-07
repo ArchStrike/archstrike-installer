@@ -3,11 +3,13 @@ import cStringIO
 import inspect
 import logging
 import os
+from functools import wraps
 
 usr_cfg = {}
 
 pacmanconf = "/etc/pacman.conf"
 archstrike_mirrorlist = "/etc/pacman.d/archstrike-mirrorlist"
+CRASH_FILE = '/tmp/archstrike-installer-crash-report.lock'
 LOG_FILE = '/tmp/archstrike-installer.log'
 CONFIG_FILE = '/tmp/as-config.json'
 IRC_SERVER = 'irc.freenode.net'
@@ -70,7 +72,6 @@ class WhitespaceRemovingFormatter(logging.Formatter):
     def format(self, record):
         record.msg = record.msg.strip()
         return super(WhitespaceRemovingFormatter, self).format(record)
-
 
 
 def setup_logger(filename):

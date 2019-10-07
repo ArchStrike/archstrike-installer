@@ -9,10 +9,11 @@ import subprocess as sp
 import sys
 import urllib2
 import urllib
+from collections import namedtuple
 from threading import Thread, Lock
 # installer modules
 from . import menus
-from .config import COLORS, setup_logger, CONFIG_FILE, usr_cfg, FNULL
+from .config import COLORS, setup_logger, CONFIG_FILE, usr_cfg, FNULL, CRASH_FILE
 
 
 logger = setup_logger(__name__)
@@ -270,3 +271,39 @@ def satisfy_dep(command):
         system(sys_cmd.format(command, pkg))
     else:
         logger.warning('Failed to locate "{}" owning package'.format(command))
+
+
+def get_crash_history(version):
+    """ create crash id to limit duplication from the client-side """
+    try:
+        crash_history = []
+        Crash = namedtuple('Crash', ['id', 'hexid', 'baseid'])
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        if exc_tb is not None:
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[-1].replace('.py', '')
+            lineno = exc_tb.tb_lineno
+            ver = version.replace('.', '-')
+        else:
+            return  # this was called when an exception did not occur
+        # record current crash
+        _crash_id = 'fname_lineno_version_hexid={}_{}_{}_{{}}'.format(fname, lineno, ver)
+        hexid = 'as' + os.urandom(14).encode('hex')
+        crash_history.append(Crash(_crash_id.format(hexid), hexid, _crash_id.format('')))
+        # check for previous crash
+        previous_hexid = None
+        if os.path.exists(CRASH_FILE):
+            with open(CRASH_FILE) as fhandle:
+                previous_crash = fhandle.read()
+            # if the crash is the same as already reported, re-use hexid
+            previous_hexid = previous_crash.split('_')[-1]
+            previous_baseid = '_'.join(previous_crash.split('_')[:-1]) + '_'
+            crash_history.append(Crash(previous_crash, previous_hexid, previous_baseid))
+        # log this crash
+        if len(crash_history) == 1 or (len(crash_history) > 1 and crash_history[0].baseid != crash_history[1].baseid):
+            with open(CRASH_FILE, 'w') as fhandle:
+                fhandle.write(crash_history[0].id)
+    except Exception:
+        hexid = 'as' + os.urandom(14).encode('hex')
+        crash_history.append(Crash('utils_unknown_{}_{}'.format(version, hexid), hexid))
+    finally:
+        return crash_history

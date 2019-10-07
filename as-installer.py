@@ -104,14 +104,20 @@ def main():
         # Ask to report crash
         print_error('An error has occured, see '
                     + '/tmp/archstrike-installer.log for details.')
-        if query_yes_no("> Would you like to send a crash report?", 'yes'):
-            print_info('Submitting crash report...')
-            unique_id = 'as' + os.urandom(14).encode('hex')
-            LogHandler(unique_id,
-                       save_crash_files(unique_id, [CONFIG_FILE, LOG_FILE]))
-            print_info("\n\nYour Report has successfully been submitted."
-                       + "Your unique ID is {0}. Use this as a ".format(unique_id)
-                       + "reference when asking admins for assistance.")
+        report_yn = query_yes_no("> Would you like to send a crash report?", 'yes')
+        crash_history = utils.get_crash_history(__version__)
+        unique_id = crash_history[-1].hexid
+        # only send when there is something new
+        info_msg = "\n\nYour Report has successfully been submitted. "
+        info_msg += "Your unique ID is {0}. Use this as a "
+        info_msg += "reference when asking admins for assistance."
+        if report_yn:
+            if len(crash_history) > 1 and crash_history[0].baseid != crash_history[-1].baseid:
+                info_msg = info_msg.format(crash_history[0].hexid)
+                LogHandler(unique_id, save_crash_files(unique_id, [CONFIG_FILE, LOG_FILE]))
+            else:
+                info_msg = info_msg.format(crash_history[1].hexid)
+            print_info(info_msg)
     finally:
         # Cleanup stuff
         sp.Popen("umount -R /mnt", stdout=FNULL, stderr=sp.STDOUT, shell=True)
