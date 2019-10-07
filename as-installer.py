@@ -5,7 +5,7 @@ from sys import exit
 from asinstaller import *
 
 
-__version__ = '2.1.9'
+__version__ = '2.2.0'
 logger = setup_logger('asinstaller.{}'.format(__name__))
 logger.debug('Version: {}'.format(__version__))
 
