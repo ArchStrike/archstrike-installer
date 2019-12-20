@@ -33,9 +33,9 @@ def base():  # noqa
             time.sleep(1)
 
     if base == 1:
-        base_install = "sudo"
+        base_install = "linux sudo"
     elif base == 2:
-        base_install = "base-devel sudo"
+        base_install = "linux base-devel sudo"
     elif base == 3:
         base_install = "linux-hardened linux-hardened-headers sudo"
     elif base == 4:
