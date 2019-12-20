@@ -234,7 +234,8 @@ def internet():
                     'yes'):
         system("pacman -S iw wpa_supplicant dialog netctl --noconfirm", True)
 
-    if query_yes_no("> Would you like to enable DHCP?", 'yes'):
+    if query_yes_no("> Would you like DHCP enabled on your new install?", 'yes'):
+        system("pacman -S dhcpcd --noconfirm", True)
         system("systemctl enable dhcpcd", True)
 
 
@@ -292,11 +293,6 @@ def archstrike():
     system("sed -i 's|Server = https://mirror.archstrike.org/$arch/$repo|"
            + "Include = /etc/pacman.d/archstrike-mirrorlist|' "
            + "/mnt{0}".format(pacmanconf))
-
-    if query_yes_no("> Do you want to add archstrike-testing as well?", 'yes'):
-        system("echo '[archstrike-testing]' >> /mnt{0}".format(pacmanconf))
-        system("echo 'Include = /etc/pacman.d/archstrike-mirrorlist' >> "
-               + "/mnt{0}".format(pacmanconf))
 
     print_info("Performing database update once more to test mirrorlist")
     system("pacman -Syy", True)
