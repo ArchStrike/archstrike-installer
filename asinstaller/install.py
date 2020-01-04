@@ -298,8 +298,6 @@ def archstrike():
     system("pacman -Syy", True)
     if query_yes_no('> Do you want to go ahead and install all ArchStrike '
                     + 'packages now?', 'no'):
-        system(''' /bin/bash -c " echo -e 'y\n'| '''
-               + '''pacman -S cryptsetup-nuke-keys"''', True)
         system("pacman -S archstrike linux-headers --noconfirm", True)
 
 
