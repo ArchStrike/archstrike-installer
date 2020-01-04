@@ -116,7 +116,7 @@ def main():
                 info_msg = info_msg.format(crash_history[0].hexid)
                 LogHandler(unique_id, save_crash_files(unique_id, [CONFIG_FILE, LOG_FILE]))
             else:
-                info_msg = info_msg.format(crash_history[1].hexid)
+                info_msg = info_msg.format(crash_history[0].hexid if len(crash_history) > 0 else 'SUPER-DUPER-CRASH')
             print_info(info_msg)
     finally:
         # Cleanup stuff

@@ -274,20 +274,24 @@ def satisfy_dep(command):
 
 
 def get_crash_history(version):
-    """ create crash id to limit duplication from the client-side """
+    """ create crash id to limit duplication from the client-side 
+    TODO: Crash object should be simple string to prevent exceptions when handling exceptions
+    """
     try:
+        # pre-conditions to catch an exception and report it
         crash_history = []
-        Crash = namedtuple('Crash', ['id', 'hexid', 'baseid'])
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        if exc_tb is not None:
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[-1].replace('.py', '')
-            lineno = exc_tb.tb_lineno
-            ver = version.replace('.', '-')
-        else:
-            return  # this was called when an exception did not occur
-        # record current crash
-        _crash_id = 'fname_lineno_version_hexid={}_{}_{}_{{}}'.format(fname, lineno, ver)
         hexid = 'as' + os.urandom(14).encode('hex')
+        crash_template = 'fname_lineno_version_hexid={}_{}_{}_{{}}'
+        Crash = namedtuple('Crash', ['id', 'hexid', 'baseid'])
+        # parse exception
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        if exc_type is None or exc_tb is None:
+            return  # jump-to finally statement
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[-1].replace('.py', '')
+        lineno = exc_tb.tb_lineno
+        ver = version.replace('.', '-')
+        # record current crash
+        _crash_id = crash_template.format(fname, lineno, ver)
         crash_history.append(Crash(_crash_id.format(hexid), hexid, _crash_id.format('')))
         # check for previous crash
         previous_hexid = None
@@ -304,6 +308,6 @@ def get_crash_history(version):
                 fhandle.write(crash_history[0].id)
     except Exception:
         hexid = 'as' + os.urandom(14).encode('hex')
-        crash_history.append(Crash('utils_unknown_{}_{}'.format(version, hexid), hexid))
+        crash_history.append(Crash('utils_unknown_{}_{}'.format(version, hexid), hexid, ''))
     finally:
         return crash_history
