@@ -1,4 +1,3 @@
-
 import platform
 import signal
 import json
@@ -10,6 +9,10 @@ from .utils import *
 from .irc import LogHandler
 from .partitions import devices, auto, encrypted, manual
 
+
+__version__ = '2.2.4'
+
+
 # Load Config
 try:
     if os.path.isfile(CONFIG_FILE):
@@ -17,5 +20,6 @@ try:
             usr_cfg = json.loads(fr)
 except:
     pass  # don't care about this
+
 
 signal.signal(signal.SIGINT, signal_handler)

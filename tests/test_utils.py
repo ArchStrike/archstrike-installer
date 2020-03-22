@@ -1,5 +1,4 @@
-
-from asinstaller import shandle
+from asinstaller import shandle, __version__
 import os
 import logging
 import unittest
@@ -7,6 +6,9 @@ import sys
 from io import StringIO
 from asinstaller.config import CRASH_FILE, LOG_FILE
 from asinstaller.utils import system, Crash
+
+
+version = __version__
 
 
 class TestUtilsSystem(unittest.TestCase):
@@ -25,12 +27,17 @@ class TestUtilsGetCrashHistory(unittest.TestCase):
                 os.remove(fname)
 
     def test_no_crash(self):
-        version = '2.1.9'
         no_crash = Crash(version)
         self.assertFalse(bool(no_crash))
 
+    def test_crash_file(self):
+        simulate_exception()
+        crash = Crash(version)
+        fcrash = Crash.from_crash_file()
+        self.assertTrue(crash == fcrash)
+        self.assertTrue(crash.submission_id == fcrash.submission_id)
+
     def test_base_and_inductive_step(self):
-        version = '2.1.9'
         try:
             raise Exception('woops!')
         except Exception:
@@ -49,7 +56,6 @@ class TestUtilsGetCrashHistory(unittest.TestCase):
         self.assertTrue(crash1.submission_id != crash3.submission_id)
 
     def test_invalid_input(self):
-        version = '2.1.9'
         try:
             raise Exception('woops!')
         except Exception:
