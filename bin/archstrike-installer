@@ -1,0 +1,6 @@
+#!/usr/bin/env python
+import asinstaller
+
+
+if __main__ == "__main__":
+    asinstaller.main()

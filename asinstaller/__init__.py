@@ -8,9 +8,7 @@ from . import menus
 from .utils import *
 from .irc import LogHandler
 from .partitions import devices, auto, encrypted, manual
-
-
-__version__ = '2.2.4'
+from .__main__ import main, __version__
 
 
 # Load Config

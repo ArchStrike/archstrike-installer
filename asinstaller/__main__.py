@@ -2,13 +2,14 @@
 import json
 from os import geteuid
 from sys import exit
-from asinstaller import auto, check_uefi, COLORS, CONFIG_FILE, Crash, \
-    devices, FNULL, install, internet_enabled, \
-    LOG_FILE, LogHandler, manual, print_error, print_info, \
-    query_yes_no, save_crash_files, set_keymap, sp, \
-    start_screen, setup_logger, system, usr_cfg, __version__
+from .config import *
+from . import install, menus, resolve_packages
+from .utils import *
+from .irc import LogHandler
+from .partitions import devices, auto, encrypted, manual
 
 
+__version__ = '2.2.5'
 logger = setup_logger('asinstaller.{}'.format(__name__))
 logger.debug('Version: {}'.format(__version__))
 
@@ -125,7 +126,3 @@ def main():
         # Cleanup stuff
         sp.Popen("umount -R /mnt", stdout=FNULL, stderr=sp.STDOUT, shell=True)
         FNULL.close()
-
-
-if __name__ == '__main__':
-    main()
