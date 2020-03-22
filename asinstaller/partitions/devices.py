@@ -37,9 +37,8 @@ def identify():
         print_title("Step 3) HDD Preparation")
         system("swapoff -a")
         print_info("Current Devices")
-        system(''' lsblk -p | grep "disk" | awk '{print $1" "$4}' ''')
-        available_drives = system_output('lsblk -p | grep "disk" | '\
-                            + "awk '{print $1}' ").split('\n')
+        system(''' lsblk -pa | grep "disk" | awk '{print $1" "$4}' ''')
+        available_drives = system_output('lsblk -pa | grep "disk" | awk \'{print $1}\'').split('\n')
         drive = cinput('> Please choose the drive you would like to '\
                     + 'install ArchStrike on (default: /dev/sda ): ', \
                     COLORS['OKBLUE']) or '/dev/sda'
@@ -55,7 +54,7 @@ def identify():
             continue
         break
 
-    drive_size = system_output("lsblk -p | grep -w {0} | ".format(drive) \
+    drive_size = system_output("lsblk -pa | grep -w {0} | ".format(drive) \
             + "awk '{print $4}' | grep -o '[0-9]*' | awk 'NR==1' ")
 
     usr_cfg['drive'] = drive
