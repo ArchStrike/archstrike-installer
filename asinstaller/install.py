@@ -210,6 +210,8 @@ def configuration():
 
         system("sed -i 's/k filesystems k/k lvm2 encrypt filesystems k/' "
                + "/mnt/etc/mkinitcpio.conf")
+
+        system("pacman -S lvm2 --noconfirm", True)
         system("mkinitcpio -p linux", True)
 
 
