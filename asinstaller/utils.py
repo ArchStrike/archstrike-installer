@@ -278,7 +278,7 @@ def get_crash_history(version):
     try:
         # pre-conditions to catch an exception and report it
         crash_history = []
-        hexid = 'as' + os.urandom(14).encode('hex')
+        hexid = 'as' + os.urandom(14).hex()
         crash_template = 'fname_lineno_version_hexid={}_{}_{}_{{}}'
         Crash = namedtuple('Crash', ['id', 'hexid', 'baseid'])
         # parse exception
@@ -305,6 +305,7 @@ def get_crash_history(version):
             with open(CRASH_FILE, 'w') as fhandle:
                 fhandle.write(crash_history[0].id)
     except Exception:
+        logger.exception("Failed to decipher crash history...")
         hexid = 'as' + os.urandom(14).encode('hex')
         crash_history.append(Crash('utils_unknown_{}_{}'.format(version, hexid), hexid, ''))
     finally:
