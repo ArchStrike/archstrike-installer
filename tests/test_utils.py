@@ -6,7 +6,7 @@ import unittest
 import sys
 from io import StringIO
 from asinstaller.config import CRASH_FILE, LOG_FILE
-from asinstaller.utils import system, get_crash_history
+from asinstaller.utils import system, Crash
 
 
 class TestUtilsSystem(unittest.TestCase):
@@ -17,32 +17,41 @@ class TestUtilsSystem(unittest.TestCase):
         self.assertTrue('downloading community.db...'in shandle.stream.getvalue())
 
 
-class TestUtilsCrash(unittest.TestCase):
+class TestUtilsGetCrashHistory(unittest.TestCase):
 
     def tearDown(self):
         for fname in [CRASH_FILE, LOG_FILE]:
             if os.path.exists(fname):
                 os.remove(fname)
 
-    def test_get_crash_history(self):
+    def test_no_crash(self):
         version = '2.1.9'
-        crash_history_empty = get_crash_history(version)
+        no_crash = Crash(version)
+        self.assertFalse(bool(no_crash))
+
+    def test_base_and_inductive_step(self):
+        version = '2.1.9'
         try:
             raise Exception('woops!')
         except Exception:
-            crash_history1 = get_crash_history(version)
-            crash_history2 = get_crash_history(version)
+            crash1 = Crash(version)
+            crash1.log_as_reported()
+            crash2 = Crash(version)
+        # check submission id deduplicated
+        self.assertTrue(crash1.submission_id == crash2.submission_id)
+        # check xs_trace is same
+        self.assertTrue(crash1 == crash2)
         try:
             raise Exception('woops 2!')
         except Exception:
-            crash_history3 = get_crash_history(version)
-        self.assertEqual(0, len(crash_history_empty))
-        self.assertEqual(1, len(crash_history1))
-        self.assertEqual(2, len(crash_history2))
-        self.assertTrue(crash_history1[0] == crash_history1[-1])
-        self.assertFalse(crash_history2[0] == crash_history2[-1])
-        self.assertTrue(crash_history2[0].baseid == crash_history2[-1].baseid)
-        self.assertTrue(crash_history1[0] == crash_history2[-1])
-        # now check file overwritten on crash from different line no
-        self.assertTrue(crash_history3[0] != crash_history2[0])
-        self.assertTrue(crash_history3[1].baseid == crash_history2[0].baseid)
+            crash3 = Crash(version)
+        self.assertTrue(crash1 != crash3)
+        self.assertTrue(crash1.submission_id != crash3.submission_id)
+
+    def test_invalid_input(self):
+        version = '2.1.9'
+        try:
+            raise Exception('woops!')
+        except Exception:
+            crash_empty = Crash(version)
+            crash1 = Crash(version)

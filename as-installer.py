@@ -104,16 +104,16 @@ def main():
         # Ask to report crash
         print_error('An error has occured, see /tmp/archstrike-installer.log for details.')
         report_yn = query_yes_no("> Would you like to send a crash report?", 'yes')
-        crash_history = utils.get_crash_history(__version__)
-        unique_id = crash_history[-1].hexid
+        crash = Crash(__version__)
         # only send when there is something new
         info_msg = "\n\nYour Report has successfully been submitted. "
         info_msg += "Your unique ID is {0}. Use this as a "
         info_msg += "reference when asking admins for assistance."
         if report_yn:
-            if len(crash_history) > 1 and crash_history[0].baseid != crash_history[-1].baseid:
-                info_msg = info_msg.format(crash_history[0].hexid)
-                LogHandler(unique_id, save_crash_files(unique_id, [CONFIG_FILE, LOG_FILE]))
+            if not crash.duplicate:
+                info_msg = info_msg.format(crash.submission_id)
+                log_files = [CONFIG_FILE, LOG_FILE]
+                LogHandler(crash.submission_id, save_crash_files(crash.submission_id, log_files))
             else:
                 info_msg = info_msg.format(crash_history[0].hexid if len(crash_history) > 0 else 'SUPER-DUPER-CRASH')
             print_info(info_msg)

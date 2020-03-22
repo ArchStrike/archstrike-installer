@@ -1,15 +1,14 @@
-
 import json
 import functools
-import logging
+import logging # noqa
 import os
 import random
 import re
 import subprocess as sp
 import sys
-import urllib.request, urllib.error, urllib.parse
-import urllib.request, urllib.parse, urllib.error
-from collections import namedtuple
+import urllib.request
+import urllib.error
+import urllib.parse
 from threading import Thread, Lock
 # installer modules
 from . import menus
@@ -94,9 +93,9 @@ def save_crash_files(userid, filenames):
             'expire_days': 31,
             'content': open(filename).read()
         })
-        request = urllib.request.urlopen('http://dpaste.com/api/v2/', data)
-        content = request.read().rstrip() + '.txt'
-        urls.append(content)
+        request = urllib.request.urlopen('http://dpaste.com/api/v2/', data.encode())
+        content = request.read().rstrip() + b'.txt'
+        urls.append(content.decode())
     return urls
 
 
@@ -236,17 +235,14 @@ def set_keymap():
 
     layout = 'us'
     if query_yes_no("> Would you like to change the keyboard layout? ", 'no'):
-        print(system_output("find /usr/share/X11/xkb/symbols -type f | "
-                            + "awk -F '/' '{print $NF}' | sort | uniq"""))
+        print(system_output("find /usr/share/X11/xkb/symbols -type f | awk -F '/' '{print $NF}' | sort | uniq"""))
         layout = input("> Enter your keyboard layout: ")
 
-        if query_yes_no('>Setting "{0}" as your keymap, '.format(layout)
-                        + 'is that correct? ', 'yes'):
+        if query_yes_no(f'>Setting "{layout}" as your keymap, is that correct? ', 'yes'):
             system("setxkbmap {0}".format(layout))
 
-        if query_yes_no('> Try typing in here to test. \n'
-                        + "Input 'Y' if settings are incorrect"
-                        + " and 'N' to save.:", 'no'):
+        font_prompt = '> Try typing in here to test. \nInput \'Y\' if settings are incorrect and \'N\' to save.:'
+        if query_yes_no(font_prompt, 'no'):
             system("setfont lat9w-16")
     usr_cfg['keymap'] = layout
 
@@ -271,42 +267,65 @@ def satisfy_dep(command):
         logger.warning('Failed to locate "{}" owning package'.format(command))
 
 
-def get_crash_history(version):
-    """ create crash id to limit duplication from the client-side 
-    TODO: Crash object should be simple string to prevent exceptions when handling exceptions
-    """
-    try:
-        # pre-conditions to catch an exception and report it
-        crash_history = []
-        hexid = 'as' + os.urandom(14).hex()
-        crash_template = 'fname_lineno_version_hexid={}_{}_{}_{{}}'
-        Crash = namedtuple('Crash', ['id', 'hexid', 'baseid'])
-        # parse exception
+class Crash(object):
+    """Creates a crash object from state and checks previous crash to deduplicate submissions"""
+    def __init__(self, version=None, skip_deduplication=False):
+        self.formatter = '{}:{}:version-{}'
+        self.submission_id = 'as' + os.urandom(14).hex()
+        self.affected_version = version
+        self.xs_trace = None
+        self.duplicate = False
+        self.set_xs_trace()
+        if skip_deduplication is False:
+            self.deduplicate()
+
+    def __bool__(self):
+        return self.xs_trace == f'{None}:{None}:version-{None}'
+
+    def __eq__(self, other_crash):
+        return self.xs_trace == other_crash
+
+    def __str__(self):
+        return f'{self.xs_trace}@{self.submission_id}'
+
+    def parse_exc_info(self):
         exc_type, exc_obj, exc_tb = sys.exc_info()
         if exc_type is None or exc_tb is None:
-            return  # jump-to finally statement
-        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[-1].replace('.py', '')
-        lineno = exc_tb.tb_lineno
-        ver = version.replace('.', '-')
-        # record current crash
-        _crash_id = crash_template.format(fname, lineno, ver)
-        crash_history.append(Crash(_crash_id.format(hexid), hexid, _crash_id.format('')))
-        # check for previous crash
-        previous_hexid = None
-        if os.path.exists(CRASH_FILE):
-            with open(CRASH_FILE) as fhandle:
-                previous_crash = fhandle.read()
-            # if the crash is the same as already reported, re-use hexid
-            previous_hexid = previous_crash.split('_')[-1]
-            previous_baseid = '_'.join(previous_crash.split('_')[:-1]) + '_'
-            crash_history.append(Crash(previous_crash, previous_hexid, previous_baseid))
-        # log this crash
-        if len(crash_history) == 1 or (len(crash_history) > 1 and crash_history[0].baseid != crash_history[1].baseid):
-            with open(CRASH_FILE, 'w') as fhandle:
-                fhandle.write(crash_history[0].id)
-    except Exception:
-        logger.exception("Failed to decipher crash history...")
-        hexid = 'as' + os.urandom(14).encode('hex')
-        crash_history.append(Crash('utils_unknown_{}_{}'.format(version, hexid), hexid, ''))
-    finally:
-        return crash_history
+            return None, None
+        else:
+            filename = os.path.split(exc_tb.tb_frame.f_code.co_filename)[-1]
+            filename = filename.replace('.py', '')
+            lineno = exc_tb.tb_lineno
+            return filename, lineno
+
+    def set_xs_trace(self):
+        try:
+            filename, lineno = self.parse_exc_info()
+            self.xs_trace = self.formatter.format(filename, lineno, self.affected_version)
+        except Exception:
+            logger.exception("Failed to set xs_trace")
+
+    @staticmethod
+    def from_crash_file():
+        if not os.path.exists(CRASH_FILE):
+            return
+        with open(CRASH_FILE) as fhandle:
+            previous_crash = fhandle.read()
+        # if the crash is the same as already reported, re-use hexid
+        crash = Crash(skip_deduplication=True)
+        crash.xs_trace, crash.submission_id = previous_crash.split('@')
+        return crash
+
+    def deduplicate(self):
+        """when previous crash exists, check if trace is the same to de-duplicate"""
+        try:
+            previous_crash = Crash.from_crash_file()
+            if isinstance(previous_crash, Crash) and self == previous_crash:
+                self.duplicate = True
+                self.submission_id = previous_crash.submission_id
+        except Exception:
+            logger.exception("Failed to decipher crash history...")
+
+    def log_as_reported(self):
+        with open(CRASH_FILE, 'w') as fhandle:
+            fhandle.write(self.__str__())
