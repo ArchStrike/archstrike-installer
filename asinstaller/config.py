@@ -1,5 +1,5 @@
-from __future__ import absolute_import
-import cStringIO
+
+import io
 import inspect
 import logging
 import os
@@ -51,7 +51,7 @@ if all([hndlr.name not in set([FHANDLE_NAME, SHANDLE_NAME]) for hndlr in logger.
     fhandle = logging.FileHandler(LOG_FILE, mode='a+')
     fhandle.name = FHANDLE_NAME
     fhandle.setLevel(logging.DEBUG)
-    shandle = logging.StreamHandler(cStringIO.StringIO())
+    shandle = logging.StreamHandler(io.StringIO())
     shandle.name = SHANDLE_NAME
     shandle.setLevel(logging.DEBUG)
     stdio_handle = logging.StreamHandler()

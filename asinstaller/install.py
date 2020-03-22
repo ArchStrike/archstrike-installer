@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from .config import *
 from .utils import *
 from . import menus
@@ -16,7 +16,7 @@ def base():  # noqa
         system("clear")
         print_title("Step 7) Install System Base")
 
-        options = menus.base.keys()
+        options = list(menus.base.keys())
         options.sort()
         for k in options:
             print_info('{0}) {1}'.format(k, menus.base[k]))
@@ -91,7 +91,7 @@ def locale_time():
         system("clear")
         print_title("Step 9) Generating locale and setting timezone")
 
-        options = menus.locale.keys()
+        options = list(menus.locale.keys())
         options.sort()
         for k in options:
             print_info('{0}) {1}'.format(k, menus.locale[k]))
@@ -99,7 +99,7 @@ def locale_time():
         choice = cinput('> Enter the number for your locale or leave empty '
                         + 'for default: ', COLORS['OKBLUE']) or '1'
 
-        if choice in map(str, range(1, len(menus.locale))):
+        if choice in list(map(str, list(range(1, len(menus.locale))))):
             locale = localesdict[str(choice)]
             break
         elif choice == '99':
@@ -334,7 +334,7 @@ def video_utils():
 
     if query_yes_no("> Would you like to set up video utilities?", 'yes'):
         while True:
-            options = menus.gpus.keys()
+            options = list(menus.gpus.keys())
             options.sort()
             for k in options:
                 print_info('{0}) {1}'.format(k, menus.gpus[k]))
@@ -359,7 +359,7 @@ def wm_de():
     if query_yes_no('> Would you like to install a Desktop Environment or '
                     + 'Window Manager?', 'yes'):
         while True:
-            options = menus.wm_de.keys()
+            options = list(menus.wm_de.keys())
             options.sort()
             for k in options:
                 print_info('{0}) {1}'.format(k, menus.wm_de[k]))

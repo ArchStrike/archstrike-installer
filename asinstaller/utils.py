@@ -1,4 +1,4 @@
-from __future__ import absolute_import, print_function
+
 import json
 import functools
 import logging
@@ -7,8 +7,8 @@ import random
 import re
 import subprocess as sp
 import sys
-import urllib2
-import urllib
+import urllib.request, urllib.error, urllib.parse
+import urllib.request, urllib.parse, urllib.error
 from collections import namedtuple
 from threading import Thread, Lock
 # installer modules
@@ -47,7 +47,7 @@ def print_banner():
 
 
 def cinput(msg, color):
-    response = raw_input('''{1}{0}{2}'''.format(msg, color, COLORS['ENDC'])).strip()
+    response = input('''{1}{0}{2}'''.format(msg, color, COLORS['ENDC'])).strip()
     logger.debug('prompt: {}\n{}response: {}'.format(msg, ' ' * 8, response))
     return response
 
@@ -76,7 +76,7 @@ def query_yes_no(question, default="yes"):
     while True:
         sys.stdout.write('{0}{1}{2}{3}'.format(COLORS['OKBLUE'], question,
                                                prompt, COLORS['ENDC']))
-        choice = raw_input().lower()
+        choice = input().lower()
         # logger.log(logging.INFO, '{0} : {1}'.format(question, choice))
         if default is not None and choice == '':
             return valid[default]
@@ -91,12 +91,12 @@ def query_yes_no(question, default="yes"):
 def save_crash_files(userid, filenames):
     urls = []
     for filename in filenames:
-        data = urllib.urlencode({
+        data = urllib.parse.urlencode({
             'poster': userid,
             'expire_days': 31,
             'content': open(filename).read()
         })
-        request = urllib2.urlopen('http://dpaste.com/api/v2/', data)
+        request = urllib.request.urlopen('http://dpaste.com/api/v2/', data)
         content = request.read().rstrip() + '.txt'
         urls.append(content)
     return urls
@@ -180,7 +180,7 @@ def start_screen():
         print_banner()
 
         # Print start menu
-        options = menus.start.keys()
+        options = list(menus.start.keys())
         options.sort()
         for k in options:
             print_info('{0}) {1}'.format(k, menus.start[k]))
@@ -198,9 +198,9 @@ def start_screen():
 def internet_enabled():
     logger.debug("Checking Internet Connection")
     try:
-        request = urllib2.Request('https://archstrike.org/keyfile.asc')
+        request = urllib.request.Request('https://archstrike.org/keyfile.asc')
         request.add_header('User-Agent', 'ArchStrike Installer')
-        opener = urllib2.build_opener()
+        opener = urllib.request.build_opener()
         keyfile = opener.open(request, timeout=5)
         with open('keyfile.asc', 'wb') as fw:
             fw.write(keyfile.read())
@@ -240,7 +240,7 @@ def set_keymap():
     if query_yes_no("> Would you like to change the keyboard layout? ", 'no'):
         print(system_output("find /usr/share/X11/xkb/symbols -type f | "
                             + "awk -F '/' '{print $NF}' | sort | uniq"""))
-        layout = raw_input("> Enter your keyboard layout: ")
+        layout = input("> Enter your keyboard layout: ")
 
         if query_yes_no('>Setting "{0}" as your keymap, '.format(layout)
                         + 'is that correct? ', 'yes'):

@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 import time
 from ..utils import *
 from ..config import usr_cfg
@@ -14,7 +14,7 @@ def partition_menu():
         system("clear")
         print_title("Step 2) Partition Menu")
 
-        options = menus.partition_methods.keys()
+        options = list(menus.partition_methods.keys())
         options.sort()
         for k in options:
             print_info('{0}) {1}'.format(k, menus.partition_methods[k]))
@@ -68,7 +68,7 @@ def set_filesystem():
         system("clear")
         print_title("Step 4) Selecting the Filesystem Type")
 
-        options = menus.filesystems.keys()
+        options = list(menus.filesystems.keys())
         options.sort()
         for k in options:
             print_info('{0}) {1}'.format(k, menus.filesystems[k]))

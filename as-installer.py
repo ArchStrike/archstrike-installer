@@ -102,8 +102,7 @@ def main():
         with open(CONFIG_FILE, 'w') as fw:
             json.dump(usr_cfg, fw)
         # Ask to report crash
-        print_error('An error has occured, see '
-                    + '/tmp/archstrike-installer.log for details.')
+        print_error('An error has occured, see /tmp/archstrike-installer.log for details.')
         report_yn = query_yes_no("> Would you like to send a crash report?", 'yes')
         crash_history = utils.get_crash_history(__version__)
         unique_id = crash_history[-1].hexid

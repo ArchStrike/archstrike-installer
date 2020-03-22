@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from getpass import getpass
 from . import gpt
 from . import mbr

@@ -1,11 +1,11 @@
-from __future__ import absolute_import
+
 from asinstaller import shandle
 import os
 import logging
 import unittest
 import sys
-from cStringIO import StringIO
-from asinstaller.config import CRASH_FILE
+from io import StringIO
+from asinstaller.config import CRASH_FILE, LOG_FILE
 from asinstaller.utils import system, get_crash_history
 
 
@@ -20,8 +20,9 @@ class TestUtilsSystem(unittest.TestCase):
 class TestUtilsCrash(unittest.TestCase):
 
     def tearDown(self):
-        if os.path.exists(CRASH_FILE):
-            os.remove(CRASH_FILE)
+        for fname in [CRASH_FILE, LOG_FILE]:
+            if os.path.exists(fname):
+                os.remove(fname)
 
     def test_get_crash_history(self):
         version = '2.1.9'
