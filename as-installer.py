@@ -2,7 +2,11 @@
 import json
 from os import geteuid
 from sys import exit
-from asinstaller import *
+from asinstaller import auto, check_uefi, COLORS, CONFIG_FILE, Crash, \
+    crash_history, devices, FNULL, install, internet_enabled, \
+    LOG_FILE, LogHandler, manual, print_error, print_info, \
+    query_yes_no, save_crash_files, set_keymap, sp, \
+    start_screen, setup_logger, system, usr_cfg
 
 
 __version__ = '2.2.4'
