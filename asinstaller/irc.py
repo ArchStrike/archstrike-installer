@@ -20,7 +20,7 @@ class LogHandler(object):
         self.disconnect()
 
     def send(self, msg):
-        self.sock.sendall('{0}\r\n'.format(msg))
+        self.sock.sendall(f'{msg}\r\n'.encode())
 
     def connect(self):
         # Create context for verifying host
@@ -30,20 +30,24 @@ class LogHandler(object):
         context.load_default_certs()
         # Create a socket
         base_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        base_sock.settimeout(10)
+        base_sock.settimeout(30)
         # Setup SSL Socket
-        self.sock = context.wrap_socket(base_sock,
-                                        server_hostname=self.server)
+        self.sock = context.wrap_socket(base_sock, server_hostname=self.server)
         self.sock.connect((self.server, self.port))
-
-        self.send('NICK {0}'.format(self.nick))
-        self.send('USER {0} 8 * :ArchStrike Installer'.format(self.nick))
+        try:
+            notice = self.sock.recv(1024)
+            if b'NOTICE' in notice:
+                logger.info('Squelched IRC NOTICE message from freenode...')
+        except socket.timeout:
+            pass  # RFC-2812 suggests not waiting forever
+        self.send(f'USER {self.nick} 8 * :ArchStrike Installer')
+        self.send(f'NICK {self.nick}')
 
         # RECEIVE IRC Server Info
         while True:
-            try:
-                data = self.sock.recv(1024)
-            except ssl.SSLError:
+            data = self.sock.recv(1024)
+            if b'End of /MOTD command.' in data:
+                logger.info('Squelched IRC MOTD message from freenode...')
                 break
 
     def send_logs(self, links):
