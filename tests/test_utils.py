@@ -14,7 +14,7 @@ class TestUtilsSystem(unittest.TestCase):
     def test_output(self):
         command = 'sudo pacman -Syy'
         system(command)
-        self.assertTrue('downloading archstrike-testing.db...'in shandle.stream.getvalue())
+        self.assertTrue('downloading community.db...'in shandle.stream.getvalue())
 
 
 class TestUtilsCrash(unittest.TestCase):
