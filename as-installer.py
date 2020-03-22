@@ -3,13 +3,12 @@ import json
 from os import geteuid
 from sys import exit
 from asinstaller import auto, check_uefi, COLORS, CONFIG_FILE, Crash, \
-    crash_history, devices, FNULL, install, internet_enabled, \
+    devices, FNULL, install, internet_enabled, \
     LOG_FILE, LogHandler, manual, print_error, print_info, \
     query_yes_no, save_crash_files, set_keymap, sp, \
-    start_screen, setup_logger, system, usr_cfg
+    start_screen, setup_logger, system, usr_cfg, __version__
 
 
-__version__ = '2.2.4'
 logger = setup_logger('asinstaller.{}'.format(__name__))
 logger.debug('Version: {}'.format(__version__))
 
@@ -118,8 +117,9 @@ def main():
                 info_msg = info_msg.format(crash.submission_id)
                 log_files = [CONFIG_FILE, LOG_FILE]
                 LogHandler(crash.submission_id, save_crash_files(crash.submission_id, log_files))
+                crash.log_as_reported()
             else:
-                info_msg = info_msg.format(crash_history[0].hexid if len(crash_history) > 0 else 'SUPER-DUPER-CRASH')
+                info_msg = info_msg.format(crash.submission_id)
             print_info(info_msg)
     finally:
         # Cleanup stuff

@@ -88,10 +88,12 @@ def query_yes_no(question, default="yes"):
 def save_crash_files(userid, filenames):
     urls = []
     for filename in filenames:
+        with open(filename) as fhandle:
+            content = fhandle.read()
         data = urllib.parse.urlencode({
             'poster': userid,
             'expire_days': 31,
-            'content': open(filename).read()
+            'content': content
         })
         request = urllib.request.urlopen('http://dpaste.com/api/v2/', data.encode())
         content = request.read().rstrip() + b'.txt'
@@ -316,6 +318,11 @@ class Crash(object):
         crash.xs_trace, crash.submission_id = previous_crash.split('@')
         return crash
 
+    def log_as_reported(self):
+        """call to cache exceptions to CRASH_FILE which will be used in deduplication"""
+        with open(CRASH_FILE, 'w') as fhandle:
+            fhandle.write(self.__str__())
+
     def deduplicate(self):
         """when previous crash exists, check if trace is the same to de-duplicate"""
         try:
@@ -325,7 +332,3 @@ class Crash(object):
                 self.submission_id = previous_crash.submission_id
         except Exception:
             logger.exception("Failed to decipher crash history...")
-
-    def log_as_reported(self):
-        with open(CRASH_FILE, 'w') as fhandle:
-            fhandle.write(self.__str__())
