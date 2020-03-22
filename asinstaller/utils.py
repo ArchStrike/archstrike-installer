@@ -269,7 +269,7 @@ def satisfy_dep(command):
         logger.warning('Failed to locate "{}" owning package'.format(command))
 
 
-class Crash(object):
+class Crash(object):  # TODO: consider caching submission_id per host, since it is used as irc user
     """Creates a crash object from state and checks previous crash to deduplicate submissions"""
     def __init__(self, version=None, skip_deduplication=False):
         self.formatter = '{}:{}:version-{}'
