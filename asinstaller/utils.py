@@ -74,9 +74,7 @@ def query_yes_no(question, default="yes"):
         raise ValueError("invalid default answer: '%s'" % default)
 
     while True:
-        sys.stdout.write('{0}{1}{2}{3}'.format(COLORS['OKBLUE'], question,
-                                               prompt, COLORS['ENDC']))
-        choice = input().lower()
+        choice = cinput('{0}{1}'.format(question, prompt), COLORS['OKBLUE'])
         # logger.log(logging.INFO, '{0} : {1}'.format(question, choice))
         if default is not None and choice == '':
             return valid[default]
@@ -126,7 +124,7 @@ write_lock = Lock()
 def _write(log, color, line):
     write_lock.acquire()
     print('{0}'.format(COLORS[color]), end='')
-    log(line.strip())
+    log(line.decode().strip())
     print('{0}'.format(COLORS['ENDC']), end='')
     write_lock.release()
 
@@ -167,7 +165,7 @@ def system(command, chroot=False, **kwargs):  # noqa
 
 def system_output(command):
     print('{0}'.format(COLORS['BOLD']), end='')
-    ret = sp.check_output([command], close_fds=True, shell=True).rstrip()
+    ret = sp.check_output([command], close_fds=True, shell=True).decode().rstrip()
     print('{0}'.format(COLORS['ENDC']), end='')
 
     return ret
