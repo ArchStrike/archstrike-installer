@@ -6,6 +6,7 @@ archstrike-arbitration judges which packages to install.
 
 Example usage:
     $ resolve_archstrike_group --file <path>/<to>/archstrike-iso/configs/openbox/packages.both
+    $ ./bin/archstrike-arbitration --file ./packages.{both,x86_64} --package alot diffoscope reprotest
 
 Through the example usage both the archstrike group and `../configs/openbox/packages.both` are inspected for
  * packages that cannot be found or have a dependency that cannot be found

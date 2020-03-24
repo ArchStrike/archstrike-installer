@@ -1,6 +1,7 @@
 """Helps resolve which ArchStrike packages can be installed without error"""
 import argparse
 import sys
+import pathlib
 import pyalpm
 import pycman
 import logging
@@ -22,6 +23,7 @@ class FlatDepends(object):
 
 
 flatdepends = collections.defaultdict(FlatDepends)
+package_not_found = '"package not found"'
 
 
 def get_packages_depending_on(flatdepends, pkgname):
@@ -29,6 +31,8 @@ def get_packages_depending_on(flatdepends, pkgname):
 
 
 def get_group_packages(repos, name):
+    if not name:
+        return []
     for repo in repos.values():
         grp = repo.read_grp(name)
         if grp is None:
@@ -65,32 +69,45 @@ def find_missing_depends(repos, root, deps):
     return missing
 
 
-def irresolvable_depends(repos, pkgs):
-    for pkg in pkgs:
-        missing_depends = find_missing_depends(repos, pkg.name, pkg.depends)
-        if missing_depends:
-            yield pkg.name, missing_depends
-
-
-def irresolvable_depends_from_file(repos, filename):
-    if filename:
-        for line in open(filename):
-            line = line.strip()
-            if line.startswith('#') or len(line) == 0:
+def packagenames_from_file(repos, filenames):
+    for filename in filenames:
+        if filename:
+            fpath = pathlib.Path(filename)
+            if not fpath.is_file():
+                stderr.error(f"File not found: '{filename}'...")
                 continue
-            for pkgname in line.split(' '):
-                okay, pkg = pycman.action_sync.find_sync_package(pkgname, repos)
-                if not okay:  # make sure not a group before saying it's missing
-                    grp_pkgs = get_group_packages(repos, pkgname)
-                    if grp_pkgs:
-                        for pkgname, deps in irresolvable_depends(repos, grp_pkgs):
-                            yield pkgname, deps
-                    else:
-                        yield pkgname, [f'(error: {pkg})']
-                else:
-                    missing_deps = find_missing_depends(repos, pkg.name, pkg.depends)
-                    if missing_deps:
-                        yield pkg.name, missing_deps
+            for line in fpath.open():
+                line = line.strip()
+                if line.startswith('#'):
+                    continue
+                for pkgname in line.split(' '):
+                    if len(pkgname) == 0:
+                        continue
+                    yield pkgname
+
+
+def iter_pkgname_package(repos, pkgnames):
+    for pkgname in pkgnames:
+        okay, pkg = pycman.action_sync.find_sync_package(pkgname, repos)
+        if not okay:  # make sure not a group before saying it's missing
+            grp_pkgs = get_group_packages(repos, pkgname)
+            if grp_pkgs:
+                for pkg in grp_pkgs:
+                    yield pkg.name, pkg
+            else:
+                yield pkgname, None
+        else:
+            yield pkg.name, pkg
+
+
+def irresolvable_depends(repos, pkgname_package):
+    for pkgname, pkg in pkgname_package.items():
+        if pkg is None:
+            yield pkgname, [package_not_found]
+        else:
+            missing_depends = find_missing_depends(repos, pkg.name, pkg.depends)
+            if missing_depends:
+                yield pkg.name, missing_depends
 
 
 def conflicting_pactrees(flatdepends):
@@ -135,9 +152,8 @@ def show_irresolvable_depends(pkg_missing_depends, origin, rhs="Package depends"
 
 def get_args():
     parser = argparse.ArgumentParser(description='Robust ArchStrike group analysis and installer')
-    parser.add_argument('--file', type=str, help='Specify a file with a list of package names')
-    parser.add_argument('--group', type=str, default='archstrike',
-                        help='Specify an alternate pacman configuration file')
+    parser.add_argument('--file', nargs='+', help='Specify at least one file containing a list of package names')
+    parser.add_argument('--package', nargs='+', help='Specify packages to check')
     parser.add_argument('--config', type=str, default='/etc/pacman.conf',
                         help='Specify an alternate pacman configuration file')
     return parser.parse_args()
@@ -149,23 +165,23 @@ class Packages(object):
         self.packages = packages
 
     def __str__(self):
-        return ' '.join([pkg.name for pkg in self.packages])
+        return ' '.join(list(self.packages))
 
 
 class PackageArbiter(object):
     def __init__(self, args=None):
-        self.groupname = getattr(args, 'group', 'archstrike')
-        self.file = getattr(args, 'file', None)
+        self._arg_files = [] if getattr(args, 'file', None) is None else args.file
+        self._arg_packages = set([]) if getattr(args, 'package', None) is None else set(args.package)
         self.config = getattr(args, 'config', '/etc/pacman.conf')
         self.dbnames = set(['core', 'extra', 'community', 'multilib', 'archstrike', 'archstrike-testing'])
         self.pacman_config = pycman.config.PacmanConfig(conf=self.config)
         self.hpacman = self.pacman_config.initialize_alpm()
         self._repos = None
-        self._group_pkgs = None
-        self._bad_group_pkgs = None
-        self._bad_file_pkgs = None
-        self._conflicted_trees = None
-        self._resolvable_group_pkgs = None
+        self._packages = None
+        self._irresolvable_packages = None
+        self._conflicted_packages = None
+        self._bad_pkgnames = None
+        self._good_packages = None
 
     @property
     def repos(self):
@@ -174,42 +190,45 @@ class PackageArbiter(object):
         return self._repos
 
     @property
-    def group_pkgs(self):
-        if self._group_pkgs is None:
-            self._group_pkgs = get_group_packages(self.repos, self.groupname)
-        return self._group_pkgs
+    def packages(self):
+        if self._packages is None:
+            self._packages = self._arg_packages
+            for pkg in packagenames_from_file(self.repos, self._arg_files):
+                self._packages.add(pkg)
+            self._packages = {n: p for n, p in iter_pkgname_package(self.repos, self._packages)}
+        return self._packages
 
     @property
-    def bad_group_pkgs(self):
-        if self._bad_group_pkgs is None:
-            self._bad_group_pkgs = {p: m for p, m in irresolvable_depends(self.repos, self.group_pkgs)}
-        return self._bad_group_pkgs
+    def irresolvable_packages(self):
+        if self._irresolvable_packages is None:
+            self._irresolvable_packages = {n: m for n, m in irresolvable_depends(self.repos, self.packages)}
+        return self._irresolvable_packages
 
     @property
-    def bad_file_pkgs(self):
-        if self._bad_file_pkgs is None:
-            self._bad_file_pkgs = {p: m for p, m in irresolvable_depends_from_file(self.repos, self.file)}
-        return self._bad_file_pkgs
+    def conflicted_packages(self):
+        if self._conflicted_packages is None:
+            self._conflicted_packages = conflicting_pactrees(flatdepends)
+        return self._conflicted_packages
 
     @property
-    def conflicted_trees(self):
-        if self._conflicted_trees is None:
-            self._conflicted_trees = conflicting_pactrees(flatdepends)
-        return self._conflicted_trees
-
-    @property
-    def resolvable_group_pkgs(self):
-        if self._resolvable_group_pkgs is None:
-            # Resolving two conflicting pactrees is non-trivial. So, remove all root packages
+    def bad_pkgnames(self):
+        if self._bad_pkgnames is None:
+            self._bad_pkgnames = set([])
+            # Resolving two conflicting pactrees takes some mental gymnastics. So, remove all root packages
             # that have a conflicting dependency tree with at least other package.
-            exclusions = set([])
-            for irresolvable in [self.bad_group_pkgs, self.conflicted_trees]:
+            for irresolvable in [self.irresolvable_packages, self.conflicted_packages]:
                 for pkg, missing_deps in irresolvable.items():
-                    exclusions.add(pkg)
+                    self._bad_pkgnames.add(pkg)
                     for dep in missing_deps:
-                        exclusions.add(dep)
-            self._resolvable_group_pkgs = Packages([pkg for pkg in self.group_pkgs if pkg.name not in exclusions])
-        return self._resolvable_group_pkgs
+                        self._bad_pkgnames.add(dep)
+        return self._bad_pkgnames
+
+    @property
+    def good_packages(self):
+        if self._good_packages is None:
+            self._good_packages = {n: p for n, p in self.packages.items() if n not in self.bad_pkgnames}
+            self._good_packages = Packages(self._good_packages)
+        return self._good_packages
 
 
 def main():
@@ -217,7 +236,6 @@ def main():
     args = get_args()
     arbiter = PackageArbiter(args)
     # Show results
-    stdout.info(arbiter.resolvable_group_pkgs)
-    show_irresolvable_depends(arbiter.bad_group_pkgs, "archstrike")
-    show_irresolvable_depends(arbiter.bad_file_pkgs, "file")
-    show_irresolvable_depends(arbiter.conflicted_trees, "tree", "Conflicts")
+    stdout.info(arbiter.good_packages)
+    show_irresolvable_depends(arbiter.irresolvable_packages, "package", "Dependencies")
+    show_irresolvable_depends(arbiter.conflicted_packages, "pactree", "Conflicts")

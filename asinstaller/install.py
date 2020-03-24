@@ -1,7 +1,7 @@
 
 from .config import *
 from .utils import *
-from . import menus
+from . import menus, resolve_packages
 import time
 import shutil
 import os
@@ -300,7 +300,8 @@ def archstrike():
     system("pacman -Syy", True)
     if query_yes_no('> Do you want to go ahead and install all ArchStrike '
                     + 'packages now?', 'no'):
-        system("pacman -S archstrike linux-headers --noconfirm", True)
+        archstrike_packages = PackageArbiter().resolvable_group_pkgs
+        system(f"pacman -S {archstrike_packages} linux-headers --noconfirm", True)
 
 
 def new_user():

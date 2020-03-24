@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import sys
 import pathlib
-from setuptools import setup
+from setuptools import setup, find_packages
 
 sys.path.append(pathlib.Path(__file__).resolve().parent)
 import asinstaller  # noqa
@@ -15,7 +15,7 @@ setup(name="asinstaller",
       maintainer_email="comrumino@archstrike.org",
       license="MIT",
       url="http://github.com/ArchStrike/archstrike-installer",
-      packages=['asinstaller'],
+      packages=find_packages(),
       scripts=['bin/archstrike-installer', 'bin/archstrike-arbitration'],
       install_requires=["pyalpm"],
       platforms=["ArchLinux", "ArchLinux-based"],
