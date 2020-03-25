@@ -52,7 +52,7 @@ base = {
 }
 
 locale = {
-    '1': 'Unites States',
+    '1': 'United States of America',
     '2': 'Australia',
     '3': 'Canada',
     '4': 'Spanish',
