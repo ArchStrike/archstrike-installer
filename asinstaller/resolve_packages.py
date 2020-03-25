@@ -13,7 +13,7 @@ stderr = logging.getLogger('stderr')
 stderr.addHandler(logging.StreamHandler(sys.stderr))
 
 
-__all__ = ['PackageArbiter', 'main']
+__all__ = ['PackageArbiter', 'main', 'get_args']
 
 
 class FlatDepends(object):
@@ -150,13 +150,13 @@ def show_irresolvable_depends(pkg_missing_depends, origin, rhs="Package depends"
         stderr.error(f"\033[1;31m{pkg:<{width}}{err_depends}\033[m")
 
 
-def get_args():
+def get_args(_args=None):
     parser = argparse.ArgumentParser(description='Robust ArchStrike group analysis and installer')
     parser.add_argument('--file', nargs='+', help='Specify at least one file containing a list of package names')
     parser.add_argument('--package', nargs='+', help='Specify packages to check')
     parser.add_argument('--config', type=str, default='/etc/pacman.conf',
                         help='Specify an alternate pacman configuration file')
-    return parser.parse_args()
+    return parser.parse_args() if _args is None else parser.parse_args(_args)
 
 
 class Packages(object):

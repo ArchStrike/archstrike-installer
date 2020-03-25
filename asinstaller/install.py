@@ -300,7 +300,8 @@ def archstrike():
     system("pacman -Syy", True)
     if query_yes_no('> Do you want to go ahead and install all ArchStrike '
                     + 'packages now?', 'no'):
-        archstrike_packages = resolve_packages.PackageArbiter().good_packages
+        args = resolve_packages.get_args(['--package', 'archstrike'])
+        archstrike_packages = resolve_packages.PackageArbiter(args).good_packages
         system(f"pacman -S {archstrike_packages} linux-headers --noconfirm", True)
 
 
