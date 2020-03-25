@@ -34,15 +34,19 @@ def base():  # noqa
 
     if base == 1:
         base_install = "linux sudo"
+        usr_cfg['kernel'] = 'linux'
     elif base == 2:
         base_install = "linux base-devel sudo"
+        usr_cfg['kernel'] = 'linux'
     elif base == 3:
         base_install = "linux-hardened linux-hardened-headers sudo"
+        usr_cfg['kernel'] = 'linux-hardened'
     elif base == 4:
         base_install = "linux-lts linux-lts-headers sudo"
+        usr_cfg['kernel'] = 'linux-lts'
     elif base == 5:
         base_install = "base-devel linux-lts linux-lts-headers sudo"
-
+        usr_cfg['kernel'] = 'linux-lts'
     if usr_cfg['uefi']:
         base_install += " efibootmgr"
 
@@ -133,7 +137,7 @@ def initramfs():
         system("clear")
         print_title("Step 10) Generate initramfs image...")
         time.sleep(1)
-        system("mkinitcpio -p linux", True)
+        system(f"mkinitcpio -p {usr_cfg['kernel']}", True)
 
 
 def grub():
@@ -163,7 +167,7 @@ def grub():
                + '/mnt/boot/EFI/boot/bootx64.efi')
 
         if usr_cfg['partition_type'] != '2':
-            system("mkinitcpio -p linux", True)
+            system(f"mkinitcpio -p {usr_cfg['kernel']}", True)
     else:
         system("grub-install {0}".format(usr_cfg['drive']), True)
 
@@ -212,7 +216,7 @@ def configuration():
                + "/mnt/etc/mkinitcpio.conf")
 
         system("pacman -S lvm2 --noconfirm", True)
-        system("mkinitcpio -p linux", True)
+        system(f"mkinitcpio -p {usr_cfg['kernel']}", True)
 
 
 def hostname():
