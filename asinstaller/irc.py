@@ -47,17 +47,20 @@ class LogHandler(object):
         self.send(f'NICK {self.nick}')
 
         # RECEIVE IRC Server Info
-        while True:
-            data = self.sock.recv(1024)
-            if b'End of /MOTD command.' in data:
+        data = ''
+        while True:  # sock.recv will eventually timeout in failure conditions preventing infinite loop
+            data += self.sock.recv(1024).decode().rstrip()
+            if 'End of /MOTD command.' in data:
                 logger.info('Squelched IRC MOTD message from freenode...')
+            if '+Zi' in data:
+                # Wait for MODE to indicate securely connected to avoid sending PING and receiving MODE prior to PONG
                 break
-        # Use PING message to delay sending logs
+        # Double check freenode is reachable
         try:
             self.send(f'PING {self.server}')
             data = self.sock.recv(1024)
             if b'PONG' in data:
-                logger.info('PING reply received')
+                logger.info('PING-PONG successful')
             else:
                 logger.info(f'Expected PONG response from freenode, but received: {data}')
         except socket.timeout:
