@@ -5,7 +5,7 @@ import unittest
 import sys
 from io import StringIO
 from asinstaller.config import CRASH_FILE, LOG_FILE
-from asinstaller.utils import system, Crash
+from asinstaller.utils import system, Crash, satisfy_dep
 
 
 version = __version__
@@ -26,18 +26,21 @@ class TestUtilsGetCrashHistory(unittest.TestCase):
             if os.path.exists(fname):
                 os.remove(fname)
 
-    def test_no_crash(self):
+    def test_0_no_crash(self):
         no_crash = Crash(version)
         self.assertFalse(bool(no_crash))
 
-    def test_crash_file(self):
-        simulate_exception()
-        crash = Crash(version)
-        fcrash = Crash.from_crash_file()
+    def test_1_crash_file(self):
+        try:
+            raise Exception('woops!')
+        except Exception:
+            crash = Crash(version)
+            crash.log_as_reported()
+            fcrash = Crash.from_crash_file()
         self.assertTrue(crash == fcrash)
         self.assertTrue(crash.submission_id == fcrash.submission_id)
 
-    def test_base_and_inductive_step(self):
+    def test_2_base_and_inductive_step(self):
         try:
             raise Exception('woops!')
         except Exception:
@@ -55,9 +58,19 @@ class TestUtilsGetCrashHistory(unittest.TestCase):
         self.assertTrue(crash1 != crash3)
         self.assertTrue(crash1.submission_id != crash3.submission_id)
 
-    def test_invalid_input(self):
+    def test_4_invalid_input(self):
         try:
             raise Exception('woops!')
         except Exception:
             crash_empty = Crash(version)
             crash1 = Crash(version)
+
+
+@unittest.skipIf(os.geteuid() != 0, 'satisfy_dep invokes pacman -Fs, which requires root permissions. Hence, skip')
+class TestSatisfyDep(unittest.TestCase):
+    def test_failed_to_locate(self):
+        with self.assertRaises(Exception):
+            satisfy_dep('feefiefoefoobar')
+
+    def test_successful_locate(self):
+        self.assertTrue(satisfy_dep('bash') is None)
