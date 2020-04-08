@@ -241,6 +241,7 @@ def set_keymap():
         layout = input("> Enter your keyboard layout: ")
 
         if query_yes_no(f'>Setting "{layout}" as your keymap, is that correct? ', 'yes'):
+            satisfy_dep("setxkbmap")
             system("setxkbmap {0}".format(layout))
 
         font_prompt = '> Try typing in here to test. \nInput \'Y\' if settings are incorrect and \'N\' to save.:'
@@ -249,24 +250,22 @@ def set_keymap():
     usr_cfg['keymap'] = layout
 
 
-def _pacman_fs_re():
-    repos = ['testing', 'core', 'extra', 'community-testing', 'community', 'multilib-testing', 'multilib',
-             'archstrike', 'archstrike-testing']
+def _pacman_fy_re():
+    repos = ['testing', 'core', 'extra', 'community-testing', 'community', 'multilib-testing', 'multilib', 'archstrike']
     return re.compile(r'^(?:{})/(?P<pkgname>[^\s]+) '.format('|'.join(repos)), re.M)
 
 
-PAC_FS_RE = _pacman_fs_re()
+PAC_FY_RE = _pacman_fy_re()
 
 
 def satisfy_dep(command):
-    output = system_output('pacman -Fs {}'.format(command))
-    match = PAC_FS_RE.search(output)
-    pkg = match.group('pkgname') if match else None
-    if pkg:
-        sys_cmd = "command -v {} > /dev/null || pacman -S --noconfirm {}"
-        system(sys_cmd.format(command, pkg))
+    output = system_output('pacman -Fy {}'.format(command))
+    match = PAC_FY_RE.search(output)
+    if match:
+        pkg = match.group('pkgname')
+        system(f"command -v {command} > /dev/null || pacman -S --noconfirm {pkg}")
     else:
-        logger.warning('Failed to locate "{}" owning package'.format(command))
+        raise Exception(f'Failed to locate "{command}" owning package')
 
 
 class Crash(object):  # TODO: consider caching submission_id per host, since it is used as irc user
