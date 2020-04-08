@@ -9,7 +9,7 @@ from .irc import LogHandler
 from .partitions import devices, auto, encrypted, manual
 
 
-__version__ = '2.2.6'
+__version__ = '2.2.7'
 logger = setup_logger('asinstaller.{}'.format(__name__))
 logger.debug('Version: {}'.format(__version__))
 
