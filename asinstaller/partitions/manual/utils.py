@@ -1,12 +1,12 @@
 
 import logging
 import time
-from ...config import usr_cfg, setup_logger, COLORS
+from ...config import usr_cfg, get_logger, COLORS
 from ...utils import print_error, print_warning, print_title, print_info,\
     cinput, query_yes_no, system, satisfy_dep
 
 
-logger = setup_logger(__name__)
+logger = get_logger(__name__)
 
 
 def format_partition_type(i):

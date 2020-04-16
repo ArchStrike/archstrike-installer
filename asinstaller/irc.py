@@ -3,7 +3,7 @@ import ssl
 from .config import *
 
 
-logger = setup_logger(__name__)
+logger = get_logger(__name__)
 
 
 class LogHandler(object):

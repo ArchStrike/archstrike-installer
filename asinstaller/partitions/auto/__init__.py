@@ -3,10 +3,10 @@ from . import gpt
 from . import mbr
 from ... import menus
 from ...utils import system
-from ...config import usr_cfg, setup_logger
+from ...config import usr_cfg, get_logger
 
 
-logger = setup_logger(__name__)
+logger = get_logger(__name__)
 
 
 def partition():

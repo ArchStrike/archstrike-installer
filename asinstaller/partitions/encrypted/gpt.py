@@ -1,9 +1,9 @@
 
 from ...utils import *
-from ...config import usr_cfg, setup_logger
+from ...config import usr_cfg, get_logger
 
 
-logger = setup_logger(__name__)
+logger = get_logger(__name__)
 
 
 def uefi():

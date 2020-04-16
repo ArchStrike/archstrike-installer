@@ -6,7 +6,7 @@ import time
 import shutil
 import os
 
-logger = setup_logger(__name__)
+logger = get_logger(__name__)
 
 
 def base():  # noqa

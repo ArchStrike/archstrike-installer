@@ -10,12 +10,13 @@ from .partitions import devices, auto, encrypted, manual
 
 
 __version__ = '2.2.7'
-logger = setup_logger('asinstaller.{}'.format(__name__))
-logger.debug('Version: {}'.format(__version__))
 
 
 def main():
     try:
+        init_logger_handles()
+        logger = get_logger(__name__)
+        logger.debug(f'Version: {__version__}')
         # Pre-checks
         if geteuid() != 0:
             print_error("Please run as root")

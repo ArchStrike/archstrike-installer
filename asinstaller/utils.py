@@ -12,10 +12,10 @@ import urllib.parse
 from threading import Thread, Lock
 # installer modules
 from . import menus
-from .config import COLORS, setup_logger, CONFIG_FILE, usr_cfg, FNULL, CRASH_FILE
+from .config import COLORS, get_logger, CONFIG_FILE, usr_cfg, FNULL, CRASH_FILE
 
 
-logger = setup_logger(__name__)
+logger = get_logger(__name__)
 
 
 def print_error(msg):
