@@ -9,7 +9,7 @@ from .irc import LogHandler
 from .partitions import devices, auto, encrypted, manual
 
 
-__version__ = '2.2.7'
+__version__ = '2.2.8'
 
 
 def main():
