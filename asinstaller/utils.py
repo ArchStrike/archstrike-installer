@@ -39,10 +39,15 @@ def print_info(msg):
 
 
 def print_banner():
-    directory = 'banners'
-    filename = '{0}/{1}'.format(directory, random.choice(os.listdir(directory)))
-    with open(filename) as fr:
-        print_title(fr.read())
+    banner = ['',
+              '                        _      _____ _        _ _',
+              '         /\\            | |    / ____| |      (_) |',
+              '        /  \\   _ __ ___| |__ | (___ | |_ _ __ _| | _____',
+              "       / /\\ \\ | '__/ __| '_ \\ \\___ \\| __| '__| | |/ / _ \\",
+              '      / ____ \\| | | (__| | | |____) | |_| |  | |   <  __/',
+              '     /_/    \\_\\_|  \\___|_| |_|_____/ \\__|_|  |_|_|\\_\\___|',
+              '']
+    print_title('\n'.join(banner))
 
 
 def cinput(msg, color):
