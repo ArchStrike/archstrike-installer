@@ -1,4 +1,4 @@
-
+from pathlib import Path
 import logging
 import time
 from ...config import usr_cfg, get_logger, COLORS
@@ -37,7 +37,15 @@ def format_partition():
 
     system("lsblk {}".format(usr_cfg['drive']))
     _in_prompt = '> Enter all the partitions you created by seperating them with a comma (e.g. /dev/sda1,/dev/sda2): '
-    partitions = cinput(_in_prompt, COLORS['OKBLUE']).split(',')
+    user_input = ''
+    partitions = None
+    while not user_input:
+        user_input = cinput(_in_prompt, COLORS['OKBLUE'])
+        partitions = user_input.split(',')
+        for p in partitions:
+            if not Path(p).exists():
+                logger.log(logging.ERROR, f"System Partition: {p} not found")
+                user_input = ''
 
     logger.log(logging.INFO, "System Partitions: {0}".format(partitions))
 
@@ -67,14 +75,14 @@ def mount():
         mount()
 
     if usr_cfg['manual_partition_table'] == 'gpt':
-        _in_prompt = 'Which one is your /boot mounted partition? (e.g. /dev/sda2): '
-        usr_cfg['boot'] = cinput(_in_prompt, COLORS['OKBLUE'])
-        logger.log(logging.INFO, "/boot is {0}".format(usr_cfg['boot']))
-        if usr_cfg['boot'] in usr_cfg['manual_partitions']:
-            print_info("Mounting {0} on /mnt/boot".format(usr_cfg['boot']))
-            system("mkdir -p /mnt/boot")
-            system("mount {0} /mnt/boot".format(usr_cfg['boot']))
-        else:
-            mount()
+        while usr_cfg.get('boot') not in usr_cfg['manual_partitions']:
+            _in_prompt = 'Which one is your /boot mounted partition? (e.g. /dev/sda2): '
+            usr_cfg['boot'] = cinput(_in_prompt, COLORS['OKBLUE'])
+            if usr_cfg['boot'] in usr_cfg['manual_partitions']:
+                print_info("Mounting {0} on /mnt/boot".format(usr_cfg['boot']))
+                system("mkdir -p /mnt/boot")
+                system("mount {0} /mnt/boot".format(usr_cfg['boot']))
+            else:
+                print_error(f"The partition {usr_cfg['boot']} is not in {usr_cfg['manual_partitions']}")
     else:
         system("mkdir -p /mnt/boot")

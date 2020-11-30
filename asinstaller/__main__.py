@@ -18,6 +18,9 @@ def main():
         logger = get_logger(__name__)
         logger.debug(f'Version: {__version__}')
         # Pre-checks
+        if not is_arch_linux():
+            print_error("At this time, only Arch Linux is supported")
+            exit()
         if geteuid() != 0:
             print_error("Please run as root")
             exit()

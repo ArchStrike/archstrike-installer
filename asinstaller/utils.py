@@ -9,6 +9,7 @@ import sys
 import urllib.request
 import urllib.error
 import urllib.parse
+from pathlib import Path
 from threading import Thread, Lock
 # installer modules
 from . import menus
@@ -169,12 +170,26 @@ def system(command, chroot=False, **kwargs):  # noqa
     return ret
 
 
-def system_output(command):
-    print('{0}'.format(COLORS['BOLD']), end='')
-    ret = sp.check_output([command], close_fds=True, shell=True).decode().rstrip()
-    print('{0}'.format(COLORS['ENDC']), end='')
+def system_or_exit(command, chroot=False, **kwargs):
+    try:
+        return system(command, chroot=False, **kwargs)
+    except Exception:
+        logger.exception("An host environment issue occurred")
+        print_info("\n\nGood Bye")
+        sys.exit()
 
-    return ret
+
+def system_output(command):
+    try:
+        print('{0}'.format(COLORS['BOLD']), end='')
+        ret = None
+        ret = sp.check_output([command], stderr=sp.STDOUT, close_fds=True, shell=True).decode().rstrip()
+    except sp.CalledProcessError as err:
+        print(err.output.decode())
+        raise
+    finally:
+        print('{0}'.format(COLORS['ENDC']), end='')
+        return ret
 
 
 def start_screen():
@@ -225,6 +240,17 @@ def internet_enabled():
     return True
 
 
+def is_arch_linux():
+    try:
+        logger.debug(f"Checking that os release is Arch Linux")
+        os_release_path = Path("/etc/os-release")
+        with os_release_path.open() as fhandle:
+            fcontent = fhandle.read()
+        return 'Arch Linux' in fcontent
+    except Exception:
+        return False
+
+
 def check_uefi():
     logger.debug("Checking UEFI")
     try:
@@ -268,7 +294,7 @@ def satisfy_dep(command):
     match = PAC_FY_RE.search(output)
     if match:
         pkg = match.group('pkgname')
-        system(f"command -v {command} > /dev/null || pacman -S --noconfirm {pkg}")
+        system_or_exit(f"command -v {command} > /dev/null || pacman -Sy --noconfirm {pkg}")
     else:
         raise Exception(f'Failed to locate "{command}" owning package')
 
