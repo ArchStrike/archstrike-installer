@@ -31,7 +31,7 @@ main = {
 partition_methods = {
     '1': 'Auto Partition Drive',
     '2': 'Auto Partition Encrypted LVM',
-    '3': 'Manual Partition',
+    # deprecated '3': 'Manual Partition', 
 }
 
 filesystems = {
