@@ -309,7 +309,10 @@ PAC_FY_RE = _pacman_fy_re()
 
 
 def satisfy_dep(command):
-    output = system_output('pacman -Fy {}'.format(command))
+    sys_cmd = f'pacman -Fy {command}'
+    output = system_output(sys_cmd)
+    if output is None:
+        raise Exception(f"Expected the command `{sys_cmd}` to provide output")
     match = PAC_FY_RE.search(output)
     if match:
         pkg = match.group('pkgname')
