@@ -5,6 +5,7 @@ from . import menus, resolve_packages
 import time
 import shutil
 import os
+import sys
 
 logger = get_logger(__name__)
 
@@ -143,37 +144,45 @@ def initramfs():
 
 
 def grub():
-    logger.debug("Installing GRUB")
-    system("clear")
-    print_title("Setting up GRUB bootloader...")
-    time.sleep(1)
+    try:
+        logger.debug("Installing GRUB")
+        system("clear")
+        print_title("Setting up GRUB bootloader...")
+        time.sleep(1)
 
-    system("pacman -S grub --noconfirm", True)
+        system("pacman -S grub --noconfirm", True)
 
-    if system_output("cat /proc/cpuinfo | grep -m1 vendor_id |"
-                     + "awk '{print $NF}'") == 'GenuineIntel':
-        if query_yes_no('We have detected you have an Intel CPU. '
-                        + 'Is that correct?', 'yes'):
-            system("pacman -S intel-ucode --noconfirm", True)
+        if system_output("cat /proc/cpuinfo | grep -m1 vendor_id |"
+                         + "awk '{print $NF}'") == 'GenuineIntel':
+            if query_yes_no('We have detected you have an Intel CPU. '
+                            + 'Is that correct?', 'yes'):
+                system("pacman -S intel-ucode --noconfirm", True)
 
-    if usr_cfg['partition_type'] == '2':
-        system("sed -i 's!quiet!cryptdevice=/dev/lvm/lvroot:root "
-               + "root=/dev/mapper/root!' /mnt/etc/default/grub")
-    else:
-        system("sed -i 's/quiet//' /mnt/etc/default/grub")
+        if usr_cfg['partition_type'] == '2':
+            system("sed -i 's!quiet!cryptdevice=/dev/lvm/lvroot:root "
+                   + "root=/dev/mapper/root!' /mnt/etc/default/grub")
+        else:
+            system("sed -i 's/quiet//' /mnt/etc/default/grub")
 
-    if usr_cfg['uefi']:
-        system('grub-install --efi-directory=/boot --target=x86_64-efi '
-               + '--bootloader-id=boot', True)
-        system('mv /mnt/boot/EFI/boot/grubx64.efi '
-               + '/mnt/boot/EFI/boot/bootx64.efi')
+        if usr_cfg['uefi']:
+            system('grub-install --efi-directory=/boot --target=x86_64-efi '
+                   + '--bootloader-id=boot', True)
+            system('mv /mnt/boot/EFI/boot/grubx64.efi '
+                   + '/mnt/boot/EFI/boot/bootx64.efi')
 
-        if usr_cfg['partition_type'] != '2':
-            system(f"mkinitcpio -p {usr_cfg['kernel']}", True)
-    else:
-        system("grub-install {0}".format(usr_cfg['drive']), True)
+            if usr_cfg['partition_type'] != '2':
+                system(f"mkinitcpio -p {usr_cfg['kernel']}", True)
+        else:
+            system("grub-install {0}".format(usr_cfg['drive']), True)
 
-    system("grub-mkconfig -o /boot/grub/grub.cfg ", True)
+        system("grub-mkconfig -o /boot/grub/grub.cfg ", True)
+    except Exception:
+        if usr_cfg['partition_type'] == '3':
+            logger.exception("Grub install failed")
+            print_error("Failed to install grub most likely due to user error during manual partitioning...")
+            sys.exit(1)
+        else:
+            raise
 
 
 # TODO: Implement

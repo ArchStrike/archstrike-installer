@@ -240,13 +240,10 @@ def internet_enabled():
     return True
 
 
-def is_arch_linux():
+def pacman_exists():
     try:
-        logger.debug(f"Checking that os release is Arch Linux")
-        os_release_path = Path("/etc/os-release")
-        with os_release_path.open() as fhandle:
-            fcontent = fhandle.read()
-        return 'Arch Linux' in fcontent
+        logger.debug(f"Checking for pacman")
+        return system("pacman -V") == 0
     except Exception:
         return False
 
@@ -267,8 +264,8 @@ def set_keymap():
     print_info("Setting your keyboard layout now, default is US.")
 
     layout = 'us'
+    font = None
     if query_yes_no("> Would you like to change the keyboard layout? ", 'no'):
-        print(system_output("find /usr/share/X11/xkb/symbols -type f | awk -F '/' '{print $NF}' | sort | uniq"""))
         layout = None
         keymaps_path = Path('/usr/share/kbd/keymaps/')
         while layout is None:
@@ -277,7 +274,9 @@ def set_keymap():
                 layout = _layout
                 break
             if layout is None:
-                print_error(f"Keymap was not found {keymaps_path}/**/{_layout}.map.gz")
+                for p in keymaps_path.glob(f'**/*.map.gz'):
+                    print_info(p.stem.rstrip('.map.gz'))
+                print_error(f"Keymap {_layout} was not found. Try one of the above...")
             elif query_yes_no(f'>Setting "{layout}" as your keymap, is that correct? ', 'yes'):
                 system(f"loadkeys {layout}")
             else:
@@ -286,7 +285,6 @@ def set_keymap():
         system('showconsolefont --verbose')
         consolefonts_path = Path('/usr/share/kbd/consolefonts/')
         font_prompt = '> Would you like to change the console font?'
-        font = None
         if query_yes_no(font_prompt, 'no'):
             while font is None:
                 _font = input("> Enter your console font: ")
@@ -294,7 +292,9 @@ def set_keymap():
                 if consolefonts_path.joinpath(_file).exists():
                     font = _font
                 else:
-                    print_error(f"Font not found: {consolefonts_path}/{_file}")
+                    for p in consolefonts_path.glob(f'*.psfu.gz'):
+                        print_info(p.stem.rstrip('.psfu.gz'))
+                    print_error(f"Font {_file.rstrip('.psfu.gz')} not found. Try one of the above...")
             system(f'setfont {font}')
     usr_cfg['keymap'] = layout
     usr_cfg['font'] = font
