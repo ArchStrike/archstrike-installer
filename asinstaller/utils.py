@@ -269,16 +269,35 @@ def set_keymap():
     layout = 'us'
     if query_yes_no("> Would you like to change the keyboard layout? ", 'no'):
         print(system_output("find /usr/share/X11/xkb/symbols -type f | awk -F '/' '{print $NF}' | sort | uniq"""))
-        layout = input("> Enter your keyboard layout: ")
+        layout = None
+        keymaps_path = Path('/usr/share/kbd/keymaps/')
+        while layout is None:
+            _layout = input("> Enter your keyboard layout: ")
+            for p in keymaps_path.glob(f'**/{_layout}.map.gz'):
+                layout = _layout
+                break
+            if layout is None:
+                print_error(f"Keymap was not found {keymaps_path}/**/{_layout}.map.gz")
+            elif query_yes_no(f'>Setting "{layout}" as your keymap, is that correct? ', 'yes'):
+                system(f"loadkeys {layout}")
+            else:
+                layout = None
 
-        if query_yes_no(f'>Setting "{layout}" as your keymap, is that correct? ', 'yes'):
-            satisfy_dep("setxkbmap")
-            system("setxkbmap {0}".format(layout))
-
-        font_prompt = '> Try typing in here to test. \nInput \'Y\' if settings are incorrect and \'N\' to save.:'
+        system('showconsolefont --verbose')
+        consolefonts_path = Path('/usr/share/kbd/consolefonts/')
+        font_prompt = '> Would you like to change the console font?'
+        font = None
         if query_yes_no(font_prompt, 'no'):
-            system("setfont lat9w-16")
+            while font is None:
+                _font = input("> Enter your console font: ")
+                _file = f'{_font}.psfu.gz'
+                if consolefonts_path.joinpath(_file).exists():
+                    font = _font
+                else:
+                    print_error(f"Font not found: {consolefonts_path}/{_file}")
+            system(f'setfont {font}')
     usr_cfg['keymap'] = layout
+    usr_cfg['font'] = font
 
 
 def _pacman_fy_re():

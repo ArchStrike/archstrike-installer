@@ -119,8 +119,10 @@ def locale_time():
     system("sed -i '/{0}/s/^#//g' /mnt/etc/locale.gen".format(locale))
     system("locale-gen", True)
     print_info("Setting keyboard layout...")
-    layout = system("localectl | grep Locale | cut -d ':' -f 2")
-    system("echo {0} >> /mnt/etc/vconsole.conf".format(layout))
+    vconsole_lang = system("localectl | grep Locale | cut -d ':' -f 2")
+    system(f"printf '{vconsole_lang}\n' >> /mnt/etc/vconsole.conf")
+    if usr_cfg['font'] is not None:
+        system(f"printf 'FONT={usr_cfg['font']}\n' >> /mnt/etc/vconsole.conf")
     print_info("Setting timezone...")
     tzcmd = "/bin/sh -c '(tzselect 3>&2 2>&1 1>&3) 2> /tmp/archstrike-timezone'"  # swap stdout/stderr so level is info
     system(tzcmd, True)
