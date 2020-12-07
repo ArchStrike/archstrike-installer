@@ -1,6 +1,6 @@
 
-from asinstaller.utils import *
-from asinstaller.config import usr_cfg, get_logger
+from ...utils import system, system_output
+from ...config import usr_cfg, get_logger
 
 logger = get_logger(__name__)
 

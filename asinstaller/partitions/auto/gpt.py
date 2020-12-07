@@ -1,5 +1,5 @@
 
-from asinstaller.utils import *
+from asinstaller.utils import system, system_output
 from asinstaller.config import usr_cfg, get_logger
 
 logger = get_logger(__name__)
