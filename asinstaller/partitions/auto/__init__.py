@@ -1,7 +1,6 @@
 
 from . import gpt
 from . import mbr
-from ... import menus
 from ...utils import system
 from ...config import usr_cfg, get_logger
 

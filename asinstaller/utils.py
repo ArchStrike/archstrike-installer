@@ -2,7 +2,6 @@ import json
 import functools
 import logging # noqa
 import os
-import random
 import re
 import subprocess as sp
 import sys
@@ -14,6 +13,12 @@ from threading import Thread, Lock
 # installer modules
 from . import menus
 from .config import COLORS, get_logger, CONFIG_FILE, usr_cfg, FNULL, CRASH_FILE
+
+
+__all__ = ["print_error", "print_warning", "print_command", "print_title", "print_info", "print_banner", "cinput",
+           "query_yes_no", "save_crash_files", "signal_handler", "write_lock", "_write", "_read", "system",
+           "system_or_exit", "system_output", "start_screen", "internet_enabled", "pacman_exists", "check_uefi",
+           "set_keymap", "_pacman_fy_re", "PAC_FY_RE", "satisfy_dep", "Crash"]
 
 
 logger = get_logger(__name__)
@@ -242,7 +247,7 @@ def internet_enabled():
 
 def pacman_exists():
     try:
-        logger.debug(f"Checking for pacman")
+        logger.debug("Checking for pacman")
         return system("pacman -V") == 0
     except Exception:
         return False
@@ -274,7 +279,7 @@ def set_keymap():
                 layout = _layout
                 break
             if layout is None:
-                for p in keymaps_path.glob(f'**/*.map.gz'):
+                for p in keymaps_path.glob('**/*.map.gz'):
                     print_info(p.stem.rstrip('.map.gz'))
                 print_error(f"Keymap {_layout} was not found. Try one of the above...")
             elif query_yes_no(f'>Setting "{layout}" as your keymap, is that correct? ', 'yes'):
@@ -292,7 +297,7 @@ def set_keymap():
                 if consolefonts_path.joinpath(_file).exists():
                     font = _font
                 else:
-                    for p in consolefonts_path.glob(f'*.psfu.gz'):
+                    for p in consolefonts_path.glob('*.psfu.gz'):
                         print_info(p.stem.rstrip('.psfu.gz'))
                     print_error(f"Font {_file.rstrip('.psfu.gz')} not found. Try one of the above...")
             system(f'setfont {font}')
@@ -301,7 +306,8 @@ def set_keymap():
 
 
 def _pacman_fy_re():
-    repos = ['testing', 'core', 'extra', 'community-testing', 'community', 'multilib-testing', 'multilib', 'archstrike']
+    repos = ['testing', 'core', 'extra', 'community-testing', 'community', 'multilib-testing', 'multilib',
+             'archstrike']
     return re.compile(r'^(?:{})/(?P<pkgname>[^\s]+) '.format('|'.join(repos)), re.M)
 
 

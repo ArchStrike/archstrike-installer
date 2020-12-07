@@ -1,8 +1,10 @@
 import signal
 import json
+from subprocess import Popen, STDOUT
 from sys import exit
-from .config import *
-from .utils import *
+from .config import COLORS, CONFIG_FILE, FNULL, LOG_FILE, get_logger, init_logger_handles, usr_cfg
+from .utils import Crash, check_uefi, internet_enabled, pacman_exists, print_error, print_info, query_yes_no, \
+    save_crash_files, set_keymap, signal_handler, start_screen, system
 from .partitions import devices, auto, manual
 from os import geteuid
 from . import install
@@ -130,7 +132,7 @@ def main():
             print_info(info_msg)
     finally:
         # Cleanup stuff
-        sp.Popen("umount -R /mnt", stdout=FNULL, stderr=sp.STDOUT, shell=True)
+        Popen("umount -R /mnt", stdout=FNULL, stderr=STDOUT, shell=True)
         FNULL.close()
 
 

@@ -2,7 +2,7 @@
 from getpass import getpass
 from . import gpt
 from . import mbr
-from ...utils import *
+from ...utils import print_error, print_warning, query_yes_no, system
 from ...config import usr_cfg, get_logger
 
 

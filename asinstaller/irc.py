@@ -1,6 +1,6 @@
 import socket
 import ssl
-from .config import *
+from .config import IRC_BOT_NICK, IRC_PORT, IRC_SERVER, get_logger
 
 
 logger = get_logger(__name__)

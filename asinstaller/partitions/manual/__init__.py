@@ -2,7 +2,7 @@
 import sys
 import time
 from .utils import format_partition, mount
-from ...utils import *
+from ...utils import cinput, print_error, print_info, print_title, query_yes_no, system, system_output
 from ...config import usr_cfg, get_logger
 
 

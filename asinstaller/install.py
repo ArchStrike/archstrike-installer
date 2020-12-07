@@ -1,6 +1,6 @@
 
-from .config import *
-from .utils import *
+from .config import COLORS, get_logger, localesdict, pacmanconf, usr_cfg
+from .utils import cinput, print_command, print_error, print_info, print_title, query_yes_no, system, system_output
 from . import menus, resolve_packages
 import time
 import shutil
@@ -65,7 +65,7 @@ def base():  # noqa
         _cmd = '[[ -z "{}" ]] && printf "{}" >&2'.format(_conflict_check, _err_msg)
         system(_cmd)
     # if not ntpd.service is inactive, then set time with ntpd. otherwise, pass so exits 0
-    system("[[ ! -z $(systemctl status ntpd | grep 'Active: inactive') ]] &&  ntpd -qg >/dev/null 2>&1 || :")
+    system("timedatectl set-ntp true")
     system("hwclock --systohc")
     # the following should be the same as pacman-key --refresh-keys --keyserver pgp.mit.edu
     # however, keyservers are too slow for my taste

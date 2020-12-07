@@ -1,15 +1,19 @@
-
 import io
 import logging
 import os
+from pathlib import Path
 
-usr_cfg = {}
+__all__ = ["pacmanconf", "archstrike_mirrorlist", "CRASH_FILE", "LOG_FILE", "CONFIG_FILE", "IRC_SERVER", "IRC_PORT",
+           "IRC_BOT_NICK", "COLORS", "localesdict", "FNULL", "TOPLEVEL_NAME", "usr_cfg", "WhitespaceRemovingFormatter",
+           "init_logger_handles", "get_logger", "load_user_cfg", "dump_user_cfg"]
+
+
 
 pacmanconf = "/etc/pacman.conf"
 archstrike_mirrorlist = "/etc/pacman.d/archstrike-mirrorlist"
 CRASH_FILE = '/tmp/archstrike-installer-crash-report.lock'
 LOG_FILE = '/tmp/archstrike-installer.log'
-CONFIG_FILE = '/tmp/as-config.json'
+CONFIG_FILE = Path('/tmp/as-config.json')
 IRC_SERVER = 'irc.freenode.net'
 IRC_PORT = 6697
 IRC_BOT_NICK = 'xorbot'
@@ -33,6 +37,8 @@ localesdict = {'1': 'en_US.UTF-8', '2': 'en_AU.UTF-8', '3': 'en_CA.UTF-8',
 
 FNULL = open(os.devnull, 'w')  # TODO, oh my... resource acquisition and initialization please...
 TOPLEVEL_NAME = 'asinstaller'
+
+usr_cfg = {}
 
 
 class WhitespaceRemovingFormatter(logging.Formatter):
@@ -70,3 +76,30 @@ def init_logger_handles():
 
 def get_logger(filename):
     return logging.getLogger(f'{TOPLEVEL_NAME}.{filename}')
+
+
+def load_user_cfg():
+    try:
+        if CONFIG_FILE.exists():
+            with open(CONFIG_FILE) as fr:
+                usr_cfg = json.loads(fr)
+    except json.decoder.JSONDecodeError:
+        logger = get_logger(__file__)
+        logger.warning(f"Found corrupt user config {CONFIG_FILE}")
+        return {}
+    except Exception:
+        raise
+
+
+def dump_user_cfg():
+    try:
+        logger = get_logger(__file__)
+        if CONFIG_FILE.exists():
+            with open(CONFIG_FILE) as fr:
+                usr_cfg = json.loads(fr)
+    except TypeError as exc:
+        import pdb; pdb.set_trace()
+        logger.warning(f"User config ")
+        return {}
+    except Exception:
+        raise
