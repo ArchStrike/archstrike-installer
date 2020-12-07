@@ -16,15 +16,15 @@ __version__ = '2.3.0'
 
 def main():
     try:
+        if geteuid() != 0:
+            print_error("Please run as root")
+            exit(1)
         init_logger_handles()
         logger = get_logger(__name__)
         logger.debug(f'Version: {__version__}')
         # Pre-checks
         if not pacman_exists():
             print_error("Please install pacman")
-            exit()
-        if geteuid() != 0:
-            print_error("Please run as root")
             exit()
         if not internet_enabled():
             print_error("You need an active Internet connection")
