@@ -1,12 +1,17 @@
-from asinstaller import shandle, __version__
 import os
+import io
 import logging
 import unittest
-import sys
-from io import StringIO
+from asinstaller import __version__
 from asinstaller.config import CRASH_FILE, LOG_FILE
 from asinstaller.utils import system, Crash, satisfy_dep
 
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+shandle = logging.StreamHandler(io.StringIO())
+shandle.name = 'Unit Test String Buffer'
+shandle.setLevel(logging.DEBUG)
+logger.addHandler(shandle)
 
 version = __version__
 
@@ -16,7 +21,7 @@ class TestUtilsSystem(unittest.TestCase):
     def test_output(self):
         command = 'sudo pacman -Syy'
         system(command)
-        self.assertTrue('downloading community.db...'in shandle.stream.getvalue())
+        self.assertTrue('downloading community.db...' in shandle.stream.getvalue())
 
 
 class TestUtilsGetCrashHistory(unittest.TestCase):
@@ -57,13 +62,6 @@ class TestUtilsGetCrashHistory(unittest.TestCase):
             crash3 = Crash(version)
         self.assertTrue(crash1 != crash3)
         self.assertTrue(crash1.submission_id != crash3.submission_id)
-
-    def test_4_invalid_input(self):
-        try:
-            raise Exception('woops!')
-        except Exception:
-            crash_empty = Crash(version)
-            crash1 = Crash(version)
 
 
 @unittest.skipIf(os.geteuid() != 0, 'satisfy_dep invokes pacman -Fs, which requires root permissions. Hence, skip')
