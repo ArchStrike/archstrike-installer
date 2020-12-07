@@ -1,5 +1,4 @@
-
-
+__all__ = ["start", "main", "partition_methods", "filesystems", "base", "locale", "gpus", "wm_de"]
 
 start = {
     '1': 'Start Installer',
@@ -31,7 +30,6 @@ main = {
 partition_methods = {
     '1': 'Auto Partition Drive',
     '2': 'Auto Partition Encrypted LVM',
-    # deprecated '3': 'Manual Partition', 
 }
 
 filesystems = {

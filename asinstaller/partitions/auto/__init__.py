@@ -1,10 +1,9 @@
-
 from . import gpt
 from . import mbr
 from ...utils import system
 from ...config import usr_cfg, get_logger
 
-
+__all__ = ["gpt", "mbr", "partition"]
 logger = get_logger(__name__)
 
 
@@ -29,11 +28,9 @@ def partition():
     # Create Root Partition
     system("wipefs -afq /dev/{0}".format(usr_cfg['root']))
     if usr_cfg['filesystem'] == 'jfs' or usr_cfg['filesystem'] == 'reiserfs':
-        system('echo -e "y" | mkfs.{0} /dev/{1}'.format(usr_cfg['filesystem'],
-            usr_cfg['root']))
+        system('echo -e "y" | mkfs.{0} /dev/{1}'.format(usr_cfg['filesystem'], usr_cfg['root']))
     else:
-        system('mkfs.{0} /dev/{1}'.format(usr_cfg['filesystem'],
-            usr_cfg['root']))
+        system('mkfs.{0} /dev/{1}'.format(usr_cfg['filesystem'], usr_cfg['root']))
 
     system("mount /dev/{0} /mnt".format(usr_cfg['root']))
     system("mkdir -p /mnt/boot")

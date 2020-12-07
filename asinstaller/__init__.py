@@ -5,12 +5,12 @@ from sys import exit
 from .config import COLORS, CONFIG_FILE, FNULL, LOG_FILE, get_logger, init_logger_handles, usr_cfg
 from .utils import Crash, check_uefi, internet_enabled, pacman_exists, print_error, print_info, query_yes_no, \
     save_crash_files, set_keymap, signal_handler, start_screen, system
-from .partitions import devices, auto, manual
+from .partitions import devices, auto
 from os import geteuid
 from . import install
 from .irc import LogHandler
 
-
+__all__ = ["config", "install", "irc", "menus", "partitions", "resolve_packages", "utils"]
 __version__ = '2.3.0'
 
 
@@ -49,7 +49,7 @@ def main():
 
         devices.partition_menu()
 
-        confirmed = True if usr_cfg['partition_type'] == '3' else False
+        confirmed = False
         devices.identify()
         while not confirmed:
 
@@ -61,11 +61,8 @@ def main():
 
             confirmed = devices.confirm_settings()
 
-        if usr_cfg['partition_type'] in ['1', '2']:
-            devices.check_lvm()
-            auto.partition()
-        else:
-            manual.partition()
+        devices.check_lvm()
+        auto.partition()
 
         # Install Base
         install.base()

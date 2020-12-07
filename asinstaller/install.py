@@ -177,12 +177,7 @@ def grub():
 
         system("grub-mkconfig -o /boot/grub/grub.cfg ", True)
     except Exception:
-        if usr_cfg['partition_type'] == '3':
-            logger.exception("Grub install failed")
-            print_error("Failed to install grub most likely due to user error during manual partitioning...")
-            sys.exit(1)
-        else:
-            raise
+        raise
 
 
 # TODO: Implement

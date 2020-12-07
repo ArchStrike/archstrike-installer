@@ -1,14 +1,13 @@
-
 from ...utils import system, system_output
 from ...config import usr_cfg, get_logger
 
-
+__all__ = ["uefi", "non_uefi"]
 logger = get_logger(__name__)
 
 
 def uefi():
     system('echo -e "n\n\n\n512M\nef00\nn\n\n\n\n\nw\ny" | ' \
-            + 'gdisk {0}'.format(drive))
+            + 'gdisk {0}'.format(usr_cfg['drive']))
 
     usr_cfg['boot'] = system_output("fdisk -l | " \
                 + "grep {0} | ".format(usr_cfg['drive'][-3:]) \

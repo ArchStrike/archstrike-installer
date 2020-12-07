@@ -1,10 +1,11 @@
 import logging
 import time
-from ..utils import cinput, print_error, print_info, print_title, query_yes_no, system, system_output
+from ..utils import cinput, print_error, print_info, print_title, query_yes_no, system, system_output, COLORS
 from ..config import usr_cfg
 from .. import menus
 
 
+__all__ = ["partition_menu", "identify", "set_filesystem", "set_swap", "set_gpt", "confirm_settings", "check_lvm"]
 logger = logging.getLogger(__name__)
 
 

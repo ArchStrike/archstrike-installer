@@ -1,7 +1,7 @@
-
 from asinstaller.utils import system, system_output
 from asinstaller.config import usr_cfg, get_logger
 
+__all__ = ["uefi", "non_uefi"]
 logger = get_logger(__name__)
 
 def uefi():

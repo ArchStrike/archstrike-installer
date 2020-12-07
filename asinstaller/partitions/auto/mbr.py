@@ -1,8 +1,9 @@
-
 from ...utils import system, system_output
 from ...config import usr_cfg, get_logger
 
+__all__ = ["format"]
 logger = get_logger(__name__)
+
 
 def format():
     if usr_cfg['swap_space']:

@@ -39,7 +39,7 @@ class LogHandler(object):
             if b'NOTICE' in notice:
                 logger.info('Squelched IRC NOTICE message from freenode...')
             else:
-                logger.info(f'Expected NOTICE response from freenode, but received: {data}')
+                logger.info(f'Expected NOTICE response from freenode, but received: {notice}')
         except socket.timeout:
             logger.info('Receive for NOTICE timed out...')
             pass  # RFC-2812 suggests not waiting forever
