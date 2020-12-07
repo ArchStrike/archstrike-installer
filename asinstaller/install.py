@@ -1,4 +1,3 @@
-
 from .config import COLORS, get_logger, localesdict, pacmanconf, usr_cfg
 from .utils import cinput, print_command, print_error, print_info, print_title, query_yes_no, system, system_output
 from . import menus, resolve_packages
@@ -7,6 +6,7 @@ import shutil
 import os
 from sys import exit
 
+__all__ = []
 logger = get_logger(__name__)
 
 
