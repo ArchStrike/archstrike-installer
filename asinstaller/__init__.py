@@ -37,14 +37,14 @@ def main():
         # First time, ask the user if they want to proceed
         start_screen()
 
+        # Make sure pacstrap is available first
+        install.pacstrap()
         # Let the installation begin
         logger.debug("Starting Installation")
         # Let the installation begin
         logger.debug("Starting Installation")
 
         check_uefi()
-        system("timedatectl set-ntp true")
-
         set_keymap()
 
         devices.partition_menu()

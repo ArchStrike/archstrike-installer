@@ -5,9 +5,30 @@ from . import menus, resolve_packages
 import time
 import shutil
 import os
+from sys import exit
 
 logger = get_logger(__name__)
 
+
+def pacstrap():
+    try:
+        logger.debug("Starting pre-installation dependency tasks...")
+        print_title("Checking time synchronization")
+        system("find /etc -maxdepth 1 -name adjtime -mmin +60 -exec timedatectl set-ntp true \\; >/dev/null")
+        system("hwclock --systohc >/dev/null")
+        print_title("Refreshing pacman db")
+        system("pacman -Syy >/dev/null")
+        # the following should be the same as pacman-key --refresh-keys --keyserver pgp.mit.edu
+        # however, keyservers are too slow for my taste
+        print_title("Refreshing keyring")
+        system("pacman -S archlinux-keyring --noconfirm >/dev/null")
+        print_title("Updating host")
+        system("pacman -Su --noconfirm >/dev/null")
+        print_title("Installing arch-install-scripts if not up-to-date")
+        system("pacman -S arch-install-scripts --needed --noconfirm >/dev/null")
+    except Exception:
+        print_error("Failed ensure targets are up-to-date using pacman... please manually update your system.")
+        exit(1)
 
 def base():  # noqa
     logger.debug("Installing Base")
@@ -49,32 +70,6 @@ def base():  # noqa
     if usr_cfg['uefi']:
         base_install += " efibootmgr"
 
-    system("pacman -Syy")
-    try:
-        # Check if ntp command exists
-        system("pacman -Qs ntp >/dev/null 2>&1")
-    except BaseException:
-        # Install ntp if command does not exists
-        system("pacman -S ntp --noconfirm")
-    else:
-        # Verify ntp command is owned by ntp and not opentpd
-        _conflict_check = '$(pacman -Qo /usr/bin/ntpd | grep -o "is owned by ntp ")'
-        _err_msg = 'A package other than ntp owns /usr/bin/ntpd. Please install ntp manually.\n'
-        _cmd = '[[ -z "{}" ]] && printf "{}" >&2'.format(_conflict_check, _err_msg)
-        system(_cmd)
-    # if not ntpd.service is inactive, then set time with ntpd. otherwise, pass so exits 0
-    system("timedatectl set-ntp true")
-    system("hwclock --systohc")
-    # the following should be the same as pacman-key --refresh-keys --keyserver pgp.mit.edu
-    # however, keyservers are too slow for my taste
-    system("pacman -S archlinux-keyring --noconfirm >/dev/null")
-    system("pacman -Su --noconfirm >/dev/null")
-    try:
-        # Check if pacstrap command exists
-        system("pacman -Qo pacstrap >/dev/null")
-    except BaseException:
-        # Install arch-install-scripts if pacstrap does not exist
-        system("pacman -S arch-install-scripts --noconfirm")
     system("pacstrap /mnt base {0}".format(base_install))
 
 
