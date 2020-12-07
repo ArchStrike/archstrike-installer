@@ -15,10 +15,9 @@ def partition_menu():
         system("clear")
         print_title("Step 2) Partition Menu")
 
-        options = list(menus.partition_methods.keys())
-        options.sort()
+        options = sorted(menus.partition_methods.keys())
         for k in options:
-            print_info('{0}) {1}'.format(k, menus.partition_methods[k]))
+            print_info(f'{k}) {menus.partition_methods[k]}')
 
         part = cinput("> Choice: ", COLORS['OKBLUE'])
 
@@ -40,23 +39,20 @@ def identify():
         print_info("Current Devices")
         system(''' lsblk -pa | grep "disk" | awk '{print $1" "$4}' ''')
         available_drives = system_output('lsblk -pa | grep "disk" | awk \'{print $1}\'').split('\n')
-        drive = cinput('> Please choose the drive you would like to '\
-                    + 'install ArchStrike on (default: /dev/sda ): ', \
-                    COLORS['OKBLUE']) or '/dev/sda'
+        drive = cinput('> Please choose the drive you would like to '
+                       'install ArchStrike on (default: /dev/sda ): ', COLORS['OKBLUE']) or '/dev/sda'
 
         if drive not in available_drives:
             print_error("That drive does not exist")
             time.sleep(1)
             continue
 
-        if not query_yes_no('Are you sure want to use '\
-            + '{1}?'.format(COLORS['WARNING'], drive),
-            'yes'):
+        if not query_yes_no(f'Are you sure want to use {drive}?', 'yes'):
             continue
         break
 
-    drive_size = system_output("lsblk -pa | grep -w {0} | ".format(drive) \
-            + "awk '{print $4}' | grep -o '[0-9]*' | awk 'NR==1' ")
+    drive_size = system_output(f"lsblk -pa | grep -w {drive} | "
+                               "awk '{print $4}' | grep -o '[0-9]*' | awk 'NR==1' ")
 
     usr_cfg['drive'] = drive
     usr_cfg['drive_size'] = drive_size
@@ -68,8 +64,7 @@ def set_filesystem():
         system("clear")
         print_title("Step 4) Selecting the Filesystem Type")
 
-        options = list(menus.filesystems.keys())
-        options.sort()
+        options = sorted(menus.filesystems.keys())
         for k in options:
             print_info('{0}) {1}'.format(k, menus.filesystems[k]))
 
@@ -92,12 +87,11 @@ def set_swap():
         system("clear")
         if query_yes_no("> Step 5) Would you like to create a new swap space?",
                         'yes'):
-            swap_space = cinput('> Enter your swap space size '\
-                        + '(default is 512M): ', COLORS['OKBLUE']) or '512M'
+            swap_space = cinput('> Enter your swap space size (default is 512M): ', COLORS['OKBLUE']) or '512M'
             logger.log(logging.INFO, "Swap Size: {0}".format(swap_space))
             size = swap_space[:-1]
             if swap_space[-1] == "M":
-                if int(size) >= (int(usr_cfg['drive_size'])*1024 - 4096):
+                if int(size) >= (int(usr_cfg['drive_size']) * 1024 - 4096):
                     print_error("Your swap space is too large")
                     time.sleep(1)
                 break
@@ -120,8 +114,7 @@ def set_gpt():
     system("clear")
     gpt = False
     if not usr_cfg['uefi']:
-        if query_yes_no('> Step 6) Would you like to use GUID Partition '\
-            + 'Table?', 'no'):
+        if query_yes_no('> Step 6) Would you like to use GUID Partition Table?', 'no'):
             gpt = True
     usr_cfg['gpt'] = gpt
 
@@ -129,9 +122,9 @@ def set_gpt():
 def confirm_settings():
     logger.debug("Confirm Settings")
     system("clear")
-    print_info('Device: {0}\n'.format(usr_cfg['drive']) \
-               + 'Filesystem: {0}\n'.format(usr_cfg['filesystem']) \
-               + 'Swap: {0}'.format(usr_cfg['swap_space']))
+    print_info(f'Device: {usr_cfg["drive"]}\n'
+               f'Filesystem: {usr_cfg["filesystem"]}\n'
+               f'Swap: {usr_cfg["swap_space"]}')
 
     if query_yes_no("> Are you sure your partitions are set up correctly?",
                     'yes'):
@@ -143,7 +136,8 @@ def confirm_settings():
 def check_lvm():
     """
     Reason for if 'ACTIVE':
-        Logical volume lvm/lvroot is used by another device  -> `blkdeactivate -u /dev/lvm/lvroot` to resolve. `lvmchange -ay /dev/lvm/lvroot` to unresolve
+        Logical volume lvm/lvroot is used by another device  -> `blkdeactivate -u /dev/lvm/lvroot` to resolve.
+        `lvmchange -ay /dev/lvm/lvroot` to unresolve
     Reason for if _partition:
         Must remove physical volumn
     """
@@ -155,10 +149,13 @@ def check_lvm():
     if lvscan:
         for entry in lvscan.rstrip().split('\n'):
             lvm_dir = entry.split("'")[1]
-            if 'ACTIVE' in entry: system('blkdeactivate -u {}'.format(lvm_dir))
+            if 'ACTIVE' in entry:
+                system('blkdeactivate -u {}'.format(lvm_dir))
             system("echo -e 'y'|lvm lvremove {0}".format(lvm_dir))
 
     if pvscan:
         for entry in vgscan.rstrip().split('\n'):
-            _partition = system_output('pvscan | grep "{}" | grep -o "VG [^ ]*"| grep -o "[^ ]*$" || exit 0'.format(usr_cfg['drive']))
-            if _partition: system_output('pvremove -ff {}'.format(_partition))
+            _partition = system_output(
+                'pvscan | grep "{}" | grep -o "VG [^ ]*"| grep -o "[^ ]*$" || exit 0'.format(usr_cfg['drive']))
+            if _partition:
+                system_output('pvremove -ff {}'.format(_partition))

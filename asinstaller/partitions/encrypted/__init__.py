@@ -16,8 +16,7 @@ def partition():
 
     pass_set = False
     while not pass_set:
-        passwd = getpass('> Please enter a new password for ' \
-            '{0}: '.format(usr_cfg['drive']))
+        passwd = getpass(f'> Please enter a new password for {usr_cfg["drive"]}: ')
         passwd_chk = getpass("> Confirm password: ")
         if passwd == passwd_chk:
             pass_set = True
@@ -45,15 +44,12 @@ def partition():
     system("lvm lvcreate -L 500M -n tmp lvm")
     system("echo -e 'y' | lvm lvcreate -l 100%FREE -n lvroot lvm")
 
-    system('printf {0} | '.format(passwd) \
-        + 'cryptsetup luksFormat -c aes-xts-plain64 -s 512 /dev/lvm/lvroot -')
-    system('printf {0} | '.format(passwd) \
-        + 'cryptsetup open --type luks /dev/lvm/lvroot root -')
+    system(f'printf {passwd} | cryptsetup luksFormat -c aes-xts-plain64 -s 512 /dev/lvm/lvroot -')
+    system(f'printf {passwd} | cryptsetup open --type luks /dev/lvm/lvroot root -')
     del passwd
     system("wipefs -afq /dev/mapper/root")
     if usr_cfg['filesystem'] == 'jfs' or usr_cfg['filesystem'] == 'reiserfs':
-        system('echo -e "y" | mkfs.{0} '.format(usr_cfg['filesystem']) \
-            + '/dev/mapper/root')
+        system(f'echo -e "y" | mkfs.{usr_cfg["filesystem"]} /dev/mapper/root')
     else:
         system('mkfs.{0} /dev/mapper/root'.format(usr_cfg['filesystem']))
 

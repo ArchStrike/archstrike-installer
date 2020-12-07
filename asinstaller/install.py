@@ -5,7 +5,6 @@ from . import menus, resolve_packages
 import time
 import shutil
 import os
-import sys
 
 logger = get_logger(__name__)
 
@@ -17,8 +16,7 @@ def base():  # noqa
         system("clear")
         print_title("Step 7) Install System Base")
 
-        options = list(menus.base.keys())
-        options.sort()
+        options = sorted(menus.base.keys())
         for k in options:
             print_info('{0}) {1}'.format(k, menus.base[k]))
 
@@ -29,7 +27,7 @@ def base():  # noqa
             if choice in range(1, len(menus.base) + 1):
                 base = choice
                 break
-        except:
+        except BaseException:
             print_error("Invalid Option")
             time.sleep(1)
 
@@ -55,7 +53,7 @@ def base():  # noqa
     try:
         # Check if ntp command exists
         system("pacman -Qs ntp >/dev/null 2>&1")
-    except:
+    except BaseException:
         # Install ntp if command does not exists
         system("pacman -S ntp --noconfirm")
     else:
@@ -74,7 +72,7 @@ def base():  # noqa
     try:
         # Check if pacstrap command exists
         system("pacman -Qo pacstrap >/dev/null")
-    except:
+    except BaseException:
         # Install arch-install-scripts if pacstrap does not exist
         system("pacman -S arch-install-scripts --noconfirm")
     system("pacstrap /mnt base {0}".format(base_install))
@@ -96,13 +94,12 @@ def locale_time():
         system("clear")
         print_title("Step 9) Generating locale and setting timezone")
 
-        options = list(menus.locale.keys())
-        options.sort()
+        options = sorted(menus.locale.keys())
         for k in options:
             print_info('{0}) {1}'.format(k, menus.locale[k]))
 
         choice = cinput('> Enter the number for your locale or leave empty '
-                        + 'for default: ', COLORS['OKBLUE']) or '1'
+                        'for default: ', COLORS['OKBLUE']) or '1'
 
         if choice in list(map(str, list(range(1, len(menus.locale))))):
             locale = localesdict[str(choice)]
@@ -110,7 +107,7 @@ def locale_time():
         elif choice == '99':
             print_info("A full list will be listed now.")
             print_info("Press 'q' to quit and 'Enter'/'Return' to scroll. "
-                       + "Afterwards type in the locale you want to use.")
+                       "Afterwards type in the locale you want to use.")
             time.sleep(1)
             system("cat /mnt/etc/locale.gen | more")
             locale = cinput('> Please type in the locale you want to use: ',
@@ -128,7 +125,7 @@ def locale_time():
     tzcmd = "/bin/sh -c '(tzselect 3>&2 2>&1 1>&3) 2> /tmp/archstrike-timezone'"  # swap stdout/stderr so level is info
     system(tzcmd, True)
     system('ln -sf /usr/share/zoneinfo/$(cat /tmp/archstrike-timezone) '
-           + '/etc/localtime', True)
+           '/etc/localtime', True)
     system("hwclock --systohc --utc")
 
 
@@ -153,22 +150,22 @@ def grub():
         system("pacman -S grub --noconfirm", True)
 
         if system_output("cat /proc/cpuinfo | grep -m1 vendor_id |"
-                         + "awk '{print $NF}'") == 'GenuineIntel':
+                         "awk '{print $NF}'") == 'GenuineIntel':
             if query_yes_no('We have detected you have an Intel CPU. '
-                            + 'Is that correct?', 'yes'):
+                            'Is that correct?', 'yes'):
                 system("pacman -S intel-ucode --noconfirm", True)
 
         if usr_cfg['partition_type'] == '2':
             system("sed -i 's!quiet!cryptdevice=/dev/lvm/lvroot:root "
-                   + "root=/dev/mapper/root!' /mnt/etc/default/grub")
+                   "root=/dev/mapper/root!' /mnt/etc/default/grub")
         else:
             system("sed -i 's/quiet//' /mnt/etc/default/grub")
 
         if usr_cfg['uefi']:
             system('grub-install --efi-directory=/boot --target=x86_64-efi '
-                   + '--bootloader-id=boot', True)
+                   '--bootloader-id=boot', True)
             system('mv /mnt/boot/EFI/boot/grubx64.efi '
-                   + '/mnt/boot/EFI/boot/bootx64.efi')
+                   '/mnt/boot/EFI/boot/bootx64.efi')
 
             if usr_cfg['partition_type'] != '2':
                 system(f"mkinitcpio -p {usr_cfg['kernel']}", True)
@@ -192,34 +189,34 @@ def configuration():
     time.sleep(1)
 
     if usr_cfg['partition_type'] == '2' and usr_cfg['uefi']:
-        system('echo "/dev/{0}'.format(usr_cfg['boot'])
-               + '              /boot           vfat         '
-               + 'rw,relatime,fmask=0022,dmask=0022,codepage=437,'
-               + 'iocharset=iso8859-1,shortname=mixed,errors=remount-ro        0'
-               + '2" > /mnt/etc/fstab')
+        system(f'echo "/dev/{usr_cfg["boot"]}'
+               '              /boot           vfat         '
+               'rw,relatime,fmask=0022,dmask=0022,codepage=437,'
+               'iocharset=iso8859-1,shortname=mixed,errors=remount-ro        0'
+               '2" > /mnt/etc/fstab')
     elif usr_cfg['partition_type'] == 'Auto Partition Encrypted LVM':
-        system('echo "/dev/{0}'.format(usr_cfg['boot'])
-               + '              /boot           '
-               + '{0}         '.format(usr_cfg['filesystem'])
-               + 'defaults        0       2" > /mnt/etc/fstab')
+        system(f'echo "/dev/{usr_cfg["boot"]}'
+               '              /boot           '
+               f'{usr_cfg["filesystem"]}         '
+               'defaults        0       2" > /mnt/etc/fstab')
 
     if usr_cfg['partition_type'] == '2':
         system('echo "/dev/mapper/root        /               '
-               + '{0}         '.format(usr_cfg['filesystem'])
-               + 'defaults        0       1" >> /mnt/etc/fstab')
+               f'{usr_cfg["filesystem"]}         '
+               'defaults        0       1" >> /mnt/etc/fstab')
         system('echo "/dev/mapper/tmp         /tmp            tmpfs        '
-               + 'defaults        0       0" >> /mnt/etc/fstab')
+               'defaults        0       0" >> /mnt/etc/fstab')
         system('echo "tmp	       /dev/lvm/tmp	       /dev/urandom	tmp,'
-               + 'cipher=aes-xts-plain64,size=256" >> /mnt/etc/crypttab')
+               'cipher=aes-xts-plain64,size=256" >> /mnt/etc/crypttab')
 
         if usr_cfg['swap_space']:
             system('echo "/dev/mapper/swap     none            swap          '
-                   + 'sw                    0       0" >> /mnt/etc/fstab')
+                   'sw                    0       0" >> /mnt/etc/fstab')
             system('echo "swap	/dev/lvm/swap	/dev/urandom	swap,'
-                   + 'cipher=aes-xts-plain64,size=256" >> /mnt/etc/crypttab')
+                   'cipher=aes-xts-plain64,size=256" >> /mnt/etc/crypttab')
 
         system("sed -i 's/k filesystems k/k lvm2 encrypt filesystems k/' "
-               + "/mnt/etc/mkinitcpio.conf")
+               "/mnt/etc/mkinitcpio.conf")
 
         system("pacman -S lvm2 --noconfirm", True)
         system(f"mkinitcpio -p {usr_cfg['kernel']}", True)
@@ -231,7 +228,7 @@ def hostname():
     print_title("Step 11) Setting Hostname")
 
     print_info("Your hostname will be 'archstrike'. "
-               + "You can change it later if you wish.")
+               "You can change it later if you wish.")
     time.sleep(1)
 
     system("echo 'archstrike' > /mnt/etc/hostname")
@@ -267,24 +264,24 @@ def archstrike():
     print_title("Step 14) Installing the ArchStrike repositories")
     time.sleep(1)
 
-    system("echo '[archstrike]' >> /mnt{0}".format(pacmanconf))
+    system(f"echo '[archstrike]' >> /mnt{pacmanconf}")
     system("echo 'Server = https://mirror.archstrike.org/$arch/$repo' >> "
-           + "/mnt{0}".format(pacmanconf))
+           f"/mnt{pacmanconf}")
 
     if system_output('getconf LONG_BIT') == '64':
         print_info("We have detected you are running x86_64. It is advised "
-                   + "to enable multilib with the ArchStrike repo. Do you want to "
-                   + "enable multilib?")
+                   "to enable multilib with the ArchStrike repo. Do you want to "
+                   "enable multilib?")
 
         if query_yes_no(">", 'yes'):
-            system("""sed -i "/\[multilib\]/,/Include/"'s/^#//' """
-                   + "/mnt/{0}".format(pacmanconf))
+            system(r"""sed -i "/\[multilib\]/,/Include/"'s/^#//' """
+                   f"/mnt/{pacmanconf}")
             print_info("I will now perform database updates, hang tight.")
             time.sleep(1)
             system("hwclock --systohc", True)
             system("pacman -Syy", True)
             system('''/bin/bash -c " echo -e 'y\ny\n' | '''
-                   + 'pacman -S gcc-multilib"', True)
+                   'pacman -S gcc-multilib"', True)
             print_info("Multilib has been enabled.")
         else:
             print_info("I will now perform database updates, hang tight.")
@@ -303,13 +300,13 @@ def archstrike():
     print_info("Done. Editing your pacman config to use the new mirrorlist.")
 
     system("sed -i 's|Server = https://mirror.archstrike.org/$arch/$repo|"
-           + "Include = /etc/pacman.d/archstrike-mirrorlist|' "
-           + "/mnt{0}".format(pacmanconf))
+           "Include = /etc/pacman.d/archstrike-mirrorlist|' "
+           f"/mnt{pacmanconf}")
 
     print_info("Performing database update once more to test mirrorlist")
     system("pacman -Syy", True)
     if query_yes_no('> Do you want to go ahead and install all ArchStrike '
-                    + 'packages now?', 'no'):
+                    'packages now?', 'no'):
         args = resolve_packages.get_args(['--package', 'archstrike'])
         archstrike_packages = resolve_packages.PackageArbiter(args).good_packages
         system(f"pacman -S {archstrike_packages} linux-headers --noconfirm", True)
@@ -326,17 +323,17 @@ def new_user():
             username = cinput('> Please enter a username: ', COLORS['OKBLUE'])
 
         system('useradd -m -g users -G audio,network,power,'
-               + 'storage,optical {0}'.format(username), True)
-        print_command("> Please enter the password for {0}: ".format(username))
+               f'storage,optical {username}', True)
+        print_command(f"> Please enter the password for {username}: ")
 
         ret = -1
         while ret != 0:
-            ret = system("passwd {0}".format(username), True)
+            ret = system(f"passwd {username}", True)
 
-        if query_yes_no('> Would you like to give {0} '.format(username)
-                        + 'admin privileges?', 'yes'):
+        if query_yes_no(f'> Would you like to give {username} '
+                        'admin privileges?', 'yes'):
             system("sed -i '/%wheel ALL=(ALL) ALL/s/^#//' /mnt/etc/sudoers")
-            system("usermod -a -G wheel {0}".format(username), True)
+            system(f"usermod -a -G wheel {username}", True)
 
     usr_cfg['username'] = username
 
@@ -348,10 +345,9 @@ def video_utils():
 
     if query_yes_no("> Would you like to set up video utilities?", 'yes'):
         while True:
-            options = list(menus.gpus.keys())
-            options.sort()
+            options = sorted(menus.gpus.keys())
             for k in options:
-                print_info('{0}) {1}'.format(k, menus.gpus[k]))
+                print_info(f'{k}) {menus.gpus[k]}')
 
             gpu = cinput('> Choose an option or leave empty for default: ',
                          COLORS['OKBLUE']) or '5'
@@ -359,7 +355,7 @@ def video_utils():
             try:
                 sel = menus.gpus[gpu]
                 system('pacman -S xorg-server xorg-apps xorg-xinit '
-                       + 'xterm {0} --noconfirm'''.format(sel), True)
+                       f'xterm {sel} --noconfirm''', True)
                 break
             except KeyError:
                 print_error("Invalid option")
@@ -371,12 +367,11 @@ def wm_de():
     system("clear")
 
     if query_yes_no('> Would you like to install a Desktop Environment or '
-                    + 'Window Manager?', 'yes'):
+                    'Window Manager?', 'yes'):
         while True:
-            options = list(menus.wm_de.keys())
-            options.sort()
+            options = sorted(menus.wm_de.keys())
             for k in options:
-                print_info('{0}) {1}'.format(k, menus.wm_de[k]))
+                print_info(f'{k}) {menus.wm_de[k]}')
 
             choice = cinput("> Choice: ", COLORS['OKBLUE'])
 
@@ -390,80 +385,80 @@ def wm_de():
                     system("pacman -S archstrike-openbox-config --noconfirm",
                            True)
                     if username:
-                        system("mkdir -p /mnt/home/{0}/".format(username)
-                               + ".config")
+                        system(f"mkdir -p /mnt/home/{username}/"
+                               ".config")
                         system("echo 'exec openbox-session' > "
-                               + "/mnt/home/{0}/.xinitrc".format(username))
+                               f"/mnt/home/{username}/.xinitrc")
                         system('cp -a /mnt/usr/share/archstrike-openbox-config'
-                               + '/etc/* /mnt/home/{0}/.config/'.format(username))
-                        system('chown {0}:users -R /home/'.format(username)
-                               + '{0}/.config '.format(username)
-                               + '/home/{0}/.xinitrc'.format(username), True)
+                               f'/etc/* /mnt/home/{username}/.config/')
+                        system(f'chown {username}:users -R /home/'
+                               f'{username}/.config '
+                               f'/home/{username}/.xinitrc', True)
                     system("echo 'exec openbox-session' > /mnt/root/.xinitrc")
                     system("mkdir -p /mnt/root/.config")
                     system('cp -a /mnt/usr/share/archstrike-openbox-config'
-                           + '/etc/*  /mnt/root/.config/''')
+                           '/etc/*  /mnt/root/.config/''')
 
                 if '2' in choice:
                     system("pacman -S xfce4 xfce4-goodies --noconfirm", True)
                     system("pacman -S archstrike-xfce-config --noconfirm", True)
                     if username:
-                        system("mkdir -p /mnt/home/{0}/".format(username)
-                               + ".config")
+                        system(f"mkdir -p /mnt/home/{username}/"
+                               ".config")
                         system("echo 'exec startxfce4' > "
-                               + '/mnt/home/{0}/.xinitrc'.format(username))
+                               f'/mnt/home/{username}/.xinitrc')
                         system('cp -a /mnt/usr/share/archstrike-xfce-config/'
-                               + 'config/* /mnt/home/{0}'.format(username)
-                               + '/.config/')
-                        system('chown {0}:users -R /home/{0}'.format(username)
-                               + '/.config /home/'
-                               + '{0}/.xinitrc'.format(username), True)
+                               f'config/* /mnt/home/{username}'
+                               '/.config/')
+                        system(f'chown {username}:users -R /home/{username}'
+                               '/.config /home/'
+                               f'{username}/.xinitrc', True)
                     system("echo 'exec startxfce4' > /mnt/root/.xinitrc")
                     system("mkdir -p /mnt/root/.config")
                     system('cp -a /mnt/usr/share/archstrike-xfce-config'
-                           + '/config/* /mnt/root/.config/')
+                           '/config/* /mnt/root/.config/')
                     system('cp -a /mnt/usr/share/archstrike-xfce-config'
-                           + '/icons/* /mnt/usr/share/pixmaps/')
+                           '/icons/* /mnt/usr/share/pixmaps/')
                     system('cp -a /mnt/usr/share/archstrike-xfce-config'
-                           + '/wallpapers/* /mnt/usr/share/backgrounds/xfce/')
+                           '/wallpapers/* /mnt/usr/share/backgrounds/xfce/')
 
                 if '3' in choice:
                     system("pacman -S archstrike-i3-config --noconfirm", True)
                     if username:
-                        system("mkdir -p /mnt/home/{0}/".format(username)
-                               + ".config")
+                        system(f"mkdir -p /mnt/home/{username}/"
+                               ".config")
                         system("echo 'exec i3' > "
-                               + '/mnt/home/{0}/.xinitrc'.format(username))
+                               f'/mnt/home/{username}/.xinitrc')
                         system('cp -a /mnt/usr/share/archstrike-i3-config'
-                               + '/config/* /mnt/home/{0}/'.format(username)
-                               + '.config/')
+                               f'/config/* /mnt/home/{username}/'
+                               '.config/')
                         system('cat /mnt/usr/share/archstrike-i3-config'
-                               + '/Xresources >> /mnt/home/{0}/'.format(username)
-                               + '.Xresources')
+                               f'/Xresources >> /mnt/home/{username}/'
+                               '.Xresources')
                         system('cp -a /mnt/usr/share/archstrike-i3-config'
-                               + '/gtkrc-2.0 /mnt/home/{0}/'.format(username)
-                               + '.gtkrc-2.0')
-                        system('chown {0}:users -R /home/{0}'.format(username)
-                               + '/.config '
-                               + '/home/{0}/.xinitrc '.format(username)
-                               + '/home/{0}/.Xresources '.format(username)
-                               + '/home/{0}/.gtkrc-2.0'.format(username), True)
+                               f'/gtkrc-2.0 /mnt/home/{username}/'
+                               '.gtkrc-2.0')
+                        system(f'chown {username}:users -R /home/{username}'
+                               '/.config '
+                               f'/home/{username}/.xinitrc '
+                               f'/home/{username}/.Xresources '
+                               f'/home/{username}/.gtkrc-2.0', True)
                     system("echo 'exec i3' > /mnt/root/.xinitrc")
                     system("mkdir -p /mnt/root/.config")
                     system('cp -a /mnt/usr/share/archstrike-i3-config'
-                           + '/config/* /mnt/root/.config/')
+                           '/config/* /mnt/root/.config/')
                     system('cat /mnt/usr/share/archstrike-i3-config'
-                           + '/Xresources >> /mnt/root/.Xresources')
+                           '/Xresources >> /mnt/root/.Xresources')
                     system('cp -a /mnt/usr/share/archstrike-i3-config'
-                           + '/gtkrc-2.0 /mnt/root/.gtkrc-2.0')
+                           '/gtkrc-2.0 /mnt/root/.gtkrc-2.0')
 
                 if os.path.isdir('/home/archstrike/.config/terminator'):
                     if username:
                         system('cp -a /home/archstrike/.config/terminator '
-                               + '/mnt/home/{0}/.config'.format(username))
+                               f'/mnt/home/{username}/.config')
 
                     system("cp -a /home/archstrike/.config/terminator "
-                           + "/mnt/root/.config/")
+                           "/mnt/root/.config/")
 
                 break
             except KeyError:
@@ -486,7 +481,7 @@ def additional_utils():
 
     if query_yes_no("> Would you like to install virtualbox utils?", 'yes'):
         system('pacman -S virtualbox-guest-utils linux-headers mesa-libgl '
-               + '--noconfirm', True)
+               '--noconfirm', True)
 
     if query_yes_no("> Would you like to add touchpad support?", 'no'):
         system("pacman -S xf86-input-synaptics --noconfirm", True)
