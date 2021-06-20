@@ -11,7 +11,7 @@ from . import install
 from .irc import LogHandler
 
 __all__ = ["config", "install", "irc", "menus", "partitions", "resolve_packages", "utils"]
-__version__ = '2.3.0'
+__version__ = '2.3.1'
 
 
 def main():
