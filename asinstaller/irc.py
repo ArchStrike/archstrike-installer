@@ -2,7 +2,7 @@ import socket
 import ssl
 from .config import IRC_BOT_NICK, IRC_PORT, IRC_SERVER, get_logger
 
-
+__all__ = ["LogHandler"]
 logger = get_logger(__name__)
 
 
